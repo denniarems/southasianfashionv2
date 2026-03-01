@@ -9,17 +9,20 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
-    "fmt:check": "oxfmt --check"
+    "fmt:check": "oxfmt --check",
+    "db:push": "drizzle-kit push",
+    "db:seed": "bun db/seed.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
+    "@neondatabase/serverless": "^1.0.2",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@vercel/blob": "^2.3.0",
-    "@vercel/postgres": "^0.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookie": "^1.1.1",
+    "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "framer-motion": "^12.34.3",
     "input-otp": "^1.4.2",

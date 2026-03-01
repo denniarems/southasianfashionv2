@@ -23,7 +23,7 @@ export const products = pgTable("products", {
   description: text("description").default(""),
   price: real("price").notNull().default(0),
   currency: text("currency").notNull().default("USD"),
-  category: text("category").references(() => categories.name),
+  category: text("category"),
   imageUrl: text("image_url").default(""),
   isNew: boolean("is_new").default(true),
   isFeatured: boolean("is_featured").default(false),
