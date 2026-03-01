@@ -2,7 +2,7 @@ import { pgTable, text, real, boolean, serial } from "drizzle-orm/pg-core";
 
 export const categories = pgTable("categories", {
   id: text("id").primaryKey(), // uuid from mongo
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   slug: text("slug").notNull().unique(),
   description: text("description").default(""),
   createdAt: text("created_at").notNull(), // ISO string
