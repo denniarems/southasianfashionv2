@@ -10,7 +10,6 @@ import NewArrivals from "./components/NewArrivals";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 
-// Assuming we inject D1 into `process.env.DB` using vinext
 export default async function Home() {
   const db = getDb();
 

@@ -223,3 +223,13 @@ export async function seed() {
 
   console.log("Seed complete!");
 }
+
+// Allow running directly via `bun db/seed.ts`
+if (typeof process !== "undefined" && process.argv[1]?.endsWith("seed.ts")) {
+  seed()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}

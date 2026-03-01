@@ -19,7 +19,6 @@ export async function requestOtp(email: string) {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60000).toISOString();
 
-  // @ts-ignore - Need to properly inject D1 via env in Server Actions, assuming global access for now in vinext
   const db = getDb();
 
   await db.delete(otpCodes).where(eq(otpCodes.email, email));

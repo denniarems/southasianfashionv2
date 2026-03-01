@@ -37,7 +37,6 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules",
-    "alchemy.ts"
+    "node_modules"
   ]
 }
