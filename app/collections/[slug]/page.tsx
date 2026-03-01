@@ -41,7 +41,7 @@ export default async function CollectionDetailPage({ params }: { params: { slug:
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {collectionProducts.map((p) => (
+            {collectionProducts.map((p: any) => (
               <div key={p.id} className="group">
                 <div className="relative overflow-hidden aspect-[3/4] mb-4">
                   {p.imageUrl ? (

@@ -31,7 +31,7 @@ export default async function ProductsPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {allProducts.map((p) => (
+            {allProducts.map((p: any) => (
               <div key={p.id} className="group">
                 <div className="relative overflow-hidden aspect-[3/4] mb-4">
                   {p.imageUrl ? (

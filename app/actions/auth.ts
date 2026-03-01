@@ -8,11 +8,12 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "denniarems@gmail.com";
+const ADMIN_EMAILS_CONFIG = process.env.ADMIN_EMAIL || "denniarems@gmail.com";
+const ADMIN_EMAILS = ADMIN_EMAILS_CONFIG.split(",").map((e) => e.trim());
 const JWT_SECRET = process.env.JWT_SECRET || "saf_default_secret";
 
 export async function requestOtp(email: string) {
-  if (email !== ADMIN_EMAIL) {
+  if (!ADMIN_EMAILS.includes(email)) {
     return { error: "Not authorized" };
   }
 

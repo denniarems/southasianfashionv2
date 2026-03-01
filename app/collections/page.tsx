@@ -29,7 +29,7 @@ export default async function CollectionsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-            {allCollections.map((c) => (
+            {allCollections.map((c: any) => (
               <Link href={`/collections/${c.slug}`} key={c.id} className="group block">
                 <div className="relative overflow-hidden aspect-[4/3] sm:aspect-[16/9] mb-6">
                   {c.imageUrl ? (

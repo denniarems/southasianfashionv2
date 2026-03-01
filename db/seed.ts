@@ -10,6 +10,13 @@ export async function seed() {
 
   console.log("Starting seed...");
 
+  // Clear existing data to prevent foreign key issues on rerun
+  await db.delete(schema.products);
+  await db.delete(schema.collections);
+  await db.delete(schema.categories);
+  await db.delete(schema.heroBanners);
+  await db.delete(schema.settings);
+
   // Categories
   const cats = [
     {
