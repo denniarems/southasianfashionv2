@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getDb } from "@/db";
 import { products, settings, collections } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -45,10 +46,11 @@ export default async function CollectionDetailPage({ params }: { params: { slug:
               <div key={p.id} className="group">
                 <div className="relative overflow-hidden aspect-[3/4] mb-4">
                   {p.imageUrl ? (
-                    <img
+                    <Image
                       src={p.imageUrl}
                       alt={p.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full bg-stone-200" />
