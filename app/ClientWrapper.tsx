@@ -5,7 +5,7 @@ import { ReactLenis } from 'lenis/react'
 import { Toaster } from '@/components/ui/toaster'
 import { FullScreenLoader } from '@/components/ui/full-screen-loader'
 import { CartProvider } from '@/components/cart/CartContext'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 interface GlobalLoadingContextValue {
 	isLoading: boolean
@@ -27,8 +27,6 @@ export function useGlobalLoading() {
 
 export function ClientWrapper({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname()
-	const searchParams = useSearchParams()
-	const searchParamsString = searchParams.toString()
 
 	const [isLoading, setIsLoading] = useState(true)
 	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -67,7 +65,7 @@ export function ClientWrapper({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		startLoading()
 		stopLoading(800)
-	}, [pathname, searchParamsString, startLoading, stopLoading])
+	}, [pathname, startLoading, stopLoading])
 
 	useEffect(() => {
 		const { classList } = document.documentElement
