@@ -8,6 +8,7 @@ import {
 	categories,
 	settings,
 	productImages,
+	sizeGuides,
 } from '@/db/schema'
 import { and, asc, eq, ne } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -110,6 +111,9 @@ export async function deleteItem(type: string, id: string) {
 			case 'categories':
 				await db.delete(categories).where(eq(categories.id, id))
 				break
+				case 'size-guides':
+					await db.delete(sizeGuides).where(eq(sizeGuides.id, id))
+					break
 			default:
 				throw new Error('Invalid type')
 		}
@@ -169,6 +173,8 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 				const { additionalImages, ...productFields } = data
 				const productData = {
 					...productFields,
+						collectionId: productFields.collectionId || null,
+						sizeGuideId: productFields.sizeGuideId || null,
 					slug: await generateUniqueProductSlug(
 						db,
 						data?.name || 'product',
@@ -240,6 +246,23 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 					await db.update(categories).set(data).where(eq(categories.id, data.id))
 				}
 				break
+				case 'size-guides': {
+					const payload = {
+						...data,
+						unit: data.unit || 'in',
+						note: data.note || '',
+						productType: data.productType || '',
+						columnsJson: data.columnsJson || '[]',
+						rowsJson: data.rowsJson || '[]',
+					}
+
+					if (mode === 'add') {
+						await db.insert(sizeGuides).values(payload)
+					} else {
+						await db.update(sizeGuides).set(payload).where(eq(sizeGuides.id, data.id))
+					}
+					break
+				}
 			default:
 				throw new Error('Invalid type')
 		}

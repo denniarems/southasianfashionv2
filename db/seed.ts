@@ -13,6 +13,7 @@ export async function seed() {
 
 	// Clear existing data to prevent foreign key issues on rerun
 	await db.delete(schema.products)
+	await db.delete(schema.sizeGuides)
 	await db.delete(schema.collections)
 	await db.delete(schema.categories)
 	await db.delete(schema.heroBanners)

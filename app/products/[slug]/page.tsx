@@ -1,5 +1,5 @@
 import { getDb } from '@/db'
-import { products, settings, collections, productImages } from '@/db/schema'
+import { products, settings, collections, productImages, sizeGuides } from '@/db/schema'
 import { and, asc, desc, eq, ne, or } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -15,6 +15,43 @@ import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { fetchProductCategories } from '../../actions/products'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+function parseJsonStringArray(input: string | null | undefined): string[] {
+	if (!input) return []
+	try {
+		const parsed = JSON.parse(input)
+		if (!Array.isArray(parsed)) return []
+		return parsed.filter((item): item is string => typeof item === 'string')
+	} catch {
+		return []
+	}
+}
+
+function parseSizeRows(input: string | null | undefined): Array<{ size: string; values: string[] }> {
+	if (!input) return []
+	try {
+		const parsed = JSON.parse(input)
+		if (!Array.isArray(parsed)) return []
+
+		return parsed
+			.map((row) => {
+				if (!row || typeof row !== 'object') return null
+				const rawSize = (row as { size?: unknown }).size
+				const rawValues = (row as { values?: unknown }).values
+
+				if (typeof rawSize !== 'string') return null
+				if (!Array.isArray(rawValues)) return null
+
+				return {
+					size: rawSize,
+					values: rawValues.map((v) => String(v)),
+				}
+			})
+			.filter((row): row is { size: string; values: string[] } => row !== null)
+	} catch {
+		return []
+	}
+}
 
 async function getProductBySlug(slug: string) {
 	const db = getDb()
@@ -98,7 +135,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 	if (p.category) relatedConditions.push(eq(products.category, p.category))
 	if (p.collectionId) relatedConditions.push(eq(products.collectionId, p.collectionId))
 
-	const [relatedProducts, productImageRows] = await Promise.all([
+	const [relatedProducts, productImageRows, selectedSizeGuide] = await Promise.all([
 		relatedConditions.length > 0
 			? db
 					.select()
@@ -112,6 +149,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 			.from(productImages)
 			.where(eq(productImages.productId, p.id))
 			.orderBy(asc(productImages.sortOrder)),
+		p.sizeGuideId
+			? db
+					.select()
+					.from(sizeGuides)
+					.where(eq(sizeGuides.id, p.sizeGuideId))
+					.limit(1)
+					.then((rows: Array<typeof sizeGuides.$inferSelect>) => rows[0] || null)
+			: Promise.resolve(null),
 	])
 
 	const allImages = [
@@ -120,6 +165,17 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 	]
 
 	const whatsapp = siteSettings?.whatsappNumber?.replace(/[^0-9]/g, '') || ''
+	const parsedSizeGuide = selectedSizeGuide
+		? {
+				name: selectedSizeGuide.name,
+				unit: selectedSizeGuide.unit || 'in',
+				note:
+					selectedSizeGuide.note ||
+					'For the best fit, we recommend comparing with a garment you already own.',
+				columns: parseJsonStringArray(selectedSizeGuide.columnsJson),
+				rows: parseSizeRows(selectedSizeGuide.rowsJson),
+			}
+		: null
 	const productPath = `/products/${p.slug ?? p.id}`
 	const productAbsoluteUrl = `${siteUrl}${productPath}`
 
@@ -236,7 +292,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 								</p>
 							</div>
 
-							<SizeGuide whatsappNumber={whatsapp} />
+							<SizeGuide whatsappNumber={whatsapp} guide={parsedSizeGuide} />
 						</div>
 					</div>
 				</div>

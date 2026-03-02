@@ -45,9 +45,13 @@ export default function DashboardClient({
 	initialCollections,
 	initialHeroes,
 	initialCategories,
+	initialSizeGuides,
 	initialSettings,
 }: any) {
 	const router = useRouter()
+	const sizeGuideNameById = Object.fromEntries(
+		(initialSizeGuides || []).map((guide: any) => [guide.id, guide.name]),
+	)
 	const [settingsForm, setSettingsForm] = useState(initialSettings)
 	const [dlg, setDlg] = useState({ open: false, type: '', mode: 'add', data: null as any })
 	const [pendingDelete, setPendingDelete] = useState<{
@@ -189,6 +193,13 @@ export default function DashboardClient({
 						>
 							Settings
 						</TabsTrigger>
+						<TabsTrigger
+							data-testid="tab-size-guides"
+							value="size-guides"
+							className="rounded-none text-xs uppercase tracking-widest"
+						>
+							Size Guides
+						</TabsTrigger>
 					</TabsList>
 
 					{/* Products */}
@@ -234,6 +245,10 @@ export default function DashboardClient({
 												<h3 className="font-heading text-sm text-stone-900 truncate">{p.name}</h3>
 												<p className="text-xs text-stone-400 mt-1">
 													{p.category} &middot; {p.currency} {p.price}
+												</p>
+												<p className="text-[11px] text-stone-500 mt-1">
+													Size Guide:{' '}
+													{p.sizeGuideId ? sizeGuideNameById[p.sizeGuideId] || 'Unknown' : 'None'}
 												</p>
 												<div className="flex gap-1 mt-2">
 													{p.isNew && (
@@ -614,6 +629,81 @@ export default function DashboardClient({
 							</form>
 						</motion.div>
 					</TabsContent>
+
+					{/* Size Guides */}
+					<TabsContent value="size-guides">
+						<motion.div
+							initial={{ opacity: 0, y: 8 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.2 }}
+						>
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="font-heading text-xl text-stone-900">
+									Size Guides ({initialSizeGuides.length})
+								</h2>
+								<Button
+									data-testid="add-size-guide-btn"
+									onClick={() =>
+										setDlg({ open: true, type: 'size-guides', mode: 'add', data: null })
+									}
+									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
+								>
+									<Plus size={14} className="mr-2" /> Add Size Guide
+								</Button>
+							</div>
+
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								{initialSizeGuides.map((guide: any) => (
+									<div
+										key={guide.id}
+										className="bg-white border border-stone-200 p-4"
+										data-testid={`admin-size-guide-${guide.id}`}
+									>
+										<div className="flex items-start justify-between gap-3">
+											<div>
+												<h3 className="font-heading text-sm text-stone-900">{guide.name}</h3>
+												<p className="text-xs text-stone-400 mt-1">
+													{guide.productType || 'General'} &middot; {guide.unit}
+												</p>
+											</div>
+											{guide.isActive ? (
+												<span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5">
+													ACTIVE
+												</span>
+											) : null}
+										</div>
+										<p className="text-xs text-stone-500 mt-3 line-clamp-2">
+											{guide.note || 'No notes added'}
+										</p>
+										<div className="flex gap-2 mt-4 pt-3 border-t border-stone-100">
+											<Button
+												data-testid={`edit-size-guide-${guide.id}`}
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													setDlg({ open: true, type: 'size-guides', mode: 'edit', data: guide })
+												}
+												className="rounded-none text-xs flex-1"
+											>
+												<Pencil size={12} className="mr-1" /> Edit
+											</Button>
+											<Button
+												data-testid={`delete-size-guide-${guide.id}`}
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													openDeleteConfirmation('size-guides', guide.id, guide.name || 'this size guide')
+												}
+												className="rounded-none text-xs text-red-600 hover:bg-red-50"
+											>
+												<Trash2 size={12} />
+											</Button>
+										</div>
+									</div>
+								))}
+							</div>
+						</motion.div>
+					</TabsContent>
 				</Tabs>
 			</div>
 
@@ -622,6 +712,7 @@ export default function DashboardClient({
 				setDlg={setDlg}
 				collections={initialCollections}
 				categories={initialCategories}
+				sizeGuides={initialSizeGuides}
 			/>
 
 			<ConfirmDialog
@@ -638,7 +729,7 @@ export default function DashboardClient({
 	)
 }
 
-function ItemDialog({ dlg, setDlg, collections, categories }: any) {
+function ItemDialog({ dlg, setDlg, collections, categories, sizeGuides }: any) {
 	const { open, type, mode, data } = dlg
 	const [form, setForm] = useState<any>(data || {})
 	const [errors, setErrors] = useState<Record<string, string>>({})
@@ -673,6 +764,28 @@ function ItemDialog({ dlg, setDlg, collections, categories }: any) {
 		if (type === 'categories') {
 			if (!form.name?.trim()) nextErrors.name = 'Category name is required.'
 			if (!form.slug?.trim()) nextErrors.slug = 'Category slug is required.'
+		}
+
+		if (type === 'size-guides') {
+			if (!form.name?.trim()) nextErrors.name = 'Size guide name is required.'
+
+			try {
+				const cols = JSON.parse(form.columnsJson || '[]')
+				if (!Array.isArray(cols)) {
+					nextErrors.columnsJson = 'Columns JSON must be an array of labels.'
+				}
+			} catch {
+				nextErrors.columnsJson = 'Columns JSON must be valid JSON.'
+			}
+
+			try {
+				const rows = JSON.parse(form.rowsJson || '[]')
+				if (!Array.isArray(rows)) {
+					nextErrors.rowsJson = 'Rows JSON must be an array.'
+				}
+			} catch {
+				nextErrors.rowsJson = 'Rows JSON must be valid JSON.'
+			}
 		}
 
 		setErrors(nextErrors)
@@ -774,6 +887,23 @@ function ItemDialog({ dlg, setDlg, collections, categories }: any) {
 									{col.name}
 								</option>
 							))}
+						</select>
+					</Field>
+					<Field label="Size Guide Template">
+						<select
+							data-testid="dlg-size-guide"
+							value={form.sizeGuideId || ''}
+							onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
+							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+						>
+							<option value="">No size guide</option>
+							{sizeGuides
+								.filter((guide: any) => guide.isActive)
+								.map((guide: any) => (
+									<option key={guide.id} value={guide.id}>
+										{guide.name}
+									</option>
+								))}
 						</select>
 					</Field>
 					<ImageUpload
@@ -935,6 +1065,93 @@ function ItemDialog({ dlg, setDlg, collections, categories }: any) {
 				</div>
 			)
 		}
+		if (type === 'size-guides') {
+			return (
+				<div className="space-y-4">
+					<Field label="Template Name">
+						<Input
+							data-testid="dlg-size-guide-name"
+							value={form.name || ''}
+							onChange={(e) => setForm({ ...form, name: e.target.value })}
+							aria-invalid={Boolean(errors.name)}
+							className="rounded-none"
+						/>
+						{errors.name ? <p className="text-xs text-red-600">{errors.name}</p> : null}
+					</Field>
+
+					<div className="grid grid-cols-2 gap-4">
+						<Field label="Product Type">
+							<Input
+								data-testid="dlg-size-guide-product-type"
+								value={form.productType || ''}
+								onChange={(e) => setForm({ ...form, productType: e.target.value })}
+								className="rounded-none"
+								placeholder="e.g. Kurta, Sherwani"
+							/>
+						</Field>
+						<Field label="Unit">
+							<select
+								data-testid="dlg-size-guide-unit"
+								value={form.unit || 'in'}
+								onChange={(e) => setForm({ ...form, unit: e.target.value })}
+								className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+							>
+								<option value="in">in</option>
+								<option value="cm">cm</option>
+							</select>
+						</Field>
+					</div>
+
+					<Field label="Measurement Note">
+						<Textarea
+							data-testid="dlg-size-guide-note"
+							value={form.note || ''}
+							onChange={(e) => setForm({ ...form, note: e.target.value })}
+							className="rounded-none"
+							rows={2}
+						/>
+					</Field>
+
+					<Field label="Columns JSON (array of labels)">
+						<Textarea
+							data-testid="dlg-size-guide-columns"
+							value={form.columnsJson || '["Bust","Waist","Hip","Length"]'}
+							onChange={(e) => setForm({ ...form, columnsJson: e.target.value })}
+							aria-invalid={Boolean(errors.columnsJson)}
+							className="rounded-none font-mono text-xs"
+							rows={3}
+						/>
+						{errors.columnsJson ? (
+							<p className="text-xs text-red-600">{errors.columnsJson}</p>
+						) : null}
+					</Field>
+
+					<Field label="Rows JSON (array of { size, values[] })">
+						<Textarea
+							data-testid="dlg-size-guide-rows"
+							value={
+								form.rowsJson ||
+								'[{"size":"XS","values":["32","26","35","38"]},{"size":"S","values":["34","28","37","39"]}]'
+							}
+							onChange={(e) => setForm({ ...form, rowsJson: e.target.value })}
+							aria-invalid={Boolean(errors.rowsJson)}
+							className="rounded-none font-mono text-xs"
+							rows={5}
+						/>
+						{errors.rowsJson ? <p className="text-xs text-red-600">{errors.rowsJson}</p> : null}
+					</Field>
+
+					<div className="flex items-center gap-2">
+						<Switch
+							data-testid="dlg-size-guide-active"
+							checked={form.isActive ?? true}
+							onCheckedChange={(v) => setForm({ ...form, isActive: v })}
+						/>
+						<Label className="text-xs">Active</Label>
+					</div>
+				</div>
+			)
+		}
 		return null
 	}
 
@@ -945,7 +1162,9 @@ function ItemDialog({ dlg, setDlg, collections, categories }: any) {
 				? 'Product'
 				: type === 'categories'
 					? 'Category'
-					: 'Collection'
+					: type === 'size-guides'
+						? 'Size Guide'
+						: 'Collection'
 
 	return (
 		<Dialog open={open} onOpenChange={(v) => setDlg({ ...dlg, open: v })}>

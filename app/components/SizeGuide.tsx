@@ -6,17 +6,44 @@ import RulerIcon from 'lucide-react/dist/esm/icons/ruler'
 import ChevronDownIcon from 'lucide-react/dist/esm/icons/chevron-down'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 
-const SIZE_DATA = [
-	{ size: 'XS', bust: '32', waist: '26', hip: '35', length: '38' },
-	{ size: 'S', bust: '34', waist: '28', hip: '37', length: '39' },
-	{ size: 'M', bust: '36', waist: '30', hip: '39', length: '40' },
-	{ size: 'L', bust: '38', waist: '32', hip: '41', length: '41' },
-	{ size: 'XL', bust: '40', waist: '34', hip: '43', length: '42' },
-	{ size: 'XXL', bust: '42', waist: '36', hip: '45', length: '43' },
-] as const
+type SizeGuideRow = {
+	size: string
+	values: string[]
+}
 
-export default function SizeGuide({ whatsappNumber }: { whatsappNumber: string }) {
+type SizeGuideData = {
+	name: string
+	unit: string
+	note: string
+	columns: string[]
+	rows: SizeGuideRow[]
+}
+
+const FALLBACK_SIZE_GUIDE: SizeGuideData = {
+	name: 'General Size Guide',
+	unit: 'in',
+	note:
+		'All measurements in inches. For the best fit, we recommend comparing with a garment you already own.',
+	columns: ['Bust', 'Waist', 'Hip', 'Length'],
+	rows: [
+		{ size: 'XS', values: ['32', '26', '35', '38'] },
+		{ size: 'S', values: ['34', '28', '37', '39'] },
+		{ size: 'M', values: ['36', '30', '39', '40'] },
+		{ size: 'L', values: ['38', '32', '41', '41'] },
+		{ size: 'XL', values: ['40', '34', '43', '42'] },
+		{ size: 'XXL', values: ['42', '36', '45', '43'] },
+	],
+}
+
+export default function SizeGuide({
+	whatsappNumber,
+	guide,
+}: {
+	whatsappNumber: string
+	guide?: SizeGuideData | null
+}) {
 	const [open, setOpen] = useState(false)
+	const effectiveGuide = guide && guide.rows.length > 0 ? guide : FALLBACK_SIZE_GUIDE
 
 	return (
 		<div className="border border-stone-200 mt-8">
@@ -47,8 +74,8 @@ export default function SizeGuide({ whatsappNumber }: { whatsappNumber: string }
 					>
 						<div className="px-5 pb-5 border-t border-stone-100">
 							<p className="text-xs text-stone-500 mt-4 mb-4">
-								All measurements in inches. For the best fit, we recommend comparing with a garment
-								you already own.
+								{effectiveGuide.note ||
+									'For the best fit, we recommend comparing with a garment you already own.'}
 							</p>
 
 							<div className="overflow-x-auto">
@@ -58,28 +85,25 @@ export default function SizeGuide({ whatsappNumber }: { whatsappNumber: string }
 											<th className="py-2 pr-4 text-left text-xs uppercase tracking-widest text-stone-400 font-medium">
 												Size
 											</th>
-											<th className="py-2 px-4 text-left text-xs uppercase tracking-widest text-stone-400 font-medium">
-												Bust
-											</th>
-											<th className="py-2 px-4 text-left text-xs uppercase tracking-widest text-stone-400 font-medium">
-												Waist
-											</th>
-											<th className="py-2 px-4 text-left text-xs uppercase tracking-widest text-stone-400 font-medium">
-												Hip
-											</th>
-											<th className="py-2 pl-4 text-left text-xs uppercase tracking-widest text-stone-400 font-medium">
-												Length
-											</th>
+											{effectiveGuide.columns.map((column) => (
+												<th
+													key={column}
+													className="py-2 px-4 text-left text-xs uppercase tracking-widest text-stone-400 font-medium"
+												>
+													{column}
+												</th>
+											))}
 										</tr>
 									</thead>
 									<tbody>
-										{SIZE_DATA.map((row) => (
+										{effectiveGuide.rows.map((row) => (
 											<tr key={row.size} className="border-b border-stone-100 last:border-0">
 												<td className="py-2.5 pr-4 font-medium text-stone-900">{row.size}</td>
-												<td className="py-2.5 px-4 text-stone-500">{row.bust}&quot;</td>
-												<td className="py-2.5 px-4 text-stone-500">{row.waist}&quot;</td>
-												<td className="py-2.5 px-4 text-stone-500">{row.hip}&quot;</td>
-												<td className="py-2.5 pl-4 text-stone-500">{row.length}&quot;</td>
+												{effectiveGuide.columns.map((column, columnIndex) => (
+													<td key={`${row.size}-${column}`} className="py-2.5 px-4 text-stone-500">
+														{row.values[columnIndex] || '-'} {effectiveGuide.unit}
+													</td>
+												))}
 											</tr>
 										))}
 									</tbody>

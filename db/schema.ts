@@ -17,6 +17,18 @@ export const collections = pgTable('collections', {
 	createdAt: text('created_at').notNull(),
 })
 
+export const sizeGuides = pgTable('size_guides', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	productType: text('product_type').default(''),
+	unit: text('unit').notNull().default('in'),
+	note: text('note').default(''),
+	columnsJson: text('columns_json').notNull().default('[]'),
+	rowsJson: text('rows_json').notNull().default('[]'),
+	isActive: boolean('is_active').notNull().default(true),
+	createdAt: text('created_at').notNull(),
+})
+
 export const products = pgTable('products', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
@@ -29,6 +41,7 @@ export const products = pgTable('products', {
 	isNew: boolean('is_new').default(true),
 	isFeatured: boolean('is_featured').default(false),
 	collectionId: text('collection_id').references(() => collections.id),
+	sizeGuideId: text('size_guide_id').references(() => sizeGuides.id, { onDelete: 'set null' }),
 	createdAt: text('created_at').notNull(),
 })
 
