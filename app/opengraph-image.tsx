@@ -25,7 +25,16 @@ export default function Image() {
 			>
 				<div style={{ fontSize: 28, letterSpacing: 6, opacity: 0.85 }}>SOUTH ASIAN FASHION</div>
 				<div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-					<div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1.05, maxWidth: 980 }}>
+					<div
+						style={{
+							display: 'flex',
+							flexDirection: 'column',
+							fontSize: 76,
+							fontWeight: 700,
+							lineHeight: 1.05,
+							maxWidth: 980,
+						}}
+					>
 						Curated Luxury.
 						<br />
 						Culturally Rooted.
