@@ -33,7 +33,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${manrope.variable} ${cormorant.variable}`}>
+    <html
+      lang="en"
+      className={`${playfair.variable} ${manrope.variable} ${cormorant.variable}`}
+      suppressHydrationWarning
+    >
       <body className="antialiased min-h-screen font-body overflow-x-hidden">
         <ClientWrapper>{children}</ClientWrapper>
       </body>

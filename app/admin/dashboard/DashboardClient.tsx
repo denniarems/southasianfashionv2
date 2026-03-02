@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -150,9 +151,11 @@ export default function DashboardClient({
                 >
                   <div className="flex gap-4">
                     {p.imageUrl ? (
-                      <img
+                      <Image
                         src={p.imageUrl}
                         alt={p.name}
+                        width={80}
+                        height={80}
                         className="w-20 h-20 object-cover flex-shrink-0"
                       />
                     ) : (
@@ -226,9 +229,11 @@ export default function DashboardClient({
                   data-testid={`admin-collection-${c.id}`}
                 >
                   {c.imageUrl && (
-                    <img
+                    <Image
                       src={c.imageUrl}
                       alt={c.name}
+                      width={96}
+                      height={96}
                       className="w-24 h-24 object-cover flex-shrink-0"
                     />
                   )}
@@ -285,9 +290,11 @@ export default function DashboardClient({
                   data-testid={`admin-hero-${h.id}`}
                 >
                   {h.imageUrl && (
-                    <img
+                    <Image
                       src={h.imageUrl}
                       alt={h.title}
+                      width={128}
+                      height={80}
                       className="w-32 h-20 object-cover flex-shrink-0"
                     />
                   )}

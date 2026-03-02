@@ -7,11 +7,13 @@ import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 
-export default async function CollectionDetailPage({ params }: { params: { slug: string } }) {
+export default async function CollectionDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const db = getDb();
+  const { slug } = await params;
+  const currentYear = new Date().getFullYear();
 
   const [collectionQuery, allCollections, [siteSettings]] = await Promise.all([
-    db.select().from(collections).where(eq(collections.slug, params.slug)).limit(1),
+    db.select().from(collections).where(eq(collections.slug, slug)).limit(1),
     db.select().from(collections).orderBy(desc(collections.createdAt)),
     db.select().from(settings).limit(1),
   ]);
@@ -80,7 +82,7 @@ export default async function CollectionDetailPage({ params }: { params: { slug:
         </div>
       </main>
 
-      <Footer settings={siteSettings} />
+      <Footer settings={siteSettings} year={currentYear} />
     </>
   );
 }

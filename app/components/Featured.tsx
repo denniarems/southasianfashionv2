@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 
@@ -40,7 +41,7 @@ export default function Featured({
             className="relative overflow-hidden aspect-[3/4]"
           >
             {item.imageUrl && (
-              <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+              <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
             )}
           </motion.div>
 

@@ -9,7 +9,7 @@ interface Settings {
   facebookUrl?: string | null;
 }
 
-export default function Footer({ settings }: { settings?: Settings }) {
+export default function Footer({ settings, year }: { settings?: Settings; year: number }) {
   return (
     <footer id="contact" data-testid="footer" className="bg-stone-900 text-white py-24 md:py-32">
       <div className="max-w-[1800px] mx-auto px-6 md:px-12 lg:px-24">
@@ -97,7 +97,7 @@ export default function Footer({ settings }: { settings?: Settings }) {
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-white/20 tracking-wider">
-            &copy; {new Date().getFullYear()} {settings?.brandName || "SouthAsianFashion"}. All
+            &copy; {year} {settings?.brandName || "SouthAsianFashion"}. All
             rights reserved.
           </p>
           <p className="text-xs text-white/15 tracking-wider font-accent italic">

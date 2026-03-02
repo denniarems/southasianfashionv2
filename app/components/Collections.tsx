@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
@@ -65,9 +66,10 @@ export default function Collections({ collections }: { collections: Collection[]
                 data-testid={`collection-link-${c.slug}`}
               />
               {c.imageUrl && (
-                <img
+                <Image
                   src={c.imageUrl}
                   alt={c.name}
+                  fill
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               )}

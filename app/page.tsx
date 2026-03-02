@@ -28,6 +28,8 @@ export default async function Home() {
       db.select().from(settings).limit(1),
     ]);
 
+  const currentYear = new Date().getFullYear();
+
   return (
     <>
       <Navbar settings={siteSettings} collections={allCollections} transparent={true} />
@@ -39,7 +41,7 @@ export default async function Home() {
         <NewArrivals products={newArrivalProducts} settings={siteSettings} />
       </main>
 
-      <Footer settings={siteSettings} />
+      <Footer settings={siteSettings} year={currentYear} />
       <WhatsAppButton settings={siteSettings} />
     </>
   );

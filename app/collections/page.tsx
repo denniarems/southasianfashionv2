@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 
 export default async function CollectionsPage() {
   const db = getDb();
+  const currentYear = new Date().getFullYear();
 
   const [allCollections, [siteSettings]] = await Promise.all([
     db.select().from(collections).orderBy(desc(collections.createdAt)),
@@ -55,7 +56,7 @@ export default async function CollectionsPage() {
         </div>
       </main>
 
-      <Footer settings={siteSettings} />
+      <Footer settings={siteSettings} year={currentYear} />
     </>
   );
 }

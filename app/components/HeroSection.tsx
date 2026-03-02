@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 interface HeroData {
@@ -19,7 +20,7 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
       className="relative min-h-screen flex items-end overflow-hidden"
     >
       <div className="absolute inset-0">
-        {hero.imageUrl && <img src={hero.imageUrl} alt="" className="w-full h-full object-cover" />}
+        {hero.imageUrl && <Image src={hero.imageUrl} alt="" fill className="object-cover" />}
         <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/30 to-stone-900/10" />
       </div>
 

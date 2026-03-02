@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 
@@ -68,10 +69,11 @@ export default function NewArrivals({
             >
               <div className="relative overflow-hidden aspect-[3/4] mb-6">
                 {p.imageUrl && (
-                  <img
+                  <Image
                     src={p.imageUrl}
                     alt={p.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 )}
                 <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500" />

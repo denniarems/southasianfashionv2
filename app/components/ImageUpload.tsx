@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Upload, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -47,14 +48,7 @@ export default function ImageUpload({ value, onChange, label = "Image" }: ImageU
   return (
     <div className="space-y-3" data-testid="image-upload">
       <Label className="text-xs uppercase tracking-widest text-stone-500">{label}</Label>
-      <div className="flex gap-2">
-        <Input
-          data-testid="image-url-input"
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Paste URL or upload file"
-          className="rounded-none flex-1"
-        />
+      <div>
         <Button
           type="button"
           variant="outline"
@@ -63,15 +57,23 @@ export default function ImageUpload({ value, onChange, label = "Image" }: ImageU
           className="rounded-none px-4"
           data-testid="image-upload-btn"
         >
-          {uploading ? "..." : <Upload size={14} />}
+          {uploading ? (
+            "..."
+          ) : (
+            <>
+              <Upload size={14} className="mr-2" /> Upload File
+            </>
+          )}
         </Button>
       </div>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       {value && (
         <div className="relative inline-block">
-          <img
+          <Image
             src={value}
             alt="Preview"
+            width={96}
+            height={96}
             className="h-24 w-auto object-cover border border-stone-200"
           />
           <button

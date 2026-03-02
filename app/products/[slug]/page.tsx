@@ -2,15 +2,18 @@ import { getDb } from "@/db";
 import { products, settings, collections } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 
-export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const db = getDb();
+  const { slug } = await params;
+  const currentYear = new Date().getFullYear();
 
   const [productQuery, allCollections, [siteSettings]] = await Promise.all([
-    db.select().from(products).where(eq(products.id, params.slug)).limit(1),
+    db.select().from(products).where(eq(products.id, slug)).limit(1),
     db.select().from(collections).orderBy(desc(collections.createdAt)),
     db.select().from(settings).limit(1),
   ]);
@@ -30,7 +33,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             <div className="flex-1">
               <div className="aspect-[3/4] w-full bg-stone-100 overflow-hidden">
                 {p.imageUrl ? (
-                  <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                  <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-stone-400 font-accent italic">
                     No Image
@@ -84,7 +87,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
         </div>
       </main>
 
-      <Footer settings={siteSettings} />
+      <Footer settings={siteSettings} year={currentYear} />
     </>
   );
 }

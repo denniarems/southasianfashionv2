@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
@@ -116,9 +117,11 @@ export default function Navbar({
                             data-testid={`mega-menu-${c.slug}`}
                           >
                             {c.imageUrl && (
-                              <img
+                              <Image
                                 src={c.imageUrl}
                                 alt={c.name}
+                                width={56}
+                                height={56}
                                 className="w-14 h-14 object-cover flex-shrink-0"
                               />
                             )}
