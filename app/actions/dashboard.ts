@@ -1,11 +1,27 @@
 'use server'
 
 import { getDb } from '@/db'
-import { products, collections, heroBanners, categories, settings } from '@/db/schema'
-import { and, eq, ne } from 'drizzle-orm'
+import {
+	products,
+	collections,
+	heroBanners,
+	categories,
+	settings,
+	productImages,
+} from '@/db/schema'
+import { and, asc, eq, ne } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { slugify } from '@/lib/slug'
 import { deleteVercelBlobByUrl } from '@/lib/vercel-blob'
+import crypto from 'crypto'
+
+function isMissingProductImagesTableError(error: unknown): boolean {
+	const message = error instanceof Error ? error.message : String(error)
+	return (
+		message.includes('relation "product_images" does not exist') ||
+		message.includes('relation "product_images"')
+	)
+}
 
 async function generateUniqueProductSlug(
 	db: ReturnType<typeof getDb>,
@@ -42,7 +58,30 @@ export async function deleteItem(type: string, id: string) {
 					.where(eq(products.id, id))
 					.limit(1)
 
+					let additionalImgs: Array<{ imageUrl: string }> = []
+					try {
+						additionalImgs = await db
+							.select({ imageUrl: productImages.imageUrl })
+							.from(productImages)
+							.where(eq(productImages.productId, id))
+					} catch (error) {
+						if (!isMissingProductImagesTableError(error)) {
+							throw error
+						}
+					}
+
+				for (const img of additionalImgs) {
+					await deleteVercelBlobByUrl(img.imageUrl, 'product additional image deletion')
+				}
+
 				await deleteVercelBlobByUrl(existing[0]?.imageUrl, 'product deletion')
+					try {
+						await db.delete(productImages).where(eq(productImages.productId, id))
+					} catch (error) {
+						if (!isMissingProductImagesTableError(error)) {
+							throw error
+						}
+					}
 				await db.delete(products).where(eq(products.id, id))
 				break
 			}
@@ -98,14 +137,38 @@ export async function saveSettings(data: any) {
 	}
 }
 
+export async function fetchProductImagesForAdmin(): Promise<Record<string, string[]>> {
+	const db = getDb()
+	let allImages: Awaited<ReturnType<typeof db.select>> = []
+
+	try {
+		allImages = await db.select().from(productImages).orderBy(asc(productImages.sortOrder))
+	} catch (error) {
+		if (isMissingProductImagesTableError(error)) {
+			return {}
+		}
+		throw error
+	}
+
+	const map: Record<string, string[]> = {}
+	for (const img of allImages) {
+		if (!map[img.productId]) {
+			map[img.productId] = []
+		}
+		map[img.productId].push(img.imageUrl)
+	}
+	return map
+}
+
 export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 	const db = getDb()
 
 	try {
 		switch (type) {
-			case 'products':
+			case 'products': {
+				const { additionalImages, ...productFields } = data
 				const productData = {
-					...data,
+					...productFields,
 					slug: await generateUniqueProductSlug(
 						db,
 						data?.name || 'product',
@@ -118,7 +181,44 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 				} else {
 					await db.update(products).set(productData).where(eq(products.id, data.id))
 				}
+
+				if (Array.isArray(additionalImages)) {
+					const productId = productData.id || data.id
+
+					try {
+						const existingImgs = await db
+							.select({ imageUrl: productImages.imageUrl })
+							.from(productImages)
+							.where(eq(productImages.productId, productId))
+
+						const newUrlSet = new Set(additionalImages as string[])
+						for (const img of existingImgs) {
+							if (!newUrlSet.has(img.imageUrl)) {
+								await deleteVercelBlobByUrl(img.imageUrl, 'product image removed')
+							}
+						}
+
+						await db.delete(productImages).where(eq(productImages.productId, productId))
+
+						if (additionalImages.length > 0) {
+							await db.insert(productImages).values(
+								(additionalImages as string[]).map((url, i) => ({
+									id: crypto.randomUUID(),
+									productId,
+									imageUrl: url,
+									sortOrder: i,
+									createdAt: new Date().toISOString(),
+								})),
+							)
+						}
+					} catch (error) {
+						if (!isMissingProductImagesTableError(error)) {
+							throw error
+						}
+					}
+				}
 				break
+			}
 			case 'collections':
 				if (mode === 'add') {
 					await db.insert(collections).values(data)

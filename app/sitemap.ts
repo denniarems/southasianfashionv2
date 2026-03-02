@@ -56,10 +56,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 	const collectionRoutes: MetadataRoute.Sitemap = allCollections.map(
 		(collection: CollectionSitemapEntry) => ({
-		url: `${siteUrl}/collections/${collection.slug}`,
-		lastModified: new Date(collection.createdAt),
-		changeFrequency: 'weekly',
-		priority: 0.7,
+			url: `${siteUrl}/collections/${collection.slug}`,
+			lastModified: new Date(collection.createdAt),
+			changeFrequency: 'weekly',
+			priority: 0.7,
 		}),
 	)
 

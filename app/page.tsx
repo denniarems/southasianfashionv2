@@ -10,6 +10,7 @@ import Featured from './components/Featured'
 import NewArrivals from './components/NewArrivals'
 import Footer from './components/Footer'
 import WhatsAppButton from './components/WhatsAppButton'
+import { fetchProductCategories } from './actions/products'
 
 export const metadata: Metadata = {
 	title: 'Home',
@@ -24,25 +25,37 @@ export default async function Home() {
 	const db = getDb()
 
 	// Parallel fetch for homepage data
-	const [[heroData], allCollections, featuredProducts, newArrivalProducts, [siteSettings]] =
-		await Promise.all([
-			db.select().from(heroBanners).where(eq(heroBanners.isActive, true)).limit(1),
-			db.select().from(collections).orderBy(desc(collections.createdAt)),
-			db.select().from(products).where(eq(products.isFeatured, true)).limit(1),
-			db
-				.select()
-				.from(products)
-				.where(eq(products.isNew, true))
-				.orderBy(desc(products.createdAt))
-				.limit(3),
-			db.select().from(settings).limit(1),
-		])
+	const [
+		[heroData],
+		allCollections,
+		featuredProducts,
+		newArrivalProducts,
+		[siteSettings],
+		productCategories,
+	] = await Promise.all([
+		db.select().from(heroBanners).where(eq(heroBanners.isActive, true)).limit(1),
+		db.select().from(collections).orderBy(desc(collections.createdAt)),
+		db.select().from(products).where(eq(products.isFeatured, true)).limit(1),
+		db
+			.select()
+			.from(products)
+			.where(eq(products.isNew, true))
+			.orderBy(desc(products.createdAt))
+			.limit(3),
+		db.select().from(settings).limit(1),
+		fetchProductCategories(),
+	])
 
 	const currentYear = new Date().getFullYear()
 
 	return (
 		<>
-			<Navbar settings={siteSettings} collections={allCollections} transparent={true} />
+			<Navbar
+				settings={siteSettings}
+				collections={allCollections}
+				categories={productCategories}
+				transparent={true}
+			/>
 
 			<main>
 				<HeroSection hero={heroData} />

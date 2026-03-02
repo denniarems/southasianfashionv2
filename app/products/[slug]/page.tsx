@@ -1,13 +1,17 @@
 import { getDb } from '@/db'
-import { products, settings, collections } from '@/db/schema'
-import { desc, eq, or } from 'drizzle-orm'
+import { products, settings, collections, productImages } from '@/db/schema'
+import { and, asc, desc, eq, ne, or } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import Breadcrumb from '../../components/Breadcrumb'
+import SizeGuide from '../../components/SizeGuide'
+import RelatedProducts from '../../components/RelatedProducts'
+import ProductImageGallery from '../../components/ProductImageGallery'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
-import { LoadingImage } from '@/components/ui/loading-image'
+import { fetchProductCategories } from '../../actions/products'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -79,14 +83,40 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 	const { slug } = await params
 	const currentYear = new Date().getFullYear()
 
-	const [productQuery, allCollections, [siteSettings]] = await Promise.all([
+	const [productQuery, allCollections, [siteSettings], productCategories] = await Promise.all([
 		getProductBySlug(slug).then((product) => (product ? [product] : [])),
 		db.select().from(collections).orderBy(desc(collections.createdAt)),
 		db.select().from(settings).limit(1),
+		fetchProductCategories(),
 	])
 
 	const p = productQuery[0]
 	if (!p) return notFound()
+
+	const relatedConditions = []
+	if (p.category) relatedConditions.push(eq(products.category, p.category))
+	if (p.collectionId) relatedConditions.push(eq(products.collectionId, p.collectionId))
+
+	const [relatedProducts, productImageRows] = await Promise.all([
+		relatedConditions.length > 0
+			? db
+					.select()
+					.from(products)
+					.where(and(ne(products.id, p.id), or(...relatedConditions)))
+					.orderBy(desc(products.createdAt))
+					.limit(4)
+			: [],
+		db
+			.select()
+			.from(productImages)
+			.where(eq(productImages.productId, p.id))
+			.orderBy(asc(productImages.sortOrder)),
+	])
+
+	const allImages = [
+		...(p.imageUrl ? [p.imageUrl] : []),
+		...productImageRows.map((img: typeof productImages.$inferSelect) => img.imageUrl),
+	]
 
 	const whatsapp = siteSettings?.whatsappNumber?.replace(/[^0-9]/g, '') || ''
 	const productPath = `/products/${p.slug ?? p.id}`
@@ -96,7 +126,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 		'@type': 'Product',
 		name: p.name,
 		description: p.description || '',
-		image: p.imageUrl ? [p.imageUrl] : [],
+		image: allImages.length > 0 ? allImages : [],
 		sku: p.id,
 		offers: {
 			'@type': 'Offer',
@@ -107,34 +137,41 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 		},
 	}
 
+	const collectionForBreadcrumb = p.collectionId
+		? allCollections.find((col: typeof collections.$inferSelect) => col.id === p.collectionId)
+		: null
+
+	const breadcrumbItems = collectionForBreadcrumb
+		? [
+				{ label: 'Collections', href: '/collections' },
+				{
+					label: collectionForBreadcrumb.name,
+					href: `/collections/${collectionForBreadcrumb.slug}`,
+				},
+				{ label: p.name },
+			]
+		: [{ label: 'Products', href: '/products' }, { label: p.name }]
+
 	return (
 		<>
 			<script
 				type="application/ld+json"
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
 			/>
-			<Navbar settings={siteSettings} collections={allCollections} transparent={false} />
+			<Navbar
+				settings={siteSettings}
+				collections={allCollections}
+				categories={productCategories}
+				transparent={false}
+			/>
 
 			<main className="pt-24 md:pt-28 pb-16 md:pb-24 min-h-screen bg-white">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+					<Breadcrumb items={breadcrumbItems} />
+
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-start">
 						<div className="w-full">
-							<div className="relative aspect-4/5 w-full bg-stone-100 overflow-hidden rounded-sm lg:sticky lg:top-28">
-								{p.imageUrl ? (
-									<LoadingImage
-										src={p.imageUrl}
-										alt={p.name}
-										fill
-										priority
-										sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 50vw"
-										className="object-cover"
-									/>
-								) : (
-									<div className="w-full h-full flex items-center justify-center text-stone-400 font-accent italic">
-										No Image
-									</div>
-								)}
-							</div>
+							<ProductImageGallery images={allImages} productName={p.name} />
 						</div>
 
 						<div className="pt-2 lg:pt-6">
@@ -189,9 +226,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 									<span className="w-1.5 h-1.5 bg-stone-300 rounded-full" /> Customization available
 								</p>
 							</div>
+
+							<SizeGuide whatsappNumber={whatsapp} />
 						</div>
 					</div>
 				</div>
+
+				<RelatedProducts products={relatedProducts} />
 			</main>
 
 			<Footer settings={siteSettings} year={currentYear} />

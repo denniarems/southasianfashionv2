@@ -55,9 +55,7 @@ export default function Collections({ collections }: { collections: Collection[]
 							variants={fadeUp}
 							data-testid={`collection-card-${c.id}`}
 							className={`group relative overflow-hidden cursor-pointer ${
-								i === 0
-									? 'md:row-span-2 min-h-100 md:min-h-150'
-									: 'min-h-70 md:min-h-72.5'
+								i === 0 ? 'md:row-span-2 min-h-100 md:min-h-150' : 'min-h-70 md:min-h-72.5'
 							}`}
 						>
 							<Link

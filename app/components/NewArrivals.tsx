@@ -79,9 +79,14 @@ export default function NewArrivals({
 										className="object-cover transition-transform duration-700 group-hover:scale-105"
 									/>
 								)}
-								<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500" />
+								<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
+								<Link
+									href={`/products/${p.slug ?? p.id}`}
+									className="absolute inset-0 z-10"
+									aria-label={`View ${p.name}`}
+								/>
 
-								<div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-500 p-4">
+								<div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-500 p-4 z-20">
 									<AddToCartButton
 										product={{
 											id: p.id,

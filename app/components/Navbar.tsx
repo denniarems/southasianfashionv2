@@ -24,6 +24,13 @@ interface Settings {
 	whatsappNumber?: string | null
 }
 
+interface NavbarProps {
+	settings?: Settings
+	collections: Collection[]
+	categories?: string[]
+	transparent?: boolean
+}
+
 const staticLinks = [
 	{ label: 'New Arrivals', href: '/#new-arrivals', isAnchor: true },
 	{ label: 'Featured', href: '/#featured', isAnchor: true },
@@ -32,16 +39,15 @@ const staticLinks = [
 export default function Navbar({
 	settings,
 	collections,
+	categories = [],
 	transparent = false,
-}: {
-	settings?: Settings
-	collections: Collection[]
-	transparent?: boolean
-}) {
+}: NavbarProps) {
 	const [scrolled, setScrolled] = useState(false)
 	const [menuOpen, setMenuOpen] = useState(false)
 	const [cartOpen, setCartOpen] = useState(false)
 	const [showMega, setShowMega] = useState(false)
+	const [showShop, setShowShop] = useState(false)
+	const [mobileShopOpen, setMobileShopOpen] = useState(false)
 	const { itemCount } = useCart()
 
 	const pathname = usePathname()
@@ -93,6 +99,55 @@ export default function Navbar({
 									{link.label}
 								</a>
 							))}
+
+							{categories.length > 0 && (
+								<div
+									className="relative"
+									onMouseEnter={() => setShowShop(true)}
+									onMouseLeave={() => setShowShop(false)}
+								>
+									<Link
+										href="/products"
+										data-testid="nav-link-shop"
+										className={`text-xs uppercase tracking-widest transition-colors duration-300 ${linkClass}`}
+									>
+										Shop
+									</Link>
+
+									<AnimatePresence>
+										{showShop && (
+											<motion.div
+												initial={{ opacity: 0, y: 8 }}
+												animate={{ opacity: 1, y: 0 }}
+												exit={{ opacity: 0, y: 8 }}
+												transition={{ duration: 0.2 }}
+												className="absolute top-full left-1/2 -translate-x-1/2 pt-6"
+											>
+												<div className="bg-white border border-stone-200 py-3 min-w-44 shadow-lg">
+													<Link
+														href="/products"
+														onClick={() => setShowShop(false)}
+														className="block px-5 py-2 text-xs uppercase tracking-widest text-stone-900 font-medium hover:bg-stone-50 hover:text-yellow-700 transition-colors"
+													>
+														All Products
+													</Link>
+													<div className="border-t border-stone-100 my-1" />
+													{categories.map((cat) => (
+														<Link
+															key={cat}
+															href={`/products?category=${encodeURIComponent(cat)}`}
+															onClick={() => setShowShop(false)}
+															className="block px-5 py-2 text-xs tracking-wider text-stone-500 hover:bg-stone-50 hover:text-yellow-700 transition-colors"
+														>
+															{cat}
+														</Link>
+													))}
+												</div>
+											</motion.div>
+										)}
+									</AnimatePresence>
+								</div>
+							)}
 
 							<div
 								className="relative"
@@ -224,6 +279,55 @@ export default function Navbar({
 								>
 									New Arrivals
 								</a>
+
+								{categories.length > 0 && (
+									<>
+										<button
+											type="button"
+											onClick={() => setMobileShopOpen(!mobileShopOpen)}
+											className="flex items-center justify-between w-full text-sm uppercase tracking-widest text-stone-700"
+										>
+											Shop
+											<motion.span
+												animate={{ rotate: mobileShopOpen ? 180 : 0 }}
+												transition={{ duration: 0.2 }}
+												className="text-stone-400"
+											>
+												▾
+											</motion.span>
+										</button>
+										<AnimatePresence>
+											{mobileShopOpen && (
+												<motion.div
+													initial={{ height: 0, opacity: 0 }}
+													animate={{ height: 'auto', opacity: 1 }}
+													exit={{ height: 0, opacity: 0 }}
+													transition={{ duration: 0.2 }}
+													className="overflow-hidden space-y-4"
+												>
+													<Link
+														href="/products"
+														onClick={() => setMenuOpen(false)}
+														className="block text-sm text-stone-500 pl-4"
+													>
+														All Products
+													</Link>
+													{categories.map((cat) => (
+														<Link
+															key={cat}
+															href={`/products?category=${encodeURIComponent(cat)}`}
+															onClick={() => setMenuOpen(false)}
+															className="block text-sm text-stone-400 pl-4"
+														>
+															{cat}
+														</Link>
+													))}
+												</motion.div>
+											)}
+										</AnimatePresence>
+									</>
+								)}
+
 								<Link
 									href="/collections"
 									onClick={() => setMenuOpen(false)}

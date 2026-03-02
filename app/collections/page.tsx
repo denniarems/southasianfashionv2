@@ -1,15 +1,18 @@
 import { getDb } from '@/db'
 import { settings, collections } from '@/db/schema'
+import PackageIcon from 'lucide-react/dist/esm/icons/package'
 import { desc } from 'drizzle-orm'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { LoadingImage } from '@/components/ui/loading-image'
+import { fetchProductCategories } from '../actions/products'
 
 export const metadata: Metadata = {
 	title: 'Collections',
-	description: 'Explore curated South Asian Fashion collections and discover pieces by story and style.',
+	description:
+		'Explore curated South Asian Fashion collections and discover pieces by story and style.',
 	alternates: {
 		canonical: '/collections',
 	},
@@ -19,14 +22,20 @@ export default async function CollectionsPage() {
 	const db = getDb()
 	const currentYear = new Date().getFullYear()
 
-	const [allCollections, [siteSettings]] = await Promise.all([
+	const [allCollections, [siteSettings], productCategories] = await Promise.all([
 		db.select().from(collections).orderBy(desc(collections.createdAt)),
 		db.select().from(settings).limit(1),
+		fetchProductCategories(),
 	])
 
 	return (
 		<>
-			<Navbar settings={siteSettings} collections={allCollections} transparent={false} />
+			<Navbar
+				settings={siteSettings}
+				collections={allCollections}
+				categories={productCategories}
+				transparent={false}
+			/>
 
 			<main className="pt-32 pb-24 min-h-screen bg-stone-50">
 				<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
@@ -40,7 +49,7 @@ export default async function CollectionsPage() {
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-						{allCollections.map((c: any) => (
+						{allCollections.map((c: typeof collections.$inferSelect) => (
 							<Link href={`/collections/${c.slug}`} key={c.id} className="group block">
 								<div className="relative overflow-hidden aspect-4/3 sm:aspect-video mb-6">
 									{c.imageUrl ? (
@@ -63,6 +72,24 @@ export default async function CollectionsPage() {
 							</Link>
 						))}
 					</div>
+					{allCollections.length === 0 && (
+						<div className="text-center py-24">
+							<div className="inline-flex items-center justify-center w-16 h-16 bg-stone-100 mb-6">
+								<PackageIcon size={28} className="text-stone-400" />
+							</div>
+							<p className="font-heading text-2xl text-stone-900 mb-3">Check back soon</p>
+							<p className="text-stone-500 text-sm mb-8 max-w-md mx-auto leading-relaxed">
+								We&apos;re curating beautiful new collections. In the meantime, explore our
+								products.
+							</p>
+							<Link
+								href="/products"
+								className="inline-block bg-stone-900 text-white px-8 py-3 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+							>
+								Shop All Products
+							</Link>
+						</div>
+					)}
 				</div>
 			</main>
 

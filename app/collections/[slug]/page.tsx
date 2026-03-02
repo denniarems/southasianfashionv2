@@ -6,12 +6,18 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import Breadcrumb from '../../components/Breadcrumb'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { LoadingImage } from '@/components/ui/loading-image'
+import { fetchProductCategories } from '../../actions/products'
 
 async function getCollectionBySlug(slug: string) {
 	const db = getDb()
-	const collectionQuery = await db.select().from(collections).where(eq(collections.slug, slug)).limit(1)
+	const collectionQuery = await db
+		.select()
+		.from(collections)
+		.where(eq(collections.slug, slug))
+		.limit(1)
 
 	return collectionQuery[0]
 }
@@ -37,7 +43,8 @@ export async function generateMetadata({
 	const collectionPath = `/collections/${collection.slug}`
 	const title = collection.name
 	const description =
-		collection.description?.trim() || `Explore the ${collection.name} collection from South Asian Fashion.`
+		collection.description?.trim() ||
+		`Explore the ${collection.name} collection from South Asian Fashion.`
 
 	return {
 		title,
@@ -77,16 +84,16 @@ export default async function CollectionDetailPage({
 	const { slug } = await params
 	const currentYear = new Date().getFullYear()
 
-	const [collectionQuery, allCollections, [siteSettings]] = await Promise.all([
+	const [collectionQuery, allCollections, [siteSettings], productCategories] = await Promise.all([
 		getCollectionBySlug(slug).then((collection) => (collection ? [collection] : [])),
 		db.select().from(collections).orderBy(desc(collections.createdAt)),
 		db.select().from(settings).limit(1),
+		fetchProductCategories(),
 	])
 
 	const c = collectionQuery[0]
 	if (!c) return notFound()
 
-	// Fetch products for this collection independently so we can parallelize the first wave
 	const collectionProducts = await db
 		.select()
 		.from(products)
@@ -95,10 +102,17 @@ export default async function CollectionDetailPage({
 
 	return (
 		<>
-			<Navbar settings={siteSettings} collections={allCollections} transparent={false} />
+			<Navbar
+				settings={siteSettings}
+				collections={allCollections}
+				categories={productCategories}
+				transparent={false}
+			/>
 
 			<main className="pt-32 pb-24 min-h-screen bg-stone-50">
 				<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
+					<Breadcrumb items={[{ label: 'Collections', href: '/collections' }, { label: c.name }]} />
+
 					<div className="mb-16 md:mb-24 text-center max-w-3xl mx-auto">
 						<h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-stone-900 tracking-tight mb-6">
 							{c.name}
@@ -109,9 +123,12 @@ export default async function CollectionDetailPage({
 					</div>
 
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-						{collectionProducts.map((p: any) => (
+						{collectionProducts.map((p: typeof products.$inferSelect) => (
 							<div key={p.id} className="group">
-								<div className="relative overflow-hidden aspect-3/4 mb-4">
+								<Link
+									href={`/products/${p.slug ?? p.id}`}
+									className="relative overflow-hidden aspect-3/4 mb-4 block"
+								>
 									{p.imageUrl ? (
 										<LoadingImage
 											src={p.imageUrl}
@@ -123,8 +140,8 @@ export default async function CollectionDetailPage({
 									) : (
 										<div className="w-full h-full bg-stone-200" />
 									)}
-									<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500" />
-								</div>
+									<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
+								</Link>
 								<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
 									{p.category}
 								</p>
@@ -154,8 +171,26 @@ export default async function CollectionDetailPage({
 					</div>
 
 					{collectionProducts.length === 0 && (
-						<div className="text-center py-20 text-stone-500 font-accent italic text-lg">
-							No pieces currently available in this collection.
+						<div className="text-center py-24">
+							<p className="font-heading text-2xl text-stone-900 mb-3">New pieces coming soon</p>
+							<p className="text-stone-500 text-sm mb-8 max-w-md mx-auto leading-relaxed">
+								We&apos;re curating beautiful pieces for this collection. Check back soon or explore
+								our other collections.
+							</p>
+							<div className="flex flex-col sm:flex-row gap-3 justify-center">
+								<Link
+									href="/collections"
+									className="inline-block bg-stone-900 text-white px-8 py-3 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+								>
+									Browse Collections
+								</Link>
+								<Link
+									href="/products"
+									className="inline-block border border-stone-300 text-stone-700 px-8 py-3 text-xs uppercase tracking-widest font-semibold hover:bg-stone-100 transition-colors duration-300"
+								>
+									Shop All Products
+								</Link>
+							</div>
 						</div>
 					)}
 				</div>

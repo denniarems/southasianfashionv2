@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
@@ -42,6 +43,11 @@ export default function Featured({
 						transition={{ duration: 0.8 }}
 						className="relative overflow-hidden aspect-3/4"
 					>
+						<Link
+							href={`/products/${item.slug ?? item.id}`}
+							className="absolute inset-0 z-10"
+							aria-label={`View ${item.name}`}
+						/>
 						{item.imageUrl && (
 							<LoadingImage
 								src={item.imageUrl}

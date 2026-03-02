@@ -20,7 +20,13 @@ import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Plus, Pencil, Trash2, LogOut, ArrowLeft, Loader2 } from 'lucide-react'
 import ImageUpload from '@/app/components/ImageUpload'
-import { deleteItem, saveItem, saveSettings } from '@/app/actions/dashboard'
+import MultiImageUpload from '@/app/components/MultiImageUpload'
+import {
+	deleteItem,
+	fetchProductImagesForAdmin,
+	saveItem,
+	saveSettings,
+} from '@/app/actions/dashboard'
 import { logout } from '@/app/actions/auth'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { LoadingImage } from '@/components/ui/loading-image'
@@ -56,6 +62,11 @@ export default function DashboardClient({
 		label: '',
 	})
 	const [isMutating, startMutatingTransition] = useTransition()
+	const [productImagesMap, setProductImagesMap] = useState<Record<string, string[]>>({})
+
+	useEffect(() => {
+		fetchProductImagesForAdmin().then(setProductImagesMap)
+	}, [initialProducts])
 
 	const openDeleteConfirmation = (type: string, id: string, label: string) => {
 		setPendingDelete({
@@ -244,7 +255,12 @@ export default function DashboardClient({
 												variant="outline"
 												size="sm"
 												onClick={() =>
-													setDlg({ open: true, type: 'products', mode: 'edit', data: p })
+													setDlg({
+														open: true,
+														type: 'products',
+														mode: 'edit',
+														data: { ...p, additionalImages: productImagesMap[p.id] || [] },
+													})
 												}
 												className="rounded-none text-xs flex-1"
 											>
@@ -763,6 +779,10 @@ function ItemDialog({ dlg, setDlg, collections, categories }: any) {
 					<ImageUpload
 						value={form.imageUrl}
 						onChange={(url) => setForm({ ...form, imageUrl: url })}
+					/>
+					<MultiImageUpload
+						values={form.additionalImages || []}
+						onChange={(urls) => setForm({ ...form, additionalImages: urls })}
 					/>
 					<div className="flex gap-6">
 						<div className="flex items-center gap-2">

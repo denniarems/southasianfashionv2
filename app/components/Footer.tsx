@@ -109,7 +109,10 @@ export default function Footer({ settings, year }: { settings?: Settings; year: 
 						>
 							denniarems
 						</a>{' '}
-						with <span className="footer-heart-glow" aria-hidden="true">♥</span>
+						with{' '}
+						<span className="footer-heart-glow" aria-hidden="true">
+							♥
+						</span>
 					</p>
 				</div>
 			</div>

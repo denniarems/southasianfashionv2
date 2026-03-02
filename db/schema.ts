@@ -32,6 +32,16 @@ export const products = pgTable('products', {
 	createdAt: text('created_at').notNull(),
 })
 
+export const productImages = pgTable('product_images', {
+	id: text('id').primaryKey(),
+	productId: text('product_id')
+		.notNull()
+		.references(() => products.id, { onDelete: 'cascade' }),
+	imageUrl: text('image_url').notNull(),
+	sortOrder: real('sort_order').notNull().default(0),
+	createdAt: text('created_at').notNull(),
+})
+
 export const heroBanners = pgTable('hero_banners', {
 	id: text('id').primaryKey(),
 	title: text('title').notNull(),
