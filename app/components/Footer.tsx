@@ -1,6 +1,29 @@
 import { Instagram, Facebook, Mail } from 'lucide-react'
 import Link from 'next/link'
 
+const storefrontAddress = '1642 Merivale Rd, Merivale Mall | Ottawa ON, CA'
+const storefrontPhoneRaw = '(613) 221-9898'
+const storefrontPhoneHref = '+16132219898'
+const storefrontHours = 'Open Monday to Saturday: 9:30 AM – 7:00 PM'
+
+const productHighlights = [
+	'Sarees',
+	'Salwar Kameez',
+	'Sharara',
+	'Punjabi Suits',
+	'Lehanga',
+	'Saree Blouse',
+	'Kurta Pajama',
+	'Dhoti / Lungi',
+]
+
+const serviceHighlights = [
+	'Alterations',
+	'Repairs',
+	'Dry Cleaning',
+	'Saree Blouse Stitching',
+]
+
 interface Settings {
 	brandName?: string | null
 	brandTagline?: string | null
@@ -12,7 +35,7 @@ interface Settings {
 export default function Footer({ settings, year }: { settings?: Settings; year: number }) {
 	return (
 		<footer id="contact" data-testid="footer" className="bg-stone-900 text-white py-24 md:py-32">
-			<div className="max-w-[1800px] mx-auto px-6 md:px-12 lg:px-24">
+			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16 mb-20">
 					<div className="lg:col-span-2">
 						<h3 className="font-heading text-2xl tracking-wide mb-4">
@@ -21,43 +44,41 @@ export default function Footer({ settings, year }: { settings?: Settings; year: 
 						<p className="font-accent italic text-white/40 text-lg mb-6">
 							{settings?.brandTagline || 'Curated Luxury. Culturally Rooted.'}
 						</p>
-						<p className="text-white/30 text-sm leading-relaxed max-w-md">
-							Celebrating the rich tapestry of South Asian craftsmanship. Each piece in our
-							collection is a testament to centuries-old traditions, reimagined for the contemporary
-							connoisseur.
-						</p>
-					</div>
-
-					<div>
-						<p className="text-xs uppercase tracking-widest text-white/20 mb-6">Explore</p>
-						<div className="space-y-4">
-							<Link
-								href="/#new-arrivals"
-								data-testid="footer-new-arrivals"
-								className="block text-sm text-white/50 hover:text-white transition-colors duration-300"
-							>
-								New Arrivals
-							</Link>
-							<Link
-								href="/collections"
-								data-testid="footer-collections"
-								className="block text-sm text-white/50 hover:text-white transition-colors duration-300"
-							>
-								Collections
-							</Link>
-							<Link
-								href="/#featured"
-								data-testid="footer-featured"
-								className="block text-sm text-white/50 hover:text-white transition-colors duration-300"
-							>
-								Featured
-							</Link>
+						<div className="space-y-3 text-sm text-white/70 leading-relaxed max-w-xl">
+							<p>{storefrontAddress}</p>
+							<p>
+								<a
+									href={`tel:${storefrontPhoneHref}`}
+									className="hover:text-white transition-colors duration-300"
+								>
+									{storefrontPhoneRaw}
+								</a>
+							</p>
+							<p>{storefrontHours}</p>
 						</div>
 					</div>
 
 					<div>
-						<p className="text-xs uppercase tracking-widest text-white/20 mb-6">Connect</p>
+						<p className="text-xs uppercase tracking-widest text-white/20 mb-6">Shop Highlights</p>
 						<div className="space-y-4">
+							{productHighlights.map((item) => (
+								<p key={item} className="block text-sm text-white/60">
+									{item}
+								</p>
+							))}
+						</div>
+					</div>
+
+					<div>
+						<p className="text-xs uppercase tracking-widest text-white/20 mb-6">Services & Connect</p>
+						<div className="space-y-4">
+							<div className="space-y-2">
+								{serviceHighlights.map((service) => (
+									<p key={service} className="text-sm text-white/60">
+										{service}
+									</p>
+								))}
+							</div>
 							{settings?.contactEmail && (
 								<a
 									href={`mailto:${settings.contactEmail}`}
