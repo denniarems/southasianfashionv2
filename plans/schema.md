@@ -30,7 +30,7 @@ export const products = sqliteTable('products', {
 	name: text('name').notNull(),
 	description: text('description').default(''),
 	price: real('price').notNull().default(0),
-	currency: text('currency').notNull().default('USD'),
+	currency: text('currency').notNull().default('CAD'),
 	category: text('category').references(() => categories.name), // String match based on old logic, or change to cat_id
 	imageUrl: text('image_url').default(''),
 	isNew: integer('is_new', { mode: 'boolean' }).default(1),

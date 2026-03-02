@@ -23,7 +23,7 @@ export const products = pgTable('products', {
 	slug: text('slug').notNull().unique(),
 	description: text('description').default(''),
 	price: real('price').notNull().default(0),
-	currency: text('currency').notNull().default('USD'),
+	currency: text('currency').notNull().default('CAD'),
 	category: text('category'),
 	imageUrl: text('image_url').default(''),
 	isNew: boolean('is_new').default(true),
