@@ -112,6 +112,86 @@ export async function seed() {
 	]
 	await db.insert(schema.collections).values(cols).onConflictDoNothing()
 
+	// Size guides
+	const womenEthnicGuideId = generateId()
+	const lehengaGuideId = generateId()
+	const mensSherwaniGuideId = generateId()
+	const accessoryGuideId = generateId()
+
+	const guides = [
+		{
+			id: womenEthnicGuideId,
+			name: 'Women Ethnic (Kurta / Saree Blouse)',
+			productType: 'Womenswear',
+			unit: 'in',
+			note:
+				'All measurements are garment measurements in inches. For comfort fit, keep 1-2 inches ease.',
+			columnsJson: JSON.stringify(['Bust', 'Waist', 'Hip', 'Length']),
+			rowsJson: JSON.stringify([
+				{ size: 'XS', values: ['32', '26', '35', '38'] },
+				{ size: 'S', values: ['34', '28', '37', '39'] },
+				{ size: 'M', values: ['36', '30', '39', '40'] },
+				{ size: 'L', values: ['38', '32', '41', '41'] },
+				{ size: 'XL', values: ['40', '34', '43', '42'] },
+				{ size: 'XXL', values: ['42', '36', '45', '43'] },
+			]),
+			isActive: true,
+			createdAt: new Date().toISOString(),
+		},
+		{
+			id: lehengaGuideId,
+			name: 'Lehenga Set (Blouse + Skirt)',
+			productType: 'Womenswear',
+			unit: 'in',
+			note:
+				'Lehenga measurements are finished garment measurements. Contact us for custom cancan/length adjustments.',
+			columnsJson: JSON.stringify(['Bust', 'Waist', 'Hip', 'Skirt Length']),
+			rowsJson: JSON.stringify([
+				{ size: 'XS', values: ['32', '25', '36', '42'] },
+				{ size: 'S', values: ['34', '27', '38', '42'] },
+				{ size: 'M', values: ['36', '29', '40', '43'] },
+				{ size: 'L', values: ['38', '31', '42', '43'] },
+				{ size: 'XL', values: ['40', '33', '44', '44'] },
+			]),
+			isActive: true,
+			createdAt: new Date().toISOString(),
+		},
+		{
+			id: mensSherwaniGuideId,
+			name: 'Mens Sherwani / Kurta',
+			productType: 'Menswear',
+			unit: 'in',
+			note:
+				'Chest and shoulder are key fit points for sherwanis. If in-between sizes, we recommend sizing up.',
+			columnsJson: JSON.stringify(['Chest', 'Shoulder', 'Waist', 'Length', 'Sleeve']),
+			rowsJson: JSON.stringify([
+				{ size: 'S', values: ['38', '17', '34', '40', '24'] },
+				{ size: 'M', values: ['40', '17.5', '36', '41', '24.5'] },
+				{ size: 'L', values: ['42', '18', '38', '42', '25'] },
+				{ size: 'XL', values: ['44', '18.5', '40', '43', '25.5'] },
+				{ size: 'XXL', values: ['46', '19', '42', '44', '26'] },
+			]),
+			isActive: true,
+			createdAt: new Date().toISOString(),
+		},
+		{
+			id: accessoryGuideId,
+			name: 'Accessory Length Guide',
+			productType: 'Accessories',
+			unit: 'in',
+			note: 'Accessory measurements may vary slightly due to handcrafted finishing.',
+			columnsJson: JSON.stringify(['Length', 'Width']),
+			rowsJson: JSON.stringify([
+				{ size: 'Standard', values: ['80', '28'] },
+				{ size: 'Long', values: ['92', '30'] },
+			]),
+			isActive: true,
+			createdAt: new Date().toISOString(),
+		},
+	]
+
+	await db.insert(schema.sizeGuides).values(guides).onConflictDoNothing()
+
 	// Products
 	const prods = [
 		{
@@ -126,6 +206,7 @@ export async function seed() {
 			isNew: true,
 			isFeatured: true,
 			collectionId: colSilkId,
+			sizeGuideId: womenEthnicGuideId,
 			createdAt: new Date().toISOString(),
 		},
 		{
@@ -140,6 +221,7 @@ export async function seed() {
 			isNew: true,
 			isFeatured: false,
 			collectionId: colModernId,
+			sizeGuideId: lehengaGuideId,
 			createdAt: new Date().toISOString(),
 		},
 		{
@@ -154,6 +236,7 @@ export async function seed() {
 			isNew: true,
 			isFeatured: false,
 			collectionId: colModernId,
+			sizeGuideId: womenEthnicGuideId,
 			createdAt: new Date().toISOString(),
 		},
 		{
@@ -182,6 +265,7 @@ export async function seed() {
 			isNew: true,
 			isFeatured: false,
 			collectionId: colGroomId,
+			sizeGuideId: mensSherwaniGuideId,
 			createdAt: new Date().toISOString(),
 		},
 		{
@@ -196,6 +280,7 @@ export async function seed() {
 			isNew: false,
 			isFeatured: true,
 			collectionId: colSilkId,
+			sizeGuideId: accessoryGuideId,
 			createdAt: new Date().toISOString(),
 		},
 	]
