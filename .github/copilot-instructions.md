@@ -1,6 +1,7 @@
 # Project Guidelines
 
 ## Code Style
+
 - Use TypeScript with strict typing (`tsconfig.json` has `strict: true`).
 - Prefer path alias imports with `@/*` (maps to repo root).
 - Keep existing naming and style patterns used in `app/`, `db/`, and `components/ui/`.
@@ -8,6 +9,7 @@
 - For React event handlers, use explicit event types when needed.
 
 ## Architecture
+
 - Framework: Next.js 16 App Router + React 19.
 - Data layer: PostgreSQL with Drizzle ORM via `getDb()` from `db/index.ts` (singleton).
 - Server actions live in `app/actions/` (`auth.ts`, `dashboard.ts`) and handle mutations.
@@ -21,6 +23,7 @@
   - Client UI in `DashboardClient.tsx` handles dialogs/forms/actions.
 
 ## Build and Test
+
 - Install/develop with Bun.
 - Common commands:
   - `bun run dev`
@@ -34,6 +37,7 @@
 - When changing schema or server actions, run `bun run type-check` at minimum.
 
 ## Conventions
+
 - Default to Server Components. Add `'use client'` only when hooks/browser-only APIs/interactive UI are required.
 - Prefer parallel data fetching with `Promise.all()` in server components and pages (see `app/page.tsx`).
 - Use `revalidatePath()` after data mutations in server actions (see `app/actions/dashboard.ts`).
@@ -48,6 +52,7 @@
 - Use `next/image` with meaningful `sizes` values for responsive rendering.
 
 ## Environment
+
 - Required env vars (see `.env`):
   - `DATABASE_URL`
   - `JWT_SECRET`

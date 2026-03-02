@@ -130,7 +130,12 @@ export default function DashboardClient({
 						disabled={isMutating}
 						className="rounded-none text-xs uppercase tracking-widest"
 					>
-						{isMutating ? <Loader2 size={14} className="mr-2 animate-spin" /> : <LogOut size={14} className="mr-2" />} Sign Out
+						{isMutating ? (
+							<Loader2 size={14} className="mr-2 animate-spin" />
+						) : (
+							<LogOut size={14} className="mr-2" />
+						)}{' '}
+						Sign Out
 					</Button>
 				</div>
 			</div>
@@ -177,137 +182,79 @@ export default function DashboardClient({
 
 					{/* Products */}
 					<TabsContent value="products">
-						<motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-						<div className="flex justify-between items-center mb-6">
-							<h2 className="font-heading text-xl text-stone-900">
-								Products ({initialProducts.length})
-							</h2>
-							<Button
-								data-testid="add-product-btn"
-								onClick={() => setDlg({ open: true, type: 'products', mode: 'add', data: null })}
-								className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
-							>
-								<Plus size={14} className="mr-2" /> Add Product
-							</Button>
-						</div>
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{initialProducts.map((p: any) => (
-								<div
-									key={p.id}
-									className="bg-white border border-stone-200 p-4"
-									data-testid={`admin-product-${p.id}`}
+						<motion.div
+							initial={{ opacity: 0, y: 8 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.2 }}
+						>
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="font-heading text-xl text-stone-900">
+									Products ({initialProducts.length})
+								</h2>
+								<Button
+									data-testid="add-product-btn"
+									onClick={() => setDlg({ open: true, type: 'products', mode: 'add', data: null })}
+									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
 								>
-									<div className="flex gap-4">
-										{p.imageUrl ? (
-											<Image
-												src={p.imageUrl}
-												alt={p.name}
-												width={80}
-												height={80}
-												className="w-20 h-20 object-cover shrink-0"
-											/>
-										) : (
-											<div className="w-20 h-20 bg-stone-100 shrink-0" />
-										)}
-										<div className="flex-1 min-w-0">
-											<h3 className="font-heading text-sm text-stone-900 truncate">{p.name}</h3>
-											<p className="text-xs text-stone-400 mt-1">
-												{p.category} &middot; {p.currency} {p.price}
-											</p>
-											<div className="flex gap-1 mt-2">
-												{p.isNew && (
-													<span className="text-[10px] bg-yellow-700/10 text-yellow-700 px-2 py-0.5">
-														NEW
-													</span>
-												)}
-												{p.isFeatured && (
-													<span className="text-[10px] bg-stone-900/10 text-stone-700 px-2 py-0.5">
-														FEATURED
-													</span>
-												)}
+									<Plus size={14} className="mr-2" /> Add Product
+								</Button>
+							</div>
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								{initialProducts.map((p: any) => (
+									<div
+										key={p.id}
+										className="bg-white border border-stone-200 p-4"
+										data-testid={`admin-product-${p.id}`}
+									>
+										<div className="flex gap-4">
+											{p.imageUrl ? (
+												<Image
+													src={p.imageUrl}
+													alt={p.name}
+													width={80}
+													height={80}
+													className="w-20 h-20 object-cover shrink-0"
+												/>
+											) : (
+												<div className="w-20 h-20 bg-stone-100 shrink-0" />
+											)}
+											<div className="flex-1 min-w-0">
+												<h3 className="font-heading text-sm text-stone-900 truncate">{p.name}</h3>
+												<p className="text-xs text-stone-400 mt-1">
+													{p.category} &middot; {p.currency} {p.price}
+												</p>
+												<div className="flex gap-1 mt-2">
+													{p.isNew && (
+														<span className="text-[10px] bg-yellow-700/10 text-yellow-700 px-2 py-0.5">
+															NEW
+														</span>
+													)}
+													{p.isFeatured && (
+														<span className="text-[10px] bg-stone-900/10 text-stone-700 px-2 py-0.5">
+															FEATURED
+														</span>
+													)}
+												</div>
 											</div>
 										</div>
-									</div>
-									<div className="flex gap-2 mt-4 pt-3 border-t border-stone-100">
-										<Button
-											data-testid={`edit-product-${p.id}`}
-											variant="outline"
-											size="sm"
-											onClick={() =>
-												setDlg({ open: true, type: 'products', mode: 'edit', data: p })
-											}
-											className="rounded-none text-xs flex-1"
-										>
-											<Pencil size={12} className="mr-1" /> Edit
-										</Button>
-										<Button
-											data-testid={`delete-product-${p.id}`}
-											variant="outline"
-											size="sm"
-											onClick={() => openDeleteConfirmation('products', p.id, p.name || 'this product')}
-											className="rounded-none text-xs text-red-600 hover:bg-red-50"
-										>
-											<Trash2 size={12} />
-										</Button>
-									</div>
-								</div>
-							))}
-						</div>
-						</motion.div>
-					</TabsContent>
-
-					{/* Collections */}
-					<TabsContent value="collections">
-						<motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-						<div className="flex justify-between items-center mb-6">
-							<h2 className="font-heading text-xl text-stone-900">
-								Collections ({initialCollections.length})
-							</h2>
-							<Button
-								data-testid="add-collection-btn"
-								onClick={() => setDlg({ open: true, type: 'collections', mode: 'add', data: null })}
-								className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
-							>
-								<Plus size={14} className="mr-2" /> Add Collection
-							</Button>
-						</div>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							{initialCollections.map((c: any) => (
-								<div
-									key={c.id}
-									className="bg-white border border-stone-200 p-4 flex gap-4"
-									data-testid={`admin-collection-${c.id}`}
-								>
-									{c.imageUrl && (
-										<Image
-											src={c.imageUrl}
-											alt={c.name}
-											width={96}
-											height={96}
-											className="w-24 h-24 object-cover shrink-0"
-										/>
-									)}
-									<div className="flex-1">
-										<h3 className="font-heading text-sm text-stone-900">{c.name}</h3>
-										<p className="text-xs text-stone-400 mt-1 line-clamp-2">{c.description}</p>
-										<div className="flex gap-2 mt-3">
+										<div className="flex gap-2 mt-4 pt-3 border-t border-stone-100">
 											<Button
-												data-testid={`edit-collection-${c.id}`}
+												data-testid={`edit-product-${p.id}`}
 												variant="outline"
 												size="sm"
 												onClick={() =>
-													setDlg({ open: true, type: 'collections', mode: 'edit', data: c })
+													setDlg({ open: true, type: 'products', mode: 'edit', data: p })
 												}
-												className="rounded-none text-xs"
+												className="rounded-none text-xs flex-1"
 											>
 												<Pencil size={12} className="mr-1" /> Edit
 											</Button>
 											<Button
-												data-testid={`delete-collection-${c.id}`}
+												data-testid={`delete-product-${p.id}`}
 												variant="outline"
 												size="sm"
 												onClick={() =>
-													openDeleteConfirmation('collections', c.id, c.name || 'this collection')
+													openDeleteConfirmation('products', p.id, p.name || 'this product')
 												}
 												className="rounded-none text-xs text-red-600 hover:bg-red-50"
 											>
@@ -315,251 +262,337 @@ export default function DashboardClient({
 											</Button>
 										</div>
 									</div>
-								</div>
-							))}
-						</div>
+								))}
+							</div>
+						</motion.div>
+					</TabsContent>
+
+					{/* Collections */}
+					<TabsContent value="collections">
+						<motion.div
+							initial={{ opacity: 0, y: 8 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.2 }}
+						>
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="font-heading text-xl text-stone-900">
+									Collections ({initialCollections.length})
+								</h2>
+								<Button
+									data-testid="add-collection-btn"
+									onClick={() =>
+										setDlg({ open: true, type: 'collections', mode: 'add', data: null })
+									}
+									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
+								>
+									<Plus size={14} className="mr-2" /> Add Collection
+								</Button>
+							</div>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								{initialCollections.map((c: any) => (
+									<div
+										key={c.id}
+										className="bg-white border border-stone-200 p-4 flex gap-4"
+										data-testid={`admin-collection-${c.id}`}
+									>
+										{c.imageUrl && (
+											<Image
+												src={c.imageUrl}
+												alt={c.name}
+												width={96}
+												height={96}
+												className="w-24 h-24 object-cover shrink-0"
+											/>
+										)}
+										<div className="flex-1">
+											<h3 className="font-heading text-sm text-stone-900">{c.name}</h3>
+											<p className="text-xs text-stone-400 mt-1 line-clamp-2">{c.description}</p>
+											<div className="flex gap-2 mt-3">
+												<Button
+													data-testid={`edit-collection-${c.id}`}
+													variant="outline"
+													size="sm"
+													onClick={() =>
+														setDlg({ open: true, type: 'collections', mode: 'edit', data: c })
+													}
+													className="rounded-none text-xs"
+												>
+													<Pencil size={12} className="mr-1" /> Edit
+												</Button>
+												<Button
+													data-testid={`delete-collection-${c.id}`}
+													variant="outline"
+													size="sm"
+													onClick={() =>
+														openDeleteConfirmation('collections', c.id, c.name || 'this collection')
+													}
+													className="rounded-none text-xs text-red-600 hover:bg-red-50"
+												>
+													<Trash2 size={12} />
+												</Button>
+											</div>
+										</div>
+									</div>
+								))}
+							</div>
 						</motion.div>
 					</TabsContent>
 
 					{/* Hero */}
 					<TabsContent value="hero">
-						<motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-						<div className="flex justify-between items-center mb-6">
-							<h2 className="font-heading text-xl text-stone-900">
-								Hero Banners ({initialHeroes.length})
-							</h2>
-							<Button
-								data-testid="add-hero-btn"
-								onClick={() => setDlg({ open: true, type: 'hero', mode: 'add', data: null })}
-								className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
-							>
-								<Plus size={14} className="mr-2" /> Add Banner
-							</Button>
-						</div>
-						<div className="space-y-4">
-							{initialHeroes.map((h: any) => (
-								<div
-									key={h.id}
-									className="bg-white border border-stone-200 p-4 flex gap-4"
-									data-testid={`admin-hero-${h.id}`}
+						<motion.div
+							initial={{ opacity: 0, y: 8 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.2 }}
+						>
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="font-heading text-xl text-stone-900">
+									Hero Banners ({initialHeroes.length})
+								</h2>
+								<Button
+									data-testid="add-hero-btn"
+									onClick={() => setDlg({ open: true, type: 'hero', mode: 'add', data: null })}
+									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
 								>
-									{h.imageUrl && (
-										<Image
-											src={h.imageUrl}
-											alt={h.title}
-											width={128}
-											height={80}
-											className="w-32 h-20 object-cover shrink-0"
-										/>
-									)}
-									<div className="flex-1">
-										<div className="flex items-center gap-2">
-											<h3 className="font-heading text-sm text-stone-900">{h.title}</h3>
-											{h.isActive && (
-												<span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5">
-													ACTIVE
-												</span>
-											)}
+									<Plus size={14} className="mr-2" /> Add Banner
+								</Button>
+							</div>
+							<div className="space-y-4">
+								{initialHeroes.map((h: any) => (
+									<div
+										key={h.id}
+										className="bg-white border border-stone-200 p-4 flex gap-4"
+										data-testid={`admin-hero-${h.id}`}
+									>
+										{h.imageUrl && (
+											<Image
+												src={h.imageUrl}
+												alt={h.title}
+												width={128}
+												height={80}
+												className="w-32 h-20 object-cover shrink-0"
+											/>
+										)}
+										<div className="flex-1">
+											<div className="flex items-center gap-2">
+												<h3 className="font-heading text-sm text-stone-900">{h.title}</h3>
+												{h.isActive && (
+													<span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5">
+														ACTIVE
+													</span>
+												)}
+											</div>
+											<p className="text-xs text-stone-400 mt-1 line-clamp-1">{h.subtitle}</p>
 										</div>
-										<p className="text-xs text-stone-400 mt-1 line-clamp-1">{h.subtitle}</p>
+										<div className="flex gap-2 items-start shrink-0">
+											<Button
+												data-testid={`edit-hero-${h.id}`}
+												variant="outline"
+												size="sm"
+												onClick={() => setDlg({ open: true, type: 'hero', mode: 'edit', data: h })}
+												className="rounded-none text-xs"
+											>
+												<Pencil size={12} />
+											</Button>
+											<Button
+												data-testid={`delete-hero-${h.id}`}
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													openDeleteConfirmation('hero', h.id, h.title || 'this banner')
+												}
+												className="rounded-none text-xs text-red-600 hover:bg-red-50"
+											>
+												<Trash2 size={12} />
+											</Button>
+										</div>
 									</div>
-									<div className="flex gap-2 items-start shrink-0">
-										<Button
-											data-testid={`edit-hero-${h.id}`}
-											variant="outline"
-											size="sm"
-											onClick={() => setDlg({ open: true, type: 'hero', mode: 'edit', data: h })}
-											className="rounded-none text-xs"
-										>
-											<Pencil size={12} />
-										</Button>
-										<Button
-											data-testid={`delete-hero-${h.id}`}
-											variant="outline"
-											size="sm"
-											onClick={() => openDeleteConfirmation('hero', h.id, h.title || 'this banner')}
-											className="rounded-none text-xs text-red-600 hover:bg-red-50"
-										>
-											<Trash2 size={12} />
-										</Button>
-									</div>
-								</div>
-							))}
-						</div>
+								))}
+							</div>
 						</motion.div>
 					</TabsContent>
 
 					{/* Categories */}
 					<TabsContent value="categories">
-						<motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-						<div className="flex justify-between items-center mb-6">
-							<h2 className="font-heading text-xl text-stone-900">
-								Categories ({initialCategories.length})
-							</h2>
-							<Button
-								data-testid="add-category-btn"
-								onClick={() => setDlg({ open: true, type: 'categories', mode: 'add', data: null })}
-								className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
-							>
-								<Plus size={14} className="mr-2" /> Add Category
-							</Button>
-						</div>
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{initialCategories.map((cat: any) => (
-								<div
-									key={cat.id}
-									className="bg-white border border-stone-200 p-4"
-									data-testid={`admin-category-${cat.id}`}
+						<motion.div
+							initial={{ opacity: 0, y: 8 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.2 }}
+						>
+							<div className="flex justify-between items-center mb-6">
+								<h2 className="font-heading text-xl text-stone-900">
+									Categories ({initialCategories.length})
+								</h2>
+								<Button
+									data-testid="add-category-btn"
+									onClick={() =>
+										setDlg({ open: true, type: 'categories', mode: 'add', data: null })
+									}
+									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
 								>
-									<h3 className="font-heading text-sm text-stone-900">{cat.name}</h3>
-									<p className="text-xs text-stone-400 mt-1">{cat.slug}</p>
-									{cat.description && (
-										<p className="text-xs text-stone-500 mt-1 line-clamp-2">{cat.description}</p>
-									)}
-									<div className="flex gap-2 mt-3 pt-3 border-t border-stone-100">
-										<Button
-											data-testid={`edit-category-${cat.id}`}
-											variant="outline"
-											size="sm"
-											onClick={() =>
-												setDlg({ open: true, type: 'categories', mode: 'edit', data: cat })
-											}
-											className="rounded-none text-xs flex-1"
-										>
-											<Pencil size={12} className="mr-1" /> Edit
-										</Button>
-										<Button
-											data-testid={`delete-category-${cat.id}`}
-											variant="outline"
-											size="sm"
-											onClick={() =>
-												openDeleteConfirmation('categories', cat.id, cat.name || 'this category')
-											}
-											className="rounded-none text-xs text-red-600 hover:bg-red-50"
-										>
-											<Trash2 size={12} />
-										</Button>
+									<Plus size={14} className="mr-2" /> Add Category
+								</Button>
+							</div>
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								{initialCategories.map((cat: any) => (
+									<div
+										key={cat.id}
+										className="bg-white border border-stone-200 p-4"
+										data-testid={`admin-category-${cat.id}`}
+									>
+										<h3 className="font-heading text-sm text-stone-900">{cat.name}</h3>
+										<p className="text-xs text-stone-400 mt-1">{cat.slug}</p>
+										{cat.description && (
+											<p className="text-xs text-stone-500 mt-1 line-clamp-2">{cat.description}</p>
+										)}
+										<div className="flex gap-2 mt-3 pt-3 border-t border-stone-100">
+											<Button
+												data-testid={`edit-category-${cat.id}`}
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													setDlg({ open: true, type: 'categories', mode: 'edit', data: cat })
+												}
+												className="rounded-none text-xs flex-1"
+											>
+												<Pencil size={12} className="mr-1" /> Edit
+											</Button>
+											<Button
+												data-testid={`delete-category-${cat.id}`}
+												variant="outline"
+												size="sm"
+												onClick={() =>
+													openDeleteConfirmation('categories', cat.id, cat.name || 'this category')
+												}
+												className="rounded-none text-xs text-red-600 hover:bg-red-50"
+											>
+												<Trash2 size={12} />
+											</Button>
+										</div>
 									</div>
-								</div>
-							))}
-						</div>
+								))}
+							</div>
 						</motion.div>
 					</TabsContent>
 
 					{/* Settings */}
 					<TabsContent value="settings">
-						<motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-						<h2 className="font-heading text-xl text-stone-900 mb-6">Site Settings</h2>
-						<form
-							onSubmit={handleSaveSettings}
-							className="bg-white border border-stone-200 p-6 md:p-8 space-y-8"
+						<motion.div
+							initial={{ opacity: 0, y: 8 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.2 }}
 						>
-							<div>
-								<p className="text-xs uppercase tracking-widest text-stone-400 mb-4">Brand</p>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									<Field label="Brand Name">
-										<Input
-											data-testid="settings-brand-name"
-											value={settingsForm.brandName || ''}
-											onChange={(e) =>
-												setSettingsForm({ ...settingsForm, brandName: e.target.value })
-											}
-											className="rounded-none"
-										/>
-									</Field>
-									<Field label="Tagline">
-										<Input
-											data-testid="settings-tagline"
-											value={settingsForm.brandTagline || ''}
-											onChange={(e) =>
-												setSettingsForm({ ...settingsForm, brandTagline: e.target.value })
-											}
-											className="rounded-none"
-										/>
-									</Field>
-									<Field label="Contact Email">
-										<Input
-											data-testid="settings-email"
-											type="email"
-											value={settingsForm.contactEmail || ''}
-											onChange={(e) =>
-												setSettingsForm({ ...settingsForm, contactEmail: e.target.value })
-											}
-											className="rounded-none"
-										/>
-									</Field>
-								</div>
-							</div>
-							<Separator />
-							<div>
-								<p className="text-xs uppercase tracking-widest text-stone-400 mb-4">WhatsApp</p>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									<Field label="WhatsApp Number">
-										<Input
-											data-testid="settings-whatsapp-number"
-											value={settingsForm.whatsappNumber || ''}
-											onChange={(e) =>
-												setSettingsForm({ ...settingsForm, whatsappNumber: e.target.value })
-											}
-											className="rounded-none"
-											placeholder="+1234567890"
-										/>
-									</Field>
-									<Field label="Default Message">
-										<Input
-											data-testid="settings-whatsapp-message"
-											value={settingsForm.whatsappMessage || ''}
-											onChange={(e) =>
-												setSettingsForm({ ...settingsForm, whatsappMessage: e.target.value })
-											}
-											className="rounded-none"
-										/>
-									</Field>
-								</div>
-							</div>
-							<Separator />
-							<div>
-								<p className="text-xs uppercase tracking-widest text-stone-400 mb-4">Social</p>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									<Field label="Instagram URL">
-										<Input
-											data-testid="settings-instagram"
-											value={settingsForm.instagramUrl || ''}
-											onChange={(e) =>
-												setSettingsForm({ ...settingsForm, instagramUrl: e.target.value })
-											}
-											className="rounded-none"
-										/>
-									</Field>
-									<Field label="Facebook URL">
-										<Input
-											data-testid="settings-facebook"
-											value={settingsForm.facebookUrl || ''}
-											onChange={(e) =>
-												setSettingsForm({ ...settingsForm, facebookUrl: e.target.value })
-											}
-											className="rounded-none"
-										/>
-									</Field>
-								</div>
-							</div>
-							<Button
-								data-testid="save-settings-btn"
-								type="submit"
-								disabled={isMutating}
-								aria-busy={isMutating}
-								className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
+							<h2 className="font-heading text-xl text-stone-900 mb-6">Site Settings</h2>
+							<form
+								onSubmit={handleSaveSettings}
+								className="bg-white border border-stone-200 p-6 md:p-8 space-y-8"
 							>
-								{isMutating ? (
-									<span className="inline-flex items-center gap-2">
-										<Loader2 size={14} className="animate-spin" />
-										Saving...
-									</span>
-								) : (
-									'Save Settings'
-								)}
-							</Button>
-						</form>
+								<div>
+									<p className="text-xs uppercase tracking-widest text-stone-400 mb-4">Brand</p>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+										<Field label="Brand Name">
+											<Input
+												data-testid="settings-brand-name"
+												value={settingsForm.brandName || ''}
+												onChange={(e) =>
+													setSettingsForm({ ...settingsForm, brandName: e.target.value })
+												}
+												className="rounded-none"
+											/>
+										</Field>
+										<Field label="Tagline">
+											<Input
+												data-testid="settings-tagline"
+												value={settingsForm.brandTagline || ''}
+												onChange={(e) =>
+													setSettingsForm({ ...settingsForm, brandTagline: e.target.value })
+												}
+												className="rounded-none"
+											/>
+										</Field>
+										<Field label="Contact Email">
+											<Input
+												data-testid="settings-email"
+												type="email"
+												value={settingsForm.contactEmail || ''}
+												onChange={(e) =>
+													setSettingsForm({ ...settingsForm, contactEmail: e.target.value })
+												}
+												className="rounded-none"
+											/>
+										</Field>
+									</div>
+								</div>
+								<Separator />
+								<div>
+									<p className="text-xs uppercase tracking-widest text-stone-400 mb-4">WhatsApp</p>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+										<Field label="WhatsApp Number">
+											<Input
+												data-testid="settings-whatsapp-number"
+												value={settingsForm.whatsappNumber || ''}
+												onChange={(e) =>
+													setSettingsForm({ ...settingsForm, whatsappNumber: e.target.value })
+												}
+												className="rounded-none"
+												placeholder="+1234567890"
+											/>
+										</Field>
+										<Field label="Default Message">
+											<Input
+												data-testid="settings-whatsapp-message"
+												value={settingsForm.whatsappMessage || ''}
+												onChange={(e) =>
+													setSettingsForm({ ...settingsForm, whatsappMessage: e.target.value })
+												}
+												className="rounded-none"
+											/>
+										</Field>
+									</div>
+								</div>
+								<Separator />
+								<div>
+									<p className="text-xs uppercase tracking-widest text-stone-400 mb-4">Social</p>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+										<Field label="Instagram URL">
+											<Input
+												data-testid="settings-instagram"
+												value={settingsForm.instagramUrl || ''}
+												onChange={(e) =>
+													setSettingsForm({ ...settingsForm, instagramUrl: e.target.value })
+												}
+												className="rounded-none"
+											/>
+										</Field>
+										<Field label="Facebook URL">
+											<Input
+												data-testid="settings-facebook"
+												value={settingsForm.facebookUrl || ''}
+												onChange={(e) =>
+													setSettingsForm({ ...settingsForm, facebookUrl: e.target.value })
+												}
+												className="rounded-none"
+											/>
+										</Field>
+									</div>
+								</div>
+								<Button
+									data-testid="save-settings-btn"
+									type="submit"
+									disabled={isMutating}
+									aria-busy={isMutating}
+									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
+								>
+									{isMutating ? (
+										<span className="inline-flex items-center gap-2">
+											<Loader2 size={14} className="animate-spin" />
+											Saving...
+										</span>
+									) : (
+										'Save Settings'
+									)}
+								</Button>
+							</form>
 						</motion.div>
 					</TabsContent>
 				</Tabs>

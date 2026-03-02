@@ -3,9 +3,10 @@ import { products, settings, collections } from '@/db/schema'
 import { desc, eq, or } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { MessageCircle } from 'lucide-react'
+import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import { AddToCartButton } from '@/components/cart/AddToCartButton'
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
 	const db = getDb()
@@ -68,14 +69,26 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 							</div>
 
 							<div className="border-t border-b border-stone-200 py-6 md:py-8 mb-8 md:mb-12">
-								<div className="flex items-center gap-4">
+								<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+									<AddToCartButton
+										product={{
+											id: p.id,
+											name: p.name,
+											slug: p.slug,
+											price: p.price,
+											currency: p.currency,
+											imageUrl: p.imageUrl,
+										}}
+										className="w-full sm:w-auto sm:min-w-52 flex items-center justify-center gap-3 bg-stone-900 text-white px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+									/>
+
 									<a
 										href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! I'm interested in the ${p.name}. Could you share more details?`)}`}
 										target="_blank"
 										rel="noopener noreferrer"
 										className="w-full sm:w-auto sm:min-w-70 flex items-center justify-center gap-3 bg-stone-900 text-white px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
 									>
-										<MessageCircle size={16} />
+										<MessageCircleIcon size={16} />
 										Inquire via WhatsApp
 									</a>
 								</div>

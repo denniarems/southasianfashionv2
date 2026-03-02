@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { MessageCircle } from 'lucide-react'
+import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
+import { AddToCartButton } from '@/components/cart/AddToCartButton'
 
 interface Product {
 	id: string
@@ -38,7 +39,7 @@ export default function NewArrivals({
 
 	return (
 		<section id="new-arrivals" data-testid="new-arrivals-section" className="py-24 md:py-32">
-			<div className="max-w-[1800px] mx-auto px-6 md:px-12 lg:px-24">
+			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
@@ -68,7 +69,7 @@ export default function NewArrivals({
 							className="group"
 							data-testid={`product-card-${p.id}`}
 						>
-							<div className="relative overflow-hidden aspect-[3/4] mb-6">
+							<div className="relative overflow-hidden aspect-3/4 mb-6">
 								{p.imageUrl && (
 									<Image
 										src={p.imageUrl}
@@ -81,6 +82,18 @@ export default function NewArrivals({
 								<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500" />
 
 								<div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-500 p-4">
+									<AddToCartButton
+										product={{
+											id: p.id,
+											name: p.name,
+											slug: p.slug,
+											price: p.price,
+											currency: p.currency,
+											imageUrl: p.imageUrl,
+										}}
+										className="mb-2 flex items-center justify-center gap-2 bg-white/95 backdrop-blur-sm text-stone-900 py-3 text-xs uppercase tracking-widest font-medium hover:bg-yellow-700 hover:text-white transition-colors duration-300 w-full"
+									/>
+
 									<a
 										href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! I'm interested in the ${p.name}. Could you tell me more?`)}`}
 										target="_blank"
@@ -88,7 +101,7 @@ export default function NewArrivals({
 										data-testid={`product-whatsapp-${p.id}`}
 										className="flex items-center justify-center gap-2 bg-white/95 backdrop-blur-sm text-stone-900 py-3 text-xs uppercase tracking-widest font-medium hover:bg-yellow-700 hover:text-white transition-colors duration-300 w-full"
 									>
-										<MessageCircle size={14} />
+										<MessageCircleIcon size={14} />
 										Inquire via WhatsApp
 									</a>
 								</div>

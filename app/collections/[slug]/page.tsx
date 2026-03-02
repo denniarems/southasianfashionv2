@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import { AddToCartButton } from '@/components/cart/AddToCartButton'
 
 export default async function CollectionDetailPage({
 	params,
@@ -37,7 +38,7 @@ export default async function CollectionDetailPage({
 			<Navbar settings={siteSettings} collections={allCollections} transparent={false} />
 
 			<main className="pt-32 pb-24 min-h-screen bg-stone-50">
-				<div className="max-w-[1800px] mx-auto px-6 md:px-12 lg:px-24">
+				<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
 					<div className="mb-16 md:mb-24 text-center max-w-3xl mx-auto">
 						<h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-stone-900 tracking-tight mb-6">
 							{c.name}
@@ -50,7 +51,7 @@ export default async function CollectionDetailPage({
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 						{collectionProducts.map((p: any) => (
 							<div key={p.id} className="group">
-								<div className="relative overflow-hidden aspect-[3/4] mb-4">
+								<div className="relative overflow-hidden aspect-3/4 mb-4">
 									{p.imageUrl ? (
 										<Image
 											src={p.imageUrl}
@@ -75,6 +76,19 @@ export default async function CollectionDetailPage({
 								<p className="text-sm text-stone-500">
 									{p.currency} {p.price?.toLocaleString()}
 								</p>
+								<div className="mt-4">
+									<AddToCartButton
+										product={{
+											id: p.id,
+											name: p.name,
+											slug: p.slug,
+											price: p.price,
+											currency: p.currency,
+											imageUrl: p.imageUrl,
+										}}
+										className="w-full flex items-center justify-center gap-3 bg-stone-900 text-white px-6 py-3 text-[11px] uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+									/>
+								</div>
 							</div>
 						))}
 					</div>
