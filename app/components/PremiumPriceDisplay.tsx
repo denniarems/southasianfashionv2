@@ -82,7 +82,9 @@ export default function PremiumPriceDisplay({
 				className="flex items-end gap-2"
 			>
 				<span
-					className={compact ? 'text-xs text-stone-400 line-through' : 'text-lg text-stone-400 line-through'}
+					className={
+						compact ? 'text-xs text-stone-400 line-through' : 'text-lg text-stone-400 line-through'
+					}
 				>
 					{formatCurrency(currency, originalPrice)}
 				</span>

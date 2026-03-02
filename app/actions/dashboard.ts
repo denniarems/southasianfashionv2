@@ -158,12 +158,12 @@ export async function deleteItem(type: string, id: string) {
 			case 'categories':
 				await db.delete(categories).where(eq(categories.id, id))
 				break
-				case 'discounts':
-					await db.delete(discounts).where(eq(discounts.id, id))
-					break
-				case 'size-guides':
-					await db.delete(sizeGuides).where(eq(sizeGuides.id, id))
-					break
+			case 'discounts':
+				await db.delete(discounts).where(eq(discounts.id, id))
+				break
+			case 'size-guides':
+				await db.delete(sizeGuides).where(eq(sizeGuides.id, id))
+				break
 			default:
 				throw new Error('Invalid type')
 		}
@@ -224,8 +224,8 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 				const productData = {
 					...productFields,
 					currency: 'CAD',
-						collectionId: productFields.collectionId || null,
-						sizeGuideId: productFields.sizeGuideId || null,
+					collectionId: productFields.collectionId || null,
+					sizeGuideId: productFields.sizeGuideId || null,
 					slug: await generateUniqueProductSlug(
 						db,
 						data?.name || 'product',
@@ -297,60 +297,59 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 					await db.update(categories).set(data).where(eq(categories.id, data.id))
 				}
 				break
-				case 'discounts': {
-					const startDate = data.startDate ? new Date(data.startDate) : new Date()
-					const endDate = data.endDate ? new Date(data.endDate) : null
-					const payload = {
-						id: data.id,
-						name: data.name || 'Untitled Discount',
-						description: data.description || '',
-						discountType: data.discountType || 'flat',
-						discountValue: Number(data.discountValue) || 0,
-						originalPrice:
-							data.originalPrice === undefined || data.originalPrice === ''
-								? null
-								: Number(data.originalPrice),
-						startDate,
-						endDate,
-						minCartValue: Number(data.minCartValue) || 0,
-						applicableCategories: parseStringArray(data.applicableCategories),
-						stackable: Boolean(data.stackable),
-						maxUses:
-							data.maxUses === undefined || data.maxUses === '' ? null : Number(data.maxUses),
-						priority: Number(data.priority) || 0,
-						isActive: data.isActive !== false,
-						productId: data.productId || null,
-						bundleProductIds: parseStringArray(data.bundleProductIds),
-						tierRulesJson: normalizeTierRulesJson(data.tierRulesJson),
-						wording: data.wording || 'Instant Price Drop',
-						updatedAt: new Date().toISOString(),
-						createdAt: mode === 'add' ? new Date().toISOString() : data.createdAt,
-					}
-
-					if (mode === 'add') {
-						await db.insert(discounts).values(payload)
-					} else {
-						await db.update(discounts).set(payload).where(eq(discounts.id, data.id))
-					}
-					break
+			case 'discounts': {
+				const startDate = data.startDate ? new Date(data.startDate) : new Date()
+				const endDate = data.endDate ? new Date(data.endDate) : null
+				const payload = {
+					id: data.id,
+					name: data.name || 'Untitled Discount',
+					description: data.description || '',
+					discountType: data.discountType || 'flat',
+					discountValue: Number(data.discountValue) || 0,
+					originalPrice:
+						data.originalPrice === undefined || data.originalPrice === ''
+							? null
+							: Number(data.originalPrice),
+					startDate,
+					endDate,
+					minCartValue: Number(data.minCartValue) || 0,
+					applicableCategories: parseStringArray(data.applicableCategories),
+					stackable: Boolean(data.stackable),
+					maxUses: data.maxUses === undefined || data.maxUses === '' ? null : Number(data.maxUses),
+					priority: Number(data.priority) || 0,
+					isActive: data.isActive !== false,
+					productId: data.productId || null,
+					bundleProductIds: parseStringArray(data.bundleProductIds),
+					tierRulesJson: normalizeTierRulesJson(data.tierRulesJson),
+					wording: data.wording || 'Instant Price Drop',
+					updatedAt: new Date().toISOString(),
+					createdAt: mode === 'add' ? new Date().toISOString() : data.createdAt,
 				}
-				case 'size-guides': {
-					const payload = {
-						...data,
-						unit: data.unit || 'in',
-						note: data.note || '',
-						productType: data.productType || '',
-						columnsJson: data.columnsJson || '[]',
-						rowsJson: data.rowsJson || '[]',
-					}
 
-					if (mode === 'add') {
-						await db.insert(sizeGuides).values(payload)
-					} else {
-						await db.update(sizeGuides).set(payload).where(eq(sizeGuides.id, data.id))
-					}
-					break
+				if (mode === 'add') {
+					await db.insert(discounts).values(payload)
+				} else {
+					await db.update(discounts).set(payload).where(eq(discounts.id, data.id))
 				}
+				break
+			}
+			case 'size-guides': {
+				const payload = {
+					...data,
+					unit: data.unit || 'in',
+					note: data.note || '',
+					productType: data.productType || '',
+					columnsJson: data.columnsJson || '[]',
+					rowsJson: data.rowsJson || '[]',
+				}
+
+				if (mode === 'add') {
+					await db.insert(sizeGuides).values(payload)
+				} else {
+					await db.update(sizeGuides).set(payload).where(eq(sizeGuides.id, data.id))
+				}
+				break
+			}
 			default:
 				throw new Error('Invalid type')
 		}

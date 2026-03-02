@@ -22,18 +22,15 @@ export default async function AdminDashboardPage() {
 		allSizeGuides,
 		allDiscounts,
 		[siteSettings],
-	] =
-		await Promise.all(
-		[
-			db.select().from(products).orderBy(desc(products.createdAt)),
-			db.select().from(collections).orderBy(desc(collections.createdAt)),
-			db.select().from(heroBanners).orderBy(desc(heroBanners.createdAt)),
-			db.select().from(categories).orderBy(desc(categories.createdAt)),
-			db.select().from(sizeGuides).orderBy(desc(sizeGuides.createdAt)),
-			db.select().from(discounts).orderBy(desc(discounts.priority), desc(discounts.createdAt)),
-			db.select().from(settings).limit(1),
-		],
-		)
+	] = await Promise.all([
+		db.select().from(products).orderBy(desc(products.createdAt)),
+		db.select().from(collections).orderBy(desc(collections.createdAt)),
+		db.select().from(heroBanners).orderBy(desc(heroBanners.createdAt)),
+		db.select().from(categories).orderBy(desc(categories.createdAt)),
+		db.select().from(sizeGuides).orderBy(desc(sizeGuides.createdAt)),
+		db.select().from(discounts).orderBy(desc(discounts.priority), desc(discounts.createdAt)),
+		db.select().from(settings).limit(1),
+	])
 
 	return (
 		<DashboardClient

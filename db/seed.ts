@@ -124,8 +124,7 @@ export async function seed() {
 			name: 'Women Ethnic (Kurta / Saree Blouse)',
 			productType: 'Womenswear',
 			unit: 'in',
-			note:
-				'All measurements are garment measurements in inches. For comfort fit, keep 1-2 inches ease.',
+			note: 'All measurements are garment measurements in inches. For comfort fit, keep 1-2 inches ease.',
 			columnsJson: JSON.stringify(['Bust', 'Waist', 'Hip', 'Length']),
 			rowsJson: JSON.stringify([
 				{ size: 'XS', values: ['32', '26', '35', '38'] },
@@ -143,8 +142,7 @@ export async function seed() {
 			name: 'Lehenga Set (Blouse + Skirt)',
 			productType: 'Womenswear',
 			unit: 'in',
-			note:
-				'Lehenga measurements are finished garment measurements. Contact us for custom cancan/length adjustments.',
+			note: 'Lehenga measurements are finished garment measurements. Contact us for custom cancan/length adjustments.',
 			columnsJson: JSON.stringify(['Bust', 'Waist', 'Hip', 'Skirt Length']),
 			rowsJson: JSON.stringify([
 				{ size: 'XS', values: ['32', '25', '36', '42'] },
@@ -161,8 +159,7 @@ export async function seed() {
 			name: 'Mens Sherwani / Kurta',
 			productType: 'Menswear',
 			unit: 'in',
-			note:
-				'Chest and shoulder are key fit points for sherwanis. If in-between sizes, we recommend sizing up.',
+			note: 'Chest and shoulder are key fit points for sherwanis. If in-between sizes, we recommend sizing up.',
 			columnsJson: JSON.stringify(['Chest', 'Shoulder', 'Waist', 'Length', 'Sleeve']),
 			rowsJson: JSON.stringify([
 				{ size: 'S', values: ['38', '17', '34', '40', '24'] },

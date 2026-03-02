@@ -29,7 +29,9 @@ function parseJsonStringArray(input: string | null | undefined): string[] {
 	}
 }
 
-function parseSizeRows(input: string | null | undefined): Array<{ size: string; values: string[] }> {
+function parseSizeRows(
+	input: string | null | undefined,
+): Array<{ size: string; values: string[] }> {
 	if (!input) return []
 	try {
 		const parsed = JSON.parse(input)

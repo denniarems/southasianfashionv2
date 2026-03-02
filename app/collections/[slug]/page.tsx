@@ -133,67 +133,65 @@ export default async function CollectionDetailPage({
 
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 						{collectionProductsWithPricing.map(
-							(
-								p: typeof products.$inferSelect & { pricing?: ProductPricePreview },
-							) => (
-							<div key={p.id} className="group">
-								<Link
-									href={`/products/${p.slug ?? p.id}`}
-									className="relative overflow-hidden aspect-3/4 mb-4 block"
-								>
-									{p.imageUrl ? (
-										<LoadingImage
-											src={p.imageUrl}
-											alt={p.name}
-											fill
-											sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-											className="object-cover transition-transform duration-700 group-hover:scale-105"
-										/>
-									) : (
-										<div className="w-full h-full bg-stone-200" />
-									)}
-									<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
-									{p.pricing?.hasDiscount && p.pricing.badgeText ? (
-										<div className="absolute top-3 left-3 z-20">
-											<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
-												{p.pricing.badgeText}
-											</span>
-										</div>
-									) : null}
-								</Link>
-								<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
-									{p.category}
-								</p>
-								<Link href={`/products/${p.slug ?? p.id}`} className="block">
-									<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors">
-										{p.name}
-									</h3>
-								</Link>
-								<PremiumPriceDisplay
-									compact
-									currency="CAD"
-									originalPrice={p.pricing?.originalPrice ?? p.price}
-									discountedPrice={p.pricing?.discountedPrice ?? p.price}
-									savingsAmount={p.pricing?.savingsAmount ?? 0}
-									savingsPercent={p.pricing?.savingsPercent ?? 0}
-									discountText={p.pricing?.discountText}
-									badgeText={p.pricing?.badgeText}
-									endDate={p.pricing?.endDate}
-								/>
-								<div className="mt-4">
-									<AddToCartButton
-										product={{
-											id: p.id,
-											name: p.name,
-											slug: p.slug,
-											price: p.pricing?.discountedPrice ?? p.price,
-											currency: 'CAD',
-											imageUrl: p.imageUrl,
-										}}
-										className="w-full flex items-center justify-center gap-3 bg-stone-900 text-white px-6 py-3 text-[11px] uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+							(p: typeof products.$inferSelect & { pricing?: ProductPricePreview }) => (
+								<div key={p.id} className="group">
+									<Link
+										href={`/products/${p.slug ?? p.id}`}
+										className="relative overflow-hidden aspect-3/4 mb-4 block"
+									>
+										{p.imageUrl ? (
+											<LoadingImage
+												src={p.imageUrl}
+												alt={p.name}
+												fill
+												sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+												className="object-cover transition-transform duration-700 group-hover:scale-105"
+											/>
+										) : (
+											<div className="w-full h-full bg-stone-200" />
+										)}
+										<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
+										{p.pricing?.hasDiscount && p.pricing.badgeText ? (
+											<div className="absolute top-3 left-3 z-20">
+												<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
+													{p.pricing.badgeText}
+												</span>
+											</div>
+										) : null}
+									</Link>
+									<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
+										{p.category}
+									</p>
+									<Link href={`/products/${p.slug ?? p.id}`} className="block">
+										<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors">
+											{p.name}
+										</h3>
+									</Link>
+									<PremiumPriceDisplay
+										compact
+										currency="CAD"
+										originalPrice={p.pricing?.originalPrice ?? p.price}
+										discountedPrice={p.pricing?.discountedPrice ?? p.price}
+										savingsAmount={p.pricing?.savingsAmount ?? 0}
+										savingsPercent={p.pricing?.savingsPercent ?? 0}
+										discountText={p.pricing?.discountText}
+										badgeText={p.pricing?.badgeText}
+										endDate={p.pricing?.endDate}
 									/>
+									<div className="mt-4">
+										<AddToCartButton
+											product={{
+												id: p.id,
+												name: p.name,
+												slug: p.slug,
+												price: p.pricing?.discountedPrice ?? p.price,
+												currency: 'CAD',
+												imageUrl: p.imageUrl,
+											}}
+											className="w-full flex items-center justify-center gap-3 bg-stone-900 text-white px-6 py-3 text-[11px] uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+										/>
+									</div>
 								</div>
-							</div>
 							),
 						)}
 					</div>

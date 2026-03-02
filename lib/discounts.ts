@@ -62,33 +62,26 @@ function parseTierRules(input: string | null | undefined): TierRule[] {
 		const parsed: unknown = JSON.parse(input)
 		if (!Array.isArray(parsed)) return []
 
-		const normalized = parsed
-			.map((rule) => {
-				if (!rule || typeof rule !== 'object') return null
+		const normalized = parsed.map((rule) => {
+			if (!rule || typeof rule !== 'object') return null
 
-				const minCartValue = Number((rule as { minCartValue?: unknown }).minCartValue)
-				const discountValue = Number((rule as { discountValue?: unknown }).discountValue)
-				const discountType = (rule as { discountType?: unknown }).discountType
+			const minCartValue = Number((rule as { minCartValue?: unknown }).minCartValue)
+			const discountValue = Number((rule as { discountValue?: unknown }).discountValue)
+			const discountType = (rule as { discountType?: unknown }).discountType
 
-				if (!Number.isFinite(minCartValue) || !Number.isFinite(discountValue)) return null
-				if (
-					discountType !== undefined &&
-					discountType !== 'flat' &&
-					discountType !== 'percentage'
-				) {
-					return null
-				}
+			if (!Number.isFinite(minCartValue) || !Number.isFinite(discountValue)) return null
+			if (discountType !== undefined && discountType !== 'flat' && discountType !== 'percentage') {
+				return null
+			}
 
-				return {
-					minCartValue,
-					discountValue,
-					discountType: discountType as TierRule['discountType'],
-				}
-			})
+			return {
+				minCartValue,
+				discountValue,
+				discountType: discountType as TierRule['discountType'],
+			}
+		})
 
-		const validRules = normalized.filter(
-			(rule): rule is NonNullable<typeof rule> => rule !== null,
-		)
+		const validRules = normalized.filter((rule): rule is NonNullable<typeof rule> => rule !== null)
 
 		return validRules.sort((a, b) => b.minCartValue - a.minCartValue)
 	} catch {
@@ -171,7 +164,10 @@ const getActiveDiscountsCached = cache(async () => {
 		)
 })
 
-async function getPerUserUsageMap(discountIds: string[], userKey?: string): Promise<Map<string, number>> {
+async function getPerUserUsageMap(
+	discountIds: string[],
+	userKey?: string,
+): Promise<Map<string, number>> {
 	if (!userKey || discountIds.length === 0) {
 		return new Map()
 	}
@@ -180,7 +176,9 @@ async function getPerUserUsageMap(discountIds: string[], userKey?: string): Prom
 	const rows = await db
 		.select()
 		.from(discountUsages)
-		.where(and(eq(discountUsages.userKey, userKey), inArray(discountUsages.discountId, discountIds)))
+		.where(
+			and(eq(discountUsages.userKey, userKey), inArray(discountUsages.discountId, discountIds)),
+		)
 
 	const map = new Map<string, number>()
 	for (const row of rows) {
@@ -189,7 +187,10 @@ async function getPerUserUsageMap(discountIds: string[], userKey?: string): Prom
 	return map
 }
 
-function filterUsableDiscounts(discountRows: DiscountRow[], perUserUsage: Map<string, number>): DiscountRow[] {
+function filterUsableDiscounts(
+	discountRows: DiscountRow[],
+	perUserUsage: Map<string, number>,
+): DiscountRow[] {
 	return discountRows.filter((discount) => {
 		if (discount.maxUses === null) return true
 		if (discount.usageCount >= discount.maxUses) return false
@@ -348,7 +349,10 @@ export async function computeCartDiscounts(
 			const apportioned = bundleAmount * ratio
 			const prev = lineDiscountMap.get(line.product.id) ?? 0
 			lineDiscountMap.set(line.product.id, prev + apportioned)
-			lineAppliedIds.set(line.product.id, [...(lineAppliedIds.get(line.product.id) ?? []), bundle.id])
+			lineAppliedIds.set(line.product.id, [
+				...(lineAppliedIds.get(line.product.id) ?? []),
+				bundle.id,
+			])
 		}
 	}
 
@@ -376,12 +380,18 @@ export async function computeCartDiscounts(
 
 			const prev = lineDiscountMap.get(line.product.id) ?? 0
 			lineDiscountMap.set(line.product.id, prev + discountAmount)
-			lineAppliedIds.set(line.product.id, [...(lineAppliedIds.get(line.product.id) ?? []), discount.id])
+			lineAppliedIds.set(line.product.id, [
+				...(lineAppliedIds.get(line.product.id) ?? []),
+				discount.id,
+			])
 			remaining = Math.max(0, remaining - discountAmount)
 		}
 	}
 
-	const lineDiscountTotal = Array.from(lineDiscountMap.values()).reduce((sum, value) => sum + value, 0)
+	const lineDiscountTotal = Array.from(lineDiscountMap.values()).reduce(
+		(sum, value) => sum + value,
+		0,
+	)
 	const subtotalAfterLineDiscounts = Math.max(0, originalSubtotal - lineDiscountTotal)
 
 	const cartLevelCandidates = usableDiscounts.filter((discount) => {

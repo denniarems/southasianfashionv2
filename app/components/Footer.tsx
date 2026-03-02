@@ -17,12 +17,7 @@ const productHighlights = [
 	'Dhoti / Lungi',
 ]
 
-const serviceHighlights = [
-	'Alterations',
-	'Repairs',
-	'Dry Cleaning',
-	'Saree Blouse Stitching',
-]
+const serviceHighlights = ['Alterations', 'Repairs', 'Dry Cleaning', 'Saree Blouse Stitching']
 
 interface Settings {
 	brandName?: string | null
@@ -70,7 +65,9 @@ export default function Footer({ settings, year }: { settings?: Settings; year: 
 					</div>
 
 					<div>
-						<p className="text-xs uppercase tracking-widest text-white/20 mb-6">Services & Connect</p>
+						<p className="text-xs uppercase tracking-widest text-white/20 mb-6">
+							Services & Connect
+						</p>
 						<div className="space-y-4">
 							<div className="space-y-2">
 								{serviceHighlights.map((service) => (

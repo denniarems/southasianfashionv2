@@ -52,14 +52,7 @@ export function CartDrawer({
 	onOpenChange: (open: boolean) => void
 	whatsappNumber?: string | null
 }) {
-	const {
-		items,
-		subtotal,
-		clearCart,
-		removeItem,
-		updateQuantity,
-		itemCount,
-	} = useCart()
+	const { items, subtotal, clearCart, removeItem, updateQuantity, itemCount } = useCart()
 
 	const sanitizedWhatsApp = useMemo(
 		() => whatsappNumber?.replace(/[^0-9]/g, '') || '',
@@ -161,9 +154,7 @@ export function CartDrawer({
 													<p className="font-heading text-base text-stone-900 truncate">
 														{item.name}
 													</p>
-													<p className="text-sm text-stone-500 mt-1">
-														{formatMoney(item.price)}
-													</p>
+													<p className="text-sm text-stone-500 mt-1">{formatMoney(item.price)}</p>
 													<div className="mt-3 flex items-center justify-between">
 														<div className="inline-flex items-center border border-stone-200">
 															<button
@@ -205,9 +196,7 @@ export function CartDrawer({
 						<div className="border-t border-stone-200 px-5 py-4 space-y-3">
 							<div className="flex items-center justify-between">
 								<span className="text-stone-500 text-sm">Subtotal</span>
-								<span className="font-heading text-xl text-stone-900">
-									{formatMoney(subtotal)}
-								</span>
+								<span className="font-heading text-xl text-stone-900">{formatMoney(subtotal)}</span>
 							</div>
 
 							<button

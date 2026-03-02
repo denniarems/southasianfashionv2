@@ -68,7 +68,11 @@ function DiscountLivePreview({ form }: { form: any }) {
 
 	if (form.discountType === 'percentage') {
 		discounted = Math.max(0, base - (base * value) / 100)
-	} else if (form.discountType === 'flat' || form.discountType === 'bundle' || form.discountType === 'tiered') {
+	} else if (
+		form.discountType === 'flat' ||
+		form.discountType === 'bundle' ||
+		form.discountType === 'tiered'
+	) {
 		discounted = Math.max(0, base - value)
 	}
 
@@ -76,7 +80,9 @@ function DiscountLivePreview({ form }: { form: any }) {
 
 	return (
 		<div className="rounded-none border border-[#B8860B]/40 bg-gradient-to-r from-[#fffaf0] to-white p-4">
-			<p className="text-[10px] uppercase tracking-[0.16em] text-[#7A1E2C]">Live Customer Preview</p>
+			<p className="text-[10px] uppercase tracking-[0.16em] text-[#7A1E2C]">
+				Live Customer Preview
+			</p>
 			<p className="text-xs text-stone-500 mt-1">Preview based on an example item price.</p>
 			<div className="mt-3 flex items-end gap-3">
 				<p className="text-xl font-semibold text-stone-900">{formatCad(Math.round(discounted))}</p>
@@ -86,7 +92,9 @@ function DiscountLivePreview({ form }: { form: any }) {
 				<span className="text-[10px] uppercase tracking-[0.12em] bg-[#7A1E2C]/10 text-[#7A1E2C] px-2 py-0.5 border border-[#7A1E2C]/20">
 					{form.wording || 'Instant Price Drop'}
 				</span>
-				<span className="text-xs text-[#B8860B] font-medium">Save {formatCad(Math.round(savings))}</span>
+				<span className="text-xs text-[#B8860B] font-medium">
+					Save {formatCad(Math.round(savings))}
+				</span>
 			</div>
 		</div>
 	)
@@ -192,7 +200,9 @@ function normalizeDiscountFormData(data: any) {
 	return {
 		...defaults,
 		...data,
-		startDate: data.startDate ? new Date(data.startDate).toISOString().slice(0, 16) : defaults.startDate,
+		startDate: data.startDate
+			? new Date(data.startDate).toISOString().slice(0, 16)
+			: defaults.startDate,
 		endDate: data.endDate ? new Date(data.endDate).toISOString().slice(0, 16) : '',
 		applicableCategories: parseStringArrayFromMixed(data.applicableCategories),
 		bundleProductIds: parseStringArrayFromMixed(data.bundleProductIds),
@@ -484,9 +494,7 @@ export default function DashboardClient({
 								</h2>
 								<Button
 									data-testid="add-discount-btn"
-									onClick={() =>
-										setDlg({ open: true, type: 'discounts', mode: 'add', data: null })
-									}
+									onClick={() => setDlg({ open: true, type: 'discounts', mode: 'add', data: null })}
 									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
 								>
 									<Plus size={14} className="mr-2" /> Add Discount
@@ -552,7 +560,11 @@ export default function DashboardClient({
 													variant="outline"
 													size="sm"
 													onClick={() =>
-														openDeleteConfirmation('discounts', discount.id, discount.name || 'this discount')
+														openDeleteConfirmation(
+															'discounts',
+															discount.id,
+															discount.name || 'this discount',
+														)
 													}
 													className="rounded-none text-xs text-red-600 hover:bg-red-50"
 												>
@@ -959,7 +971,11 @@ export default function DashboardClient({
 												variant="outline"
 												size="sm"
 												onClick={() =>
-													openDeleteConfirmation('size-guides', guide.id, guide.name || 'this size guide')
+													openDeleteConfirmation(
+														'size-guides',
+														guide.id,
+														guide.name || 'this size guide',
+													)
 												}
 												className="rounded-none text-xs text-red-600 hover:bg-red-50"
 											>
@@ -1149,122 +1165,131 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 		if (type === 'products') {
 			return (
 				<div className="space-y-6">
-					<FormSection title="Product Basics" description="Core merchandising details shown to customers.">
+					<FormSection
+						title="Product Basics"
+						description="Core merchandising details shown to customers."
+					>
 						<Field label="Name">
-						<Input
-							data-testid="dlg-name"
-							value={form.name || ''}
-							onChange={(e) => setForm({ ...form, name: e.target.value })}
-							aria-invalid={Boolean(errors.name)}
-							className="rounded-none"
-						/>
-						{errors.name ? <p className="text-xs text-red-600">{errors.name}</p> : null}
+							<Input
+								data-testid="dlg-name"
+								value={form.name || ''}
+								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								aria-invalid={Boolean(errors.name)}
+								className="rounded-none"
+							/>
+							{errors.name ? <p className="text-xs text-red-600">{errors.name}</p> : null}
 						</Field>
 						<Field label="Description">
-						<Textarea
-							data-testid="dlg-desc"
-							value={form.description || ''}
-							onChange={(e) => setForm({ ...form, description: e.target.value })}
-							className="rounded-none"
-							rows={3}
-						/>
+							<Textarea
+								data-testid="dlg-desc"
+								value={form.description || ''}
+								onChange={(e) => setForm({ ...form, description: e.target.value })}
+								className="rounded-none"
+								rows={3}
+							/>
 						</Field>
 						<div className="grid grid-cols-2 gap-4">
 							<Field label="Price">
-							<Input
-								data-testid="dlg-price"
-								type="number"
-								value={form.price || ''}
-								onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
-								aria-invalid={Boolean(errors.price)}
-								className="rounded-none"
-							/>
-							{errors.price ? <p className="text-xs text-red-600">{errors.price}</p> : null}
+								<Input
+									data-testid="dlg-price"
+									type="number"
+									value={form.price || ''}
+									onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+									aria-invalid={Boolean(errors.price)}
+									className="rounded-none"
+								/>
+								{errors.price ? <p className="text-xs text-red-600">{errors.price}</p> : null}
 							</Field>
 							<Field label="Category">
-							<select
-								data-testid="dlg-category"
-								value={form.category || ''}
-								onChange={(e) => setForm({ ...form, category: e.target.value })}
-								aria-invalid={Boolean(errors.category)}
-								className="w-full h-10 border border-stone-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-stone-500"
-							>
-								<option value="">Select category</option>
-								{categories.map((cat: any) => (
-									<option key={cat.id} value={cat.name}>
-										{cat.name}
-									</option>
-								))}
-							</select>
-							{errors.category ? <p className="text-xs text-red-600">{errors.category}</p> : null}
+								<select
+									data-testid="dlg-category"
+									value={form.category || ''}
+									onChange={(e) => setForm({ ...form, category: e.target.value })}
+									aria-invalid={Boolean(errors.category)}
+									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-stone-500"
+								>
+									<option value="">Select category</option>
+									{categories.map((cat: any) => (
+										<option key={cat.id} value={cat.name}>
+											{cat.name}
+										</option>
+									))}
+								</select>
+								{errors.category ? <p className="text-xs text-red-600">{errors.category}</p> : null}
 							</Field>
 						</div>
 					</FormSection>
 
-					<FormSection title="Catalog Linking" description="Control where this product appears across the storefront.">
+					<FormSection
+						title="Catalog Linking"
+						description="Control where this product appears across the storefront."
+					>
 						<Field label="Collection">
-						<select
-							data-testid="dlg-collection"
-							value={form.collectionId || ''}
-							onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
-							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
-						>
-							<option value="">No collection</option>
-							{collections.map((col: any) => (
-								<option key={col.id} value={col.id}>
-									{col.name}
-								</option>
-							))}
-						</select>
-						</Field>
-						<Field label="Size Guide Template">
-						<select
-							data-testid="dlg-size-guide"
-							value={form.sizeGuideId || ''}
-							onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
-							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
-						>
-							<option value="">No size guide</option>
-							{sizeGuides
-								.filter((guide: any) => guide.isActive)
-								.map((guide: any) => (
-									<option key={guide.id} value={guide.id}>
-										{guide.name}
+							<select
+								data-testid="dlg-collection"
+								value={form.collectionId || ''}
+								onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
+								className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+							>
+								<option value="">No collection</option>
+								{collections.map((col: any) => (
+									<option key={col.id} value={col.id}>
+										{col.name}
 									</option>
 								))}
-						</select>
+							</select>
+						</Field>
+						<Field label="Size Guide Template">
+							<select
+								data-testid="dlg-size-guide"
+								value={form.sizeGuideId || ''}
+								onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
+								className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+							>
+								<option value="">No size guide</option>
+								{sizeGuides
+									.filter((guide: any) => guide.isActive)
+									.map((guide: any) => (
+										<option key={guide.id} value={guide.id}>
+											{guide.name}
+										</option>
+									))}
+							</select>
 						</Field>
 					</FormSection>
 
-					<FormSection title="Media" description="Upload primary and gallery images for richer presentation.">
+					<FormSection
+						title="Media"
+						description="Upload primary and gallery images for richer presentation."
+					>
 						<ImageUpload
-						value={form.imageUrl}
-						onChange={(url) => setForm({ ...form, imageUrl: url })}
+							value={form.imageUrl}
+							onChange={(url) => setForm({ ...form, imageUrl: url })}
 						/>
 						<MultiImageUpload
-						values={form.additionalImages || []}
-						onChange={(urls) => setForm({ ...form, additionalImages: urls })}
+							values={form.additionalImages || []}
+							onChange={(urls) => setForm({ ...form, additionalImages: urls })}
 						/>
 					</FormSection>
 
 					<FormSection title="Highlight Flags">
 						<div className="flex gap-6">
-						<div className="flex items-center gap-2">
-							<Switch
-								data-testid="dlg-new"
-								checked={form.isNew || false}
-								onCheckedChange={(v) => setForm({ ...form, isNew: v })}
-							/>
-							<Label className="text-xs">New Arrival</Label>
-						</div>
-						<div className="flex items-center gap-2">
-							<Switch
-								data-testid="dlg-featured"
-								checked={form.isFeatured || false}
-								onCheckedChange={(v) => setForm({ ...form, isFeatured: v })}
-							/>
-							<Label className="text-xs">Featured</Label>
-						</div>
+							<div className="flex items-center gap-2">
+								<Switch
+									data-testid="dlg-new"
+									checked={form.isNew || false}
+									onCheckedChange={(v) => setForm({ ...form, isNew: v })}
+								/>
+								<Label className="text-xs">New Arrival</Label>
+							</div>
+							<div className="flex items-center gap-2">
+								<Switch
+									data-testid="dlg-featured"
+									checked={form.isFeatured || false}
+									onCheckedChange={(v) => setForm({ ...form, isFeatured: v })}
+								/>
+								<Label className="text-xs">Featured</Label>
+							</div>
 						</div>
 					</FormSection>
 				</div>
@@ -1461,7 +1486,10 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 						</Field>
 					</FormSection>
 
-					<FormSection title="Measurements JSON" description="Use valid JSON for table headers and rows.">
+					<FormSection
+						title="Measurements JSON"
+						description="Use valid JSON for table headers and rows."
+					>
 						<Field label="Columns JSON (array of labels)">
 							<Textarea
 								data-testid="dlg-size-guide-columns"
@@ -1488,9 +1516,7 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 								className="rounded-none font-mono text-xs"
 								rows={5}
 							/>
-							{errors.rowsJson ? (
-								<p className="text-xs text-red-600">{errors.rowsJson}</p>
-							) : null}
+							{errors.rowsJson ? <p className="text-xs text-red-600">{errors.rowsJson}</p> : null}
 						</Field>
 
 						<div className="flex items-center gap-2">
@@ -1534,7 +1560,8 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 					...form,
 					discountType: strategy.id,
 					wording: form.wording || strategy.defaultWording,
-					tierRulesJson: strategy.id === 'tiered' ? form.tierRulesJson || TIER_TEMPLATE : form.tierRulesJson,
+					tierRulesJson:
+						strategy.id === 'tiered' ? form.tierRulesJson || TIER_TEMPLATE : form.tierRulesJson,
 				})
 			}
 
@@ -1573,17 +1600,19 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 					</div>
 
 					<div className="rounded-none border border-stone-200 p-4 space-y-4">
-						<p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Campaign Basics</p>
+						<p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">
+							Campaign Basics
+						</p>
 						<Field label="Discount Name">
-						<Input
-							data-testid="dlg-discount-name"
-							value={form.name || ''}
-							onChange={(e) => setForm({ ...form, name: e.target.value })}
-							aria-invalid={Boolean(errors.name)}
-							className="rounded-none"
-						/>
-						{errors.name ? <p className="text-xs text-red-600">{errors.name}</p> : null}
-					</Field>
+							<Input
+								data-testid="dlg-discount-name"
+								value={form.name || ''}
+								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								aria-invalid={Boolean(errors.name)}
+								className="rounded-none"
+							/>
+							{errors.name ? <p className="text-xs text-red-600">{errors.name}</p> : null}
+						</Field>
 
 						<Field label="Description">
 							<Textarea
@@ -1610,50 +1639,53 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 							Pricing & Rules
 						</p>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-						<Field label="Type">
-							<select
-								data-testid="dlg-discount-type"
-								value={form.discountType || 'flat'}
-								onChange={(e) => setForm({ ...form, discountType: e.target.value })}
-								className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
-							>
-								<option value="flat">flat</option>
-								<option value="percentage">percentage</option>
-								<option value="tiered">tiered</option>
-								<option value="bundle">bundle</option>
-							</select>
-							{errors.discountType ? (
-								<p className="text-xs text-red-600">{errors.discountType}</p>
-							) : null}
-						</Field>
+							<Field label="Type">
+								<select
+									data-testid="dlg-discount-type"
+									value={form.discountType || 'flat'}
+									onChange={(e) => setForm({ ...form, discountType: e.target.value })}
+									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+								>
+									<option value="flat">flat</option>
+									<option value="percentage">percentage</option>
+									<option value="tiered">tiered</option>
+									<option value="bundle">bundle</option>
+								</select>
+								{errors.discountType ? (
+									<p className="text-xs text-red-600">{errors.discountType}</p>
+								) : null}
+							</Field>
 
-						<Field label="Value">
-							<Input
-								data-testid="dlg-discount-value"
-								type="number"
-								value={form.discountValue ?? ''}
-								onChange={(e) => setForm({ ...form, discountValue: Number(e.target.value) || 0 })}
-								className="rounded-none"
-							/>
-							{errors.discountValue ? (
-								<p className="text-xs text-red-600">{errors.discountValue}</p>
-							) : null}
-						</Field>
+							<Field label="Value">
+								<Input
+									data-testid="dlg-discount-value"
+									type="number"
+									value={form.discountValue ?? ''}
+									onChange={(e) => setForm({ ...form, discountValue: Number(e.target.value) || 0 })}
+									className="rounded-none"
+								/>
+								{errors.discountValue ? (
+									<p className="text-xs text-red-600">{errors.discountValue}</p>
+								) : null}
+							</Field>
 
-						<Field label="Original Price (Optional)">
-							<Input
-								type="number"
-								value={form.originalPrice ?? ''}
-								onChange={(e) =>
-									setForm({ ...form, originalPrice: e.target.value ? Number(e.target.value) : '' })
-								}
-								className="rounded-none"
-							/>
-							{errors.originalPrice ? (
-								<p className="text-xs text-red-600">{errors.originalPrice}</p>
-							) : null}
-						</Field>
-					</div>
+							<Field label="Original Price (Optional)">
+								<Input
+									type="number"
+									value={form.originalPrice ?? ''}
+									onChange={(e) =>
+										setForm({
+											...form,
+											originalPrice: e.target.value ? Number(e.target.value) : '',
+										})
+									}
+									className="rounded-none"
+								/>
+								{errors.originalPrice ? (
+									<p className="text-xs text-red-600">{errors.originalPrice}</p>
+								) : null}
+							</Field>
+						</div>
 
 						<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 							<Field label="Priority">
@@ -1668,9 +1700,7 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 								<Input
 									type="number"
 									value={form.minCartValue ?? 0}
-									onChange={(e) =>
-										setForm({ ...form, minCartValue: Number(e.target.value) || 0 })
-									}
+									onChange={(e) => setForm({ ...form, minCartValue: Number(e.target.value) || 0 })}
 									className="rounded-none"
 								/>
 							</Field>
@@ -1705,30 +1735,34 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 					</div>
 
 					<div className="rounded-none border border-stone-200 p-4 space-y-4">
-						<p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Campaign Window</p>
+						<p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">
+							Campaign Window
+						</p>
 						<div className="grid grid-cols-2 gap-4">
-						<Field label="Start Date">
-							<Input
-								data-testid="dlg-discount-start"
-								type="datetime-local"
-								value={form.startDate || ''}
-								onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-								className="rounded-none"
-							/>
-							{errors.startDate ? <p className="text-xs text-red-600">{errors.startDate}</p> : null}
-						</Field>
+							<Field label="Start Date">
+								<Input
+									data-testid="dlg-discount-start"
+									type="datetime-local"
+									value={form.startDate || ''}
+									onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+									className="rounded-none"
+								/>
+								{errors.startDate ? (
+									<p className="text-xs text-red-600">{errors.startDate}</p>
+								) : null}
+							</Field>
 
-						<Field label="End Date (Optional)">
-							<Input
-								data-testid="dlg-discount-end"
-								type="datetime-local"
-								value={form.endDate || ''}
-								onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-								className="rounded-none"
-							/>
-							{errors.endDate ? <p className="text-xs text-red-600">{errors.endDate}</p> : null}
-						</Field>
-					</div>
+							<Field label="End Date (Optional)">
+								<Input
+									data-testid="dlg-discount-end"
+									type="datetime-local"
+									value={form.endDate || ''}
+									onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+									className="rounded-none"
+								/>
+								{errors.endDate ? <p className="text-xs text-red-600">{errors.endDate}</p> : null}
+							</Field>
+						</div>
 					</div>
 
 					<div className="rounded-none border border-stone-200 p-4 space-y-4">
@@ -1845,9 +1879,9 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 					? 'Category'
 					: type === 'discounts'
 						? 'Discount'
-					: type === 'size-guides'
-						? 'Size Guide'
-						: 'Collection'
+						: type === 'size-guides'
+							? 'Size Guide'
+							: 'Collection'
 
 	return (
 		<Dialog open={open} onOpenChange={(v) => setDlg({ ...dlg, open: v })}>

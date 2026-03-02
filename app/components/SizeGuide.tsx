@@ -22,8 +22,7 @@ type SizeGuideData = {
 const FALLBACK_SIZE_GUIDE: SizeGuideData = {
 	name: 'General Size Guide',
 	unit: 'in',
-	note:
-		'All measurements in inches. For the best fit, we recommend comparing with a garment you already own.',
+	note: 'All measurements in inches. For the best fit, we recommend comparing with a garment you already own.',
 	columns: ['Bust', 'Waist', 'Hip', 'Length'],
 	rows: [
 		{ size: 'XS', values: ['32', '26', '35', '38'] },
