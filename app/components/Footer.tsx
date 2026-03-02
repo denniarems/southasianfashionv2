@@ -99,8 +99,17 @@ export default function Footer({ settings, year }: { settings?: Settings; year: 
 					<p className="text-xs text-white/20 tracking-wider">
 						&copy; {year} {settings?.brandName || 'SouthAsianFashion'}. All rights reserved.
 					</p>
-					<p className="text-xs text-white/15 tracking-wider font-accent italic">
-						Crafted with intention
+					<p className="text-xs text-white/60 tracking-wider font-accent italic">
+						Crafted by{' '}
+						<a
+							href="https://denniarems.com"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="footer-glitch inline-block underline underline-offset-4 hover:text-white transition-colors duration-300"
+						>
+							denniarems
+						</a>{' '}
+						with <span className="footer-heart-glow" aria-hidden="true">♥</span>
 					</p>
 				</div>
 			</div>
