@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { getDb } from '@/db'
 import { products, settings, collections } from '@/db/schema'
 import { count, desc } from 'drizzle-orm'
@@ -7,6 +6,7 @@ import type { Metadata } from 'next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 export const metadata: Metadata = {
 	title: 'Products',
@@ -47,7 +47,7 @@ export default async function ProductsPage() {
 							<div key={p.id} className="group">
 								<div className="relative overflow-hidden aspect-3/4 mb-4">
 									{p.imageUrl ? (
-										<Image
+										<LoadingImage
 											src={p.imageUrl}
 											alt={p.name}
 											fill

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
-import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import MinusIcon from 'lucide-react/dist/esm/icons/minus'
@@ -9,6 +8,7 @@ import PlusIcon from 'lucide-react/dist/esm/icons/plus'
 import Trash2Icon from 'lucide-react/dist/esm/icons/trash-2'
 import XIcon from 'lucide-react/dist/esm/icons/x'
 import { useCart } from '@/components/cart/CartContext'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 function formatMoney(currency: string, amount: number) {
 	return `${currency} ${amount.toLocaleString()}`
@@ -157,7 +157,7 @@ export function CartDrawer({
 											<div className="flex gap-3">
 												<div className="relative w-16 h-20 bg-stone-100 shrink-0 overflow-hidden">
 													{item.imageUrl ? (
-														<Image
+														<LoadingImage
 															src={item.imageUrl}
 															alt={item.name}
 															fill

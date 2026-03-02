@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 interface Collection {
 	id: string
@@ -66,7 +66,7 @@ export default function Collections({ collections }: { collections: Collection[]
 								data-testid={`collection-link-${c.slug}`}
 							/>
 							{c.imageUrl && (
-								<Image
+								<LoadingImage
 									src={c.imageUrl}
 									alt={c.name}
 									fill

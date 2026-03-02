@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import Image from 'next/image'
 import { Upload, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 interface ImageUploadProps {
 	value: string
@@ -72,11 +72,12 @@ export default function ImageUpload({ value, onChange, label = 'Image' }: ImageU
 			<input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 			{value && (
 				<div className="relative inline-block">
-					<Image
+					<LoadingImage
 						src={value}
 						alt="Preview"
 						width={96}
 						height={96}
+						sizes="96px"
 						className="h-24 w-auto object-cover border border-stone-200"
 					/>
 					<button

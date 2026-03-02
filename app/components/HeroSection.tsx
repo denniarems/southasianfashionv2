@@ -1,7 +1,7 @@
 'use client'
 
-import Image from 'next/image'
 import { motion } from 'framer-motion'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 interface HeroData {
 	title: string
@@ -21,7 +21,7 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 		>
 			<div className="absolute inset-0">
 				{hero.imageUrl && (
-					<Image
+					<LoadingImage
 						src={hero.imageUrl}
 						alt=""
 						fill

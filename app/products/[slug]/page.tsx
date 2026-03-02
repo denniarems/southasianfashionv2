@@ -2,12 +2,12 @@ import { getDb } from '@/db'
 import { products, settings, collections } from '@/db/schema'
 import { desc, eq, or } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import type { Metadata } from 'next'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -121,10 +121,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 						<div className="w-full">
 							<div className="relative aspect-4/5 w-full bg-stone-100 overflow-hidden rounded-sm lg:sticky lg:top-28">
 								{p.imageUrl ? (
-									<Image
+									<LoadingImage
 										src={p.imageUrl}
 										alt={p.name}
 										fill
+										priority
 										sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 50vw"
 										className="object-cover"
 									/>

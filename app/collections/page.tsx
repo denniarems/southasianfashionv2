@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { getDb } from '@/db'
 import { settings, collections } from '@/db/schema'
 import { desc } from 'drizzle-orm'
@@ -6,6 +5,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 export const metadata: Metadata = {
 	title: 'Collections',
@@ -44,10 +44,11 @@ export default async function CollectionsPage() {
 							<Link href={`/collections/${c.slug}`} key={c.id} className="group block">
 								<div className="relative overflow-hidden aspect-4/3 sm:aspect-video mb-6">
 									{c.imageUrl ? (
-										<Image
+										<LoadingImage
 											src={c.imageUrl}
 											alt={c.name}
 											fill
+											sizes="(max-width: 768px) 100vw, 50vw"
 											className="object-cover transition-transform duration-700 group-hover:scale-105"
 										/>
 									) : (

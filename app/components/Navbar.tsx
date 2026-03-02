@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import MenuIcon from 'lucide-react/dist/esm/icons/menu'
@@ -10,6 +9,7 @@ import ShoppingCartIcon from 'lucide-react/dist/esm/icons/shopping-cart'
 import XIcon from 'lucide-react/dist/esm/icons/x'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { useCart } from '@/components/cart/CartContext'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 interface Collection {
 	id: string
@@ -128,11 +128,12 @@ export default function Navbar({
 															data-testid={`mega-menu-${c.slug}`}
 														>
 															{c.imageUrl && (
-																<Image
+																<LoadingImage
 																	src={c.imageUrl}
 																	alt={c.name}
 																	width={56}
 																	height={56}
+																	sizes="56px"
 																	className="w-14 h-14 object-cover shrink-0"
 																/>
 															)}

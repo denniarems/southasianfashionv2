@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
@@ -24,6 +23,7 @@ import ImageUpload from '@/app/components/ImageUpload'
 import { deleteItem, saveItem, saveSettings } from '@/app/actions/dashboard'
 import { logout } from '@/app/actions/auth'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
@@ -208,11 +208,12 @@ export default function DashboardClient({
 									>
 										<div className="flex gap-4">
 											{p.imageUrl ? (
-												<Image
+												<LoadingImage
 													src={p.imageUrl}
 													alt={p.name}
 													width={80}
 													height={80}
+													sizes="80px"
 													className="w-20 h-20 object-cover shrink-0"
 												/>
 											) : (
@@ -296,11 +297,12 @@ export default function DashboardClient({
 										data-testid={`admin-collection-${c.id}`}
 									>
 										{c.imageUrl && (
-											<Image
+											<LoadingImage
 												src={c.imageUrl}
 												alt={c.name}
 												width={96}
 												height={96}
+												sizes="96px"
 												className="w-24 h-24 object-cover shrink-0"
 											/>
 										)}
@@ -365,11 +367,12 @@ export default function DashboardClient({
 										data-testid={`admin-hero-${h.id}`}
 									>
 										{h.imageUrl && (
-											<Image
+											<LoadingImage
 												src={h.imageUrl}
 												alt={h.title}
 												width={128}
 												height={80}
+												sizes="128px"
 												className="w-32 h-20 object-cover shrink-0"
 											/>
 										)}

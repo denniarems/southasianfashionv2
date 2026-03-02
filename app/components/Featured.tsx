@@ -1,9 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import { motion } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 interface Product {
 	id: string
@@ -43,7 +43,7 @@ export default function Featured({
 						className="relative overflow-hidden aspect-3/4"
 					>
 						{item.imageUrl && (
-							<Image
+							<LoadingImage
 								src={item.imageUrl}
 								alt={item.name}
 								fill

@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { motion } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
+import { LoadingImage } from '@/components/ui/loading-image'
 
 interface Product {
 	id: string
@@ -71,7 +71,7 @@ export default function NewArrivals({
 						>
 							<div className="relative overflow-hidden aspect-3/4 mb-6">
 								{p.imageUrl && (
-									<Image
+									<LoadingImage
 										src={p.imageUrl}
 										alt={p.name}
 										fill
