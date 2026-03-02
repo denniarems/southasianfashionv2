@@ -58,30 +58,30 @@ export async function deleteItem(type: string, id: string) {
 					.where(eq(products.id, id))
 					.limit(1)
 
-					let additionalImgs: Array<{ imageUrl: string }> = []
-					try {
-						additionalImgs = await db
-							.select({ imageUrl: productImages.imageUrl })
-							.from(productImages)
-							.where(eq(productImages.productId, id))
-					} catch (error) {
-						if (!isMissingProductImagesTableError(error)) {
-							throw error
-						}
+				let additionalImgs: Array<{ imageUrl: string }> = []
+				try {
+					additionalImgs = await db
+						.select({ imageUrl: productImages.imageUrl })
+						.from(productImages)
+						.where(eq(productImages.productId, id))
+				} catch (error) {
+					if (!isMissingProductImagesTableError(error)) {
+						throw error
 					}
+				}
 
 				for (const img of additionalImgs) {
 					await deleteVercelBlobByUrl(img.imageUrl, 'product additional image deletion')
 				}
 
 				await deleteVercelBlobByUrl(existing[0]?.imageUrl, 'product deletion')
-					try {
-						await db.delete(productImages).where(eq(productImages.productId, id))
-					} catch (error) {
-						if (!isMissingProductImagesTableError(error)) {
-							throw error
-						}
+				try {
+					await db.delete(productImages).where(eq(productImages.productId, id))
+				} catch (error) {
+					if (!isMissingProductImagesTableError(error)) {
+						throw error
 					}
+				}
 				await db.delete(products).where(eq(products.id, id))
 				break
 			}

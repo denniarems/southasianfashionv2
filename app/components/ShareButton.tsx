@@ -38,12 +38,9 @@ export default function ShareButton({
 
 	const shareText = useMemo(
 		() =>
-			[
-				`✨ ${productName}`,
-				shareSnippet,
-				`Image: ${productImage}`,
-				`Link: ${productUrl}`,
-			].join('\n\n'),
+			[`✨ ${productName}`, shareSnippet, `Image: ${productImage}`, `Link: ${productUrl}`].join(
+				'\n\n',
+			),
 		[productImage, productName, productUrl, shareSnippet],
 	)
 
@@ -121,7 +118,9 @@ export default function ShareButton({
 							className="flex w-full items-center gap-3 px-2 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
 						>
 							<SmartphoneIcon size={16} />
-							<span className="text-xs uppercase tracking-widest font-medium">Share via Device</span>
+							<span className="text-xs uppercase tracking-widest font-medium">
+								Share via Device
+							</span>
 						</button>
 					)}
 
