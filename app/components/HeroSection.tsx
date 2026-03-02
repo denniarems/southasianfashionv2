@@ -20,11 +20,20 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 			className="relative min-h-screen flex items-end overflow-hidden"
 		>
 			<div className="absolute inset-0">
-				{hero.imageUrl && <Image src={hero.imageUrl} alt="" fill className="object-cover" />}
-				<div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/30 to-stone-900/10" />
+				{hero.imageUrl && (
+					<Image
+						src={hero.imageUrl}
+						alt=""
+						fill
+						priority
+						sizes="100vw"
+						className="object-cover"
+					/>
+				)}
+				<div className="absolute inset-0 bg-linear-to-t from-stone-900/70 via-stone-900/30 to-stone-900/10" />
 			</div>
 
-			<div className="relative z-10 max-w-[1800px] mx-auto px-6 md:px-12 lg:px-24 w-full pb-24 md:pb-32">
+			<div className="relative z-10 max-w-450 mx-auto px-6 md:px-12 lg:px-24 w-full pb-24 md:pb-32">
 				<div className="max-w-3xl">
 					<motion.p
 						initial={{ opacity: 0, y: 20 }}

@@ -1,6 +1,7 @@
 import { getDb } from '@/db'
 import { heroBanners, collections, products, settings } from '@/db/schema'
 import { eq, desc } from 'drizzle-orm'
+import type { Metadata } from 'next'
 
 import Navbar from './components/Navbar'
 import HeroSection from './components/HeroSection'
@@ -9,6 +10,15 @@ import Featured from './components/Featured'
 import NewArrivals from './components/NewArrivals'
 import Footer from './components/Footer'
 import WhatsAppButton from './components/WhatsAppButton'
+
+export const metadata: Metadata = {
+	title: 'Home',
+	description:
+		'Discover curated luxury South Asian fashion collections, featured pieces, and new arrivals.',
+	alternates: {
+		canonical: '/',
+	},
+}
 
 export default async function Home() {
 	const db = getDb()

@@ -4,9 +4,69 @@ import { products, settings, collections } from '@/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
+
+async function getCollectionBySlug(slug: string) {
+	const db = getDb()
+	const collectionQuery = await db.select().from(collections).where(eq(collections.slug, slug)).limit(1)
+
+	return collectionQuery[0]
+}
+
+export async function generateMetadata({
+	params,
+}: {
+	params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+	const { slug } = await params
+	const collection = await getCollectionBySlug(slug)
+
+	if (!collection) {
+		return {
+			title: 'Collection Not Found',
+			robots: {
+				index: false,
+				follow: false,
+			},
+		}
+	}
+
+	const collectionPath = `/collections/${collection.slug}`
+	const title = collection.name
+	const description =
+		collection.description?.trim() || `Explore the ${collection.name} collection from South Asian Fashion.`
+
+	return {
+		title,
+		description,
+		alternates: {
+			canonical: collectionPath,
+		},
+		openGraph: {
+			type: 'website',
+			title,
+			description,
+			url: collectionPath,
+			images: collection.imageUrl
+				? [
+						{
+							url: collection.imageUrl,
+							alt: collection.name,
+						},
+					]
+				: undefined,
+		},
+		twitter: {
+			card: 'summary_large_image',
+			title,
+			description,
+			images: collection.imageUrl ? [collection.imageUrl] : undefined,
+		},
+	}
+}
 
 export default async function CollectionDetailPage({
 	params,
@@ -18,7 +78,7 @@ export default async function CollectionDetailPage({
 	const currentYear = new Date().getFullYear()
 
 	const [collectionQuery, allCollections, [siteSettings]] = await Promise.all([
-		db.select().from(collections).where(eq(collections.slug, slug)).limit(1),
+		getCollectionBySlug(slug).then((collection) => (collection ? [collection] : [])),
 		db.select().from(collections).orderBy(desc(collections.createdAt)),
 		db.select().from(settings).limit(1),
 	])

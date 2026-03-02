@@ -3,10 +3,76 @@ import { products, settings, collections } from '@/db/schema'
 import { desc, eq, or } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+async function getProductBySlug(slug: string) {
+	const db = getDb()
+	const productQuery = await db
+		.select()
+		.from(products)
+		.where(or(eq(products.slug, slug), eq(products.id, slug)))
+		.limit(1)
+
+	return productQuery[0]
+}
+
+export async function generateMetadata({
+	params,
+}: {
+	params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+	const { slug } = await params
+	const product = await getProductBySlug(slug)
+
+	if (!product) {
+		return {
+			title: 'Product Not Found',
+			robots: {
+				index: false,
+				follow: false,
+			},
+		}
+	}
+
+	const productPath = `/products/${product.slug ?? product.id}`
+	const title = product.name
+	const description =
+		product.description?.trim() || `Explore ${product.name} from South Asian Fashion.`
+
+	return {
+		title,
+		description,
+		alternates: {
+			canonical: productPath,
+		},
+		openGraph: {
+			type: 'website',
+			title,
+			description,
+			url: productPath,
+			images: product.imageUrl
+				? [
+						{
+							url: product.imageUrl,
+							alt: product.name,
+						},
+					]
+				: undefined,
+		},
+		twitter: {
+			card: 'summary_large_image',
+			title,
+			description,
+			images: product.imageUrl ? [product.imageUrl] : undefined,
+		},
+	}
+}
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
 	const db = getDb()
@@ -14,11 +80,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 	const currentYear = new Date().getFullYear()
 
 	const [productQuery, allCollections, [siteSettings]] = await Promise.all([
-		db
-			.select()
-			.from(products)
-			.where(or(eq(products.slug, slug), eq(products.id, slug)))
-			.limit(1),
+		getProductBySlug(slug).then((product) => (product ? [product] : [])),
 		db.select().from(collections).orderBy(desc(collections.createdAt)),
 		db.select().from(settings).limit(1),
 	])
@@ -27,9 +89,30 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 	if (!p) return notFound()
 
 	const whatsapp = siteSettings?.whatsappNumber?.replace(/[^0-9]/g, '') || ''
+	const productPath = `/products/${p.slug ?? p.id}`
+
+	const productJsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'Product',
+		name: p.name,
+		description: p.description || '',
+		image: p.imageUrl ? [p.imageUrl] : [],
+		sku: p.id,
+		offers: {
+			'@type': 'Offer',
+			priceCurrency: p.currency,
+			price: String(p.price),
+			availability: 'https://schema.org/InStock',
+			url: `${siteUrl}${productPath}`,
+		},
+	}
 
 	return (
 		<>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+			/>
 			<Navbar settings={siteSettings} collections={allCollections} transparent={false} />
 
 			<main className="pt-24 md:pt-28 pb-16 md:pb-24 min-h-screen bg-white">

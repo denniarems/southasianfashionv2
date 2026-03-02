@@ -43,7 +43,13 @@ export default function Featured({
 						className="relative overflow-hidden aspect-3/4"
 					>
 						{item.imageUrl && (
-							<Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+							<Image
+								src={item.imageUrl}
+								alt={item.name}
+								fill
+								sizes="(max-width: 1024px) 100vw, 50vw"
+								className="object-cover"
+							/>
 						)}
 					</motion.div>
 

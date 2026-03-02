@@ -28,7 +28,7 @@ export default function Collections({ collections }: { collections: Collection[]
 			data-testid="collections-section"
 			className="py-24 md:py-32 bg-stone-100"
 		>
-			<div className="max-w-[1800px] mx-auto px-6 md:px-12 lg:px-24">
+			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
@@ -56,8 +56,8 @@ export default function Collections({ collections }: { collections: Collection[]
 							data-testid={`collection-card-${c.id}`}
 							className={`group relative overflow-hidden cursor-pointer ${
 								i === 0
-									? 'md:row-span-2 min-h-[400px] md:min-h-[600px]'
-									: 'min-h-[280px] md:min-h-[290px]'
+									? 'md:row-span-2 min-h-100 md:min-h-150'
+									: 'min-h-70 md:min-h-72.5'
 							}`}
 						>
 							<Link
@@ -70,10 +70,11 @@ export default function Collections({ collections }: { collections: Collection[]
 									src={c.imageUrl}
 									alt={c.name}
 									fill
+									sizes="(max-width: 768px) 100vw, 50vw"
 									className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
 								/>
 							)}
-							<div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/20 to-transparent" />
+							<div className="absolute inset-0 bg-linear-to-t from-stone-900/70 via-stone-900/20 to-transparent" />
 
 							<div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
 								<p className="font-accent italic text-white/60 text-sm mb-1">

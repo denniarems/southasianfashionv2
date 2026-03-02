@@ -3,9 +3,18 @@ import { getDb } from '@/db'
 import { products, settings, collections } from '@/db/schema'
 import { count, desc } from 'drizzle-orm'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
+
+export const metadata: Metadata = {
+	title: 'Products',
+	description: 'Browse all available South Asian Fashion products and discover your next statement piece.',
+	alternates: {
+		canonical: '/products',
+	},
+}
 
 export default async function ProductsPage() {
 	const db = getDb()
