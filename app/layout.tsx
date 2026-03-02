@@ -26,6 +26,11 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
 	metadataBase: new URL(siteUrl),
+	icons: {
+		icon: [{ url: '/icon.ico', type: 'image/x-icon' }],
+		shortcut: ['/icon.ico'],
+		apple: [{ url: '/logo.png', type: 'image/png' }],
+	},
 	title: {
 		default: 'South Asian Fashion',
 		template: '%s | South Asian Fashion',

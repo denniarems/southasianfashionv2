@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import MenuIcon from 'lucide-react/dist/esm/icons/menu'
@@ -69,6 +70,7 @@ export default function Navbar({
 	const cartButtonClass = isDark
 		? 'text-stone-900 border-stone-300 hover:bg-stone-100'
 		: 'text-white border-white/60 hover:bg-white hover:text-stone-900'
+	const brandName = settings?.brandName || 'South Asian Fashion'
 
 	return (
 		<>
@@ -82,10 +84,24 @@ export default function Navbar({
 					<div className="flex items-center justify-between h-20">
 						<Link
 							href="/"
-							className={`font-heading text-lg tracking-wider transition-colors duration-500 ${isDark ? 'text-stone-900' : 'text-white'}`}
+							className="inline-flex items-center gap-3"
 							data-testid="nav-logo"
+							aria-label={brandName}
 						>
-							{settings?.brandName || 'SouthAsianFashion'}
+							<Image
+								src="/logo.png"
+								alt={brandName}
+								width={168}
+								height={40}
+								sizes="168px"
+								priority
+								className="h-8 w-auto md:h-9"
+							/>
+							<span
+								className={`font-heading text-sm md:text-base tracking-wider transition-colors duration-500 ${isDark ? 'text-stone-900' : 'text-white'}`}
+							>
+								{brandName}
+							</span>
 						</Link>
 
 						<div className="hidden md:flex items-center gap-12">
