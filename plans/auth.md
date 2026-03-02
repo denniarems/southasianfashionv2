@@ -10,7 +10,6 @@ For Next.js App Router (RSC + Server Actions), it is much more secure and ergono
    - User enters email on `/admin/login`.
    - Client calls `requestOtpAction(email)`.
    - Server Action generates OTP, stores in D1 `otp_codes`, and sends email via Resend.
-   
 2. **Verify OTP (Client -> Server Action)**
    - User enters OTP on `/admin/login`.
    - Client calls `verifyOtpAction(email, otp)`.
@@ -24,6 +23,5 @@ For Next.js App Router (RSC + Server Actions), it is much more secure and ergono
    - Intercept all requests to `/admin/*` (except `/admin/login`).
    - Read `saf_admin_session` from cookies.
    - Verify JWT. If invalid, redirect to `/admin/login`.
-   
 4. **Data Fetching (RSC / Server Actions)**
    - In Server Actions targeting `/admin` data, we read `cookies().get('saf_admin_session')` and verify the JWT before executing the DB mutation/query, ensuring the action cannot be called directly without authentication.

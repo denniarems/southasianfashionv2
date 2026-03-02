@@ -14,13 +14,14 @@ This migration isn't just a file extension rename; it requires careful typing of
 2. **Prop Interfaces (Mandatory):**
    - Every React component must have an explicit interface or type for its props.
    - Example:
+
      ```tsx
      // Old
      const ProductCard = ({ product, isFeatured }) => { ... }
-     
+
      // New
      import { Product } from '@/db/schema'; // Import type from Drizzle schema
-     
+
      interface ProductCardProps {
        product: Product;
        isFeatured?: boolean;
@@ -39,7 +40,7 @@ This migration isn't just a file extension rename; it requires careful typing of
 
 5. **Strict React 19 Policy Enforcement:**
    - **Remove `useMemo` and `useCallback`**.
-   - **Replace `useEffect` for Data Fetching**: 
+   - **Replace `useEffect` for Data Fetching**:
      - Move data fetching to Server Components (RSC) where possible.
      - If client-side fetching is absolutely needed, use `use` with Suspense, Server Actions, or an approved data-fetching library (like TanStack Query if pre-approved).
    - **Replace Context for Global State (if applicable)**: Evaluate if the old Context API pattern is still needed or if Server Components and Server Actions remove the necessity for it.
@@ -51,7 +52,7 @@ This migration isn't just a file extension rename; it requires careful typing of
      - Browser APIs (e.g., `window`, `document`).
      - Event listeners (e.g., `onClick`, `onChange`).
      - Custom hooks that rely on state/effects (e.g., `framer-motion` hooks).
-   - *Crucially, if a component only renders UI based on props or data fetched from the server, leave it as an RSC (no `"use client"`).*
+   - _Crucially, if a component only renders UI based on props or data fetched from the server, leave it as an RSC (no `"use client"`)._
 
 7. **Handling `framer-motion` & Styling:**
    - Components using `motion.*` (e.g., `motion.div`) require `"use client"`.
