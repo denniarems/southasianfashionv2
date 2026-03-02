@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { LoadingImage } from '@/components/ui/loading-image'
+import PremiumPriceDisplay from '@/app/components/PremiumPriceDisplay'
+import type { ProductPricePreview } from '@/lib/discounts'
 
 interface Product {
 	id: string
@@ -14,6 +16,7 @@ interface Product {
 	price: number
 	currency: string
 	imageUrl: string | null
+	pricing?: ProductPricePreview
 }
 
 interface Settings {
@@ -57,6 +60,13 @@ export default function Featured({
 								className="object-cover"
 							/>
 						)}
+						{item.pricing?.hasDiscount && item.pricing.badgeText ? (
+							<div className="absolute top-4 left-4 z-20">
+								<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
+									{item.pricing.badgeText}
+								</span>
+							</div>
+						) : null}
 					</motion.div>
 
 					<motion.div
@@ -72,16 +82,25 @@ export default function Featured({
 							{item.name}
 						</h2>
 						<p className="text-stone-500 leading-relaxed mb-4 max-w-lg">{item.description}</p>
-						<p className="font-heading text-2xl text-stone-900 mb-10">
-							{item.currency} {item.price?.toLocaleString()}
-						</p>
+						<div className="mb-10">
+							<PremiumPriceDisplay
+								currency={item.currency}
+								originalPrice={item.pricing?.originalPrice ?? item.price}
+								discountedPrice={item.pricing?.discountedPrice ?? item.price}
+								savingsAmount={item.pricing?.savingsAmount ?? 0}
+								savingsPercent={item.pricing?.savingsPercent ?? 0}
+								discountText={item.pricing?.discountText}
+								badgeText={item.pricing?.badgeText}
+								endDate={item.pricing?.endDate}
+							/>
+						</div>
 						<div className="flex flex-col sm:flex-row gap-3">
 							<AddToCartButton
 								product={{
 									id: item.id,
 									name: item.name,
 									slug: item.slug,
-									price: item.price,
+									price: item.pricing?.discountedPrice ?? item.price,
 									currency: item.currency,
 									imageUrl: item.imageUrl,
 								}}

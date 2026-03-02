@@ -3,10 +3,13 @@
 import { getDb } from '@/db'
 import { products } from '@/db/schema'
 import { and, asc, count, desc, eq, ilike, isNotNull, or } from 'drizzle-orm'
+import { previewProductPrice, type ProductPricePreview } from '@/lib/discounts'
 
 const PAGE_SIZE = 12
 
-export type ProductRow = typeof products.$inferSelect
+export type ProductRow = typeof products.$inferSelect & {
+	pricing?: ProductPricePreview
+}
 
 interface FetchProductsParams {
 	search: string
@@ -68,10 +71,17 @@ export async function fetchProducts({
 		db.select({ total: count() }).from(products).where(whereClause),
 	])
 
+	const productsWithPricing = await Promise.all(
+		items.map(async (product: typeof products.$inferSelect) => ({
+			...product,
+			pricing: await previewProductPrice(product),
+		})),
+	)
+
 	return {
-		products: items,
+		products: productsWithPricing,
 		total,
-		hasMore: offset + items.length < total,
+		hasMore: offset + productsWithPricing.length < total,
 	}
 }
 

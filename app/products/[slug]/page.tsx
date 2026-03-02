@@ -11,8 +11,10 @@ import SizeGuide from '../../components/SizeGuide'
 import RelatedProducts from '../../components/RelatedProducts'
 import ProductImageGallery from '../../components/ProductImageGallery'
 import ShareButton from '../../components/ShareButton'
+import PremiumPriceDisplay from '../../components/PremiumPriceDisplay'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { fetchProductCategories } from '../../actions/products'
+import { previewProductPrice, type ProductPricePreview } from '@/lib/discounts'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -135,7 +137,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 	if (p.category) relatedConditions.push(eq(products.category, p.category))
 	if (p.collectionId) relatedConditions.push(eq(products.collectionId, p.collectionId))
 
-	const [relatedProducts, productImageRows, selectedSizeGuide] = await Promise.all([
+	const [relatedProducts, productImageRows, selectedSizeGuide, pricingPreview] = await Promise.all([
 		relatedConditions.length > 0
 			? db
 					.select()
@@ -157,12 +159,20 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 					.limit(1)
 					.then((rows: Array<typeof sizeGuides.$inferSelect>) => rows[0] || null)
 			: Promise.resolve(null),
+		previewProductPrice(p),
 	])
 
 	const allImages = [
 		...(p.imageUrl ? [p.imageUrl] : []),
 		...productImageRows.map((img: typeof productImages.$inferSelect) => img.imageUrl),
 	]
+
+	const relatedProductsWithPricing = await Promise.all(
+		relatedProducts.map(async (product: typeof products.$inferSelect) => ({
+			...product,
+			pricing: (await previewProductPrice(product)) as ProductPricePreview,
+		})),
+	)
 
 	const whatsapp = siteSettings?.whatsappNumber?.replace(/[^0-9]/g, '') || ''
 	const parsedSizeGuide = selectedSizeGuide
@@ -239,9 +249,18 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 							<h1 className="font-heading text-3xl sm:text-4xl md:text-5xl text-stone-900 tracking-tight mb-4">
 								{p.name}
 							</h1>
-							<p className="font-heading text-2xl text-stone-600 mb-6 md:mb-8">
-								{p.currency} {p.price?.toLocaleString()}
-							</p>
+							<div className="mb-6 md:mb-8">
+								<PremiumPriceDisplay
+									currency={p.currency}
+									originalPrice={pricingPreview.originalPrice}
+									discountedPrice={pricingPreview.discountedPrice}
+									savingsAmount={pricingPreview.savingsAmount}
+									savingsPercent={pricingPreview.savingsPercent}
+									discountText={pricingPreview.discountText}
+									badgeText={pricingPreview.badgeText}
+									endDate={pricingPreview.endDate}
+								/>
+							</div>
 
 							<div className="prose prose-stone max-w-none text-stone-500 mb-8 md:mb-12">
 								<p className="leading-relaxed">{p.description}</p>
@@ -254,7 +273,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 											id: p.id,
 											name: p.name,
 											slug: p.slug,
-											price: p.price,
+											price: pricingPreview.discountedPrice,
 											currency: p.currency,
 											imageUrl: p.imageUrl,
 										}}
@@ -297,7 +316,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 					</div>
 				</div>
 
-				<RelatedProducts products={relatedProducts} />
+				<RelatedProducts products={relatedProductsWithPricing} />
 			</main>
 
 			<Footer settings={siteSettings} year={currentYear} />

@@ -11,6 +11,7 @@ import ChevronDownIcon from 'lucide-react/dist/esm/icons/chevron-down'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { LoadingImage } from '@/components/ui/loading-image'
 import { fetchProducts, type ProductRow } from '@/app/actions/products'
+import PremiumPriceDisplay from '@/app/components/PremiumPriceDisplay'
 
 const PAGE_SIZE = 12
 
@@ -292,6 +293,13 @@ export default function ProductsGrid({
 										<div className="w-full h-full bg-stone-200" />
 									)}
 									<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
+									{p.pricing?.hasDiscount && p.pricing.badgeText ? (
+										<div className="absolute top-3 left-3 z-10">
+											<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
+												{p.pricing.badgeText}
+											</span>
+										</div>
+									) : null}
 								</Link>
 								<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
 									{p.category}
@@ -301,16 +309,24 @@ export default function ProductsGrid({
 										{p.name}
 									</h3>
 								</Link>
-								<p className="text-sm text-stone-500">
-									{p.currency} {p.price?.toLocaleString()}
-								</p>
+								<PremiumPriceDisplay
+									compact
+									currency={p.currency}
+									originalPrice={p.pricing?.originalPrice ?? p.price}
+									discountedPrice={p.pricing?.discountedPrice ?? p.price}
+									savingsAmount={p.pricing?.savingsAmount ?? 0}
+									savingsPercent={p.pricing?.savingsPercent ?? 0}
+									discountText={p.pricing?.discountText}
+									badgeText={p.pricing?.badgeText}
+									endDate={p.pricing?.endDate}
+								/>
 								<div className="mt-4">
 									<AddToCartButton
 										product={{
 											id: p.id,
 											name: p.name,
 											slug: p.slug,
-											price: p.price,
+											price: p.pricing?.discountedPrice ?? p.price,
 											currency: p.currency,
 											imageUrl: p.imageUrl,
 										}}

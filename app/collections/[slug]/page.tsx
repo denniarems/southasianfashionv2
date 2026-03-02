@@ -7,9 +7,11 @@ import type { Metadata } from 'next'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import Breadcrumb from '../../components/Breadcrumb'
+import PremiumPriceDisplay from '../../components/PremiumPriceDisplay'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { LoadingImage } from '@/components/ui/loading-image'
 import { fetchProductCategories } from '../../actions/products'
+import { previewProductPrice, type ProductPricePreview } from '@/lib/discounts'
 
 async function getCollectionBySlug(slug: string) {
 	const db = getDb()
@@ -100,6 +102,13 @@ export default async function CollectionDetailPage({
 		.where(eq(products.collectionId, c.id))
 		.orderBy(desc(products.createdAt))
 
+	const collectionProductsWithPricing = await Promise.all(
+		collectionProducts.map(async (product: typeof products.$inferSelect) => ({
+			...product,
+			pricing: (await previewProductPrice(product)) as ProductPricePreview,
+		})),
+	)
+
 	return (
 		<>
 			<Navbar
@@ -123,7 +132,10 @@ export default async function CollectionDetailPage({
 					</div>
 
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-						{collectionProducts.map((p: typeof products.$inferSelect) => (
+						{collectionProductsWithPricing.map(
+							(
+								p: typeof products.$inferSelect & { pricing?: ProductPricePreview },
+							) => (
 							<div key={p.id} className="group">
 								<Link
 									href={`/products/${p.slug ?? p.id}`}
@@ -141,6 +153,13 @@ export default async function CollectionDetailPage({
 										<div className="w-full h-full bg-stone-200" />
 									)}
 									<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
+									{p.pricing?.hasDiscount && p.pricing.badgeText ? (
+										<div className="absolute top-3 left-3 z-20">
+											<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
+												{p.pricing.badgeText}
+											</span>
+										</div>
+									) : null}
 								</Link>
 								<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
 									{p.category}
@@ -150,16 +169,24 @@ export default async function CollectionDetailPage({
 										{p.name}
 									</h3>
 								</Link>
-								<p className="text-sm text-stone-500">
-									{p.currency} {p.price?.toLocaleString()}
-								</p>
+								<PremiumPriceDisplay
+									compact
+									currency={p.currency}
+									originalPrice={p.pricing?.originalPrice ?? p.price}
+									discountedPrice={p.pricing?.discountedPrice ?? p.price}
+									savingsAmount={p.pricing?.savingsAmount ?? 0}
+									savingsPercent={p.pricing?.savingsPercent ?? 0}
+									discountText={p.pricing?.discountText}
+									badgeText={p.pricing?.badgeText}
+									endDate={p.pricing?.endDate}
+								/>
 								<div className="mt-4">
 									<AddToCartButton
 										product={{
 											id: p.id,
 											name: p.name,
 											slug: p.slug,
-											price: p.price,
+											price: p.pricing?.discountedPrice ?? p.price,
 											currency: p.currency,
 											imageUrl: p.imageUrl,
 										}}
@@ -167,10 +194,11 @@ export default async function CollectionDetailPage({
 									/>
 								</div>
 							</div>
-						))}
+							),
+						)}
 					</div>
 
-					{collectionProducts.length === 0 && (
+					{collectionProductsWithPricing.length === 0 && (
 						<div className="text-center py-24">
 							<p className="font-heading text-2xl text-stone-900 mb-3">New pieces coming soon</p>
 							<p className="text-stone-500 text-sm mb-8 max-w-md mx-auto leading-relaxed">

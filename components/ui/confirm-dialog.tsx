@@ -33,15 +33,15 @@ const iconMap = {
 } as const
 
 const iconColorMap = {
-	danger: 'text-red-600',
-	warning: 'text-amber-600',
-	info: 'text-blue-600',
+	danger: 'text-[#7A1E2C]',
+	warning: 'text-[#B8860B]',
+	info: 'text-stone-700',
 } as const
 
 const confirmVariantMap = {
 	danger: 'destructive',
-	warning: 'default',
-	info: 'default',
+	warning: 'outline',
+	info: 'outline',
 } as const
 
 export function ConfirmDialog({
@@ -59,16 +59,21 @@ export function ConfirmDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-md" showCloseButton={!confirming}>
+			<DialogContent className="sm:max-w-md rounded-none" showCloseButton={!confirming}>
 				<DialogHeader>
-					<div className="mb-2 flex items-center gap-2">
+					<div className="mb-2 flex items-center gap-3">
 						<Icon className={`size-5 ${iconColorMap[variant]}`} aria-hidden="true" />
 						<DialogTitle>{title}</DialogTitle>
 					</div>
 					{description ? <DialogDescription>{description}</DialogDescription> : null}
 				</DialogHeader>
-				<DialogFooter>
-					<Button variant="outline" onClick={() => onOpenChange(false)} disabled={confirming}>
+				<DialogFooter className="mt-2">
+					<Button
+						variant="outline"
+						onClick={() => onOpenChange(false)}
+						disabled={confirming}
+						className="rounded-none text-xs uppercase tracking-widest"
+					>
 						{cancelText}
 					</Button>
 					<Button
@@ -76,6 +81,11 @@ export function ConfirmDialog({
 						onClick={onConfirm}
 						disabled={confirming}
 						aria-busy={confirming}
+						className={
+							variant === 'danger'
+								? 'rounded-none text-xs uppercase tracking-widest'
+								: 'rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-[#B8860B] border border-stone-900'
+						}
 					>
 						{confirming ? 'Please wait…' : confirmText}
 					</Button>

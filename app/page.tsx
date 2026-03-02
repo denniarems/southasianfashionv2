@@ -11,6 +11,7 @@ import NewArrivals from './components/NewArrivals'
 import Footer from './components/Footer'
 import WhatsAppButton from './components/WhatsAppButton'
 import { fetchProductCategories } from './actions/products'
+import { previewProductPrice } from '@/lib/discounts'
 
 export const metadata: Metadata = {
 	title: 'Home',
@@ -48,6 +49,21 @@ export default async function Home() {
 
 	const currentYear = new Date().getFullYear()
 
+	const [featuredProductsWithPricing, newArrivalProductsWithPricing] = await Promise.all([
+		Promise.all(
+			featuredProducts.map(async (product: typeof products.$inferSelect) => ({
+				...product,
+				pricing: await previewProductPrice(product),
+			})),
+		),
+		Promise.all(
+			newArrivalProducts.map(async (product: typeof products.$inferSelect) => ({
+				...product,
+				pricing: await previewProductPrice(product),
+			})),
+		),
+	])
+
 	return (
 		<>
 			<Navbar
@@ -60,8 +76,8 @@ export default async function Home() {
 			<main>
 				<HeroSection hero={heroData} />
 				<Collections collections={allCollections} />
-				<Featured products={featuredProducts} settings={siteSettings} />
-				<NewArrivals products={newArrivalProducts} settings={siteSettings} />
+				<Featured products={featuredProductsWithPricing} settings={siteSettings} />
+				<NewArrivals products={newArrivalProductsWithPricing} settings={siteSettings} />
 			</main>
 
 			<Footer settings={siteSettings} year={currentYear} />

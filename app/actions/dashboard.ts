@@ -9,12 +9,59 @@ import {
 	settings,
 	productImages,
 	sizeGuides,
+	discounts,
+	discountUsages,
 } from '@/db/schema'
-import { and, asc, eq, ne } from 'drizzle-orm'
+import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { slugify } from '@/lib/slug'
 import { deleteVercelBlobByUrl } from '@/lib/vercel-blob'
+import { computeCartDiscounts } from '@/lib/discounts'
 import crypto from 'crypto'
+
+function parseStringArray(input: unknown): string[] {
+	if (Array.isArray(input)) {
+		return input.filter((v): v is string => typeof v === 'string').map((v) => v.trim())
+	}
+
+	if (typeof input === 'string') {
+		const trimmed = input.trim()
+		if (!trimmed) return []
+
+		try {
+			const parsed = JSON.parse(trimmed)
+			if (!Array.isArray(parsed)) return []
+			return parsed.filter((v): v is string => typeof v === 'string').map((v) => v.trim())
+		} catch {
+			return trimmed
+				.split(',')
+				.map((v) => v.trim())
+				.filter(Boolean)
+		}
+	}
+
+	return []
+}
+
+function normalizeTierRulesJson(input: unknown): string {
+	if (typeof input === 'string') {
+		const trimmed = input.trim()
+		if (!trimmed) return '[]'
+
+		try {
+			const parsed = JSON.parse(trimmed)
+			return JSON.stringify(parsed)
+		} catch {
+			return '[]'
+		}
+	}
+
+	if (Array.isArray(input)) {
+		return JSON.stringify(input)
+	}
+
+	return '[]'
+}
 
 function isMissingProductImagesTableError(error: unknown): boolean {
 	const message = error instanceof Error ? error.message : String(error)
@@ -111,6 +158,9 @@ export async function deleteItem(type: string, id: string) {
 			case 'categories':
 				await db.delete(categories).where(eq(categories.id, id))
 				break
+				case 'discounts':
+					await db.delete(discounts).where(eq(discounts.id, id))
+					break
 				case 'size-guides':
 					await db.delete(sizeGuides).where(eq(sizeGuides.id, id))
 					break
@@ -246,6 +296,43 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 					await db.update(categories).set(data).where(eq(categories.id, data.id))
 				}
 				break
+				case 'discounts': {
+					const startDate = data.startDate ? new Date(data.startDate) : new Date()
+					const endDate = data.endDate ? new Date(data.endDate) : null
+					const payload = {
+						id: data.id,
+						name: data.name || 'Untitled Discount',
+						description: data.description || '',
+						discountType: data.discountType || 'flat',
+						discountValue: Number(data.discountValue) || 0,
+						originalPrice:
+							data.originalPrice === undefined || data.originalPrice === ''
+								? null
+								: Number(data.originalPrice),
+						startDate,
+						endDate,
+						minCartValue: Number(data.minCartValue) || 0,
+						applicableCategories: parseStringArray(data.applicableCategories),
+						stackable: Boolean(data.stackable),
+						maxUses:
+							data.maxUses === undefined || data.maxUses === '' ? null : Number(data.maxUses),
+						priority: Number(data.priority) || 0,
+						isActive: data.isActive !== false,
+						productId: data.productId || null,
+						bundleProductIds: parseStringArray(data.bundleProductIds),
+						tierRulesJson: normalizeTierRulesJson(data.tierRulesJson),
+						wording: data.wording || 'Instant Price Drop',
+						updatedAt: new Date().toISOString(),
+						createdAt: mode === 'add' ? new Date().toISOString() : data.createdAt,
+					}
+
+					if (mode === 'add') {
+						await db.insert(discounts).values(payload)
+					} else {
+						await db.update(discounts).set(payload).where(eq(discounts.id, data.id))
+					}
+					break
+				}
 				case 'size-guides': {
 					const payload = {
 						...data,
@@ -270,5 +357,56 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 		return { success: true }
 	} catch (error: any) {
 		return { error: error.message }
+	}
+}
+
+export async function applyDiscountsToCart(input: {
+	items: Array<{ productId: string; quantity: number }>
+	userKey?: string
+	commitUsage?: boolean
+}) {
+	try {
+		if (!input?.items || !Array.isArray(input.items)) {
+			return { error: 'Invalid cart payload' }
+		}
+
+		const summary = await computeCartDiscounts(input.items, input.userKey)
+
+		if (input.commitUsage && input.userKey && summary.appliedDiscountIds.length > 0) {
+			const db = getDb()
+			const now = new Date().toISOString()
+
+			await Promise.all(
+				summary.appliedDiscountIds.map((discountId) =>
+					db
+						.insert(discountUsages)
+						.values({
+							discountId,
+							userKey: input.userKey as string,
+							useCount: 1,
+							lastUsedAt: now,
+						})
+						.onConflictDoUpdate({
+							target: [discountUsages.discountId, discountUsages.userKey],
+							set: {
+								useCount: sql`${discountUsages.useCount} + 1`,
+								lastUsedAt: now,
+							},
+						}),
+				),
+			)
+
+			await db
+				.update(discounts)
+				.set({
+					usageCount: sql`${discounts.usageCount} + 1`,
+					updatedAt: now,
+				})
+				.where(inArray(discounts.id, summary.appliedDiscountIds))
+		}
+
+		return { success: true, summary }
+	} catch (error: any) {
+		return { error: error.message || 'Failed to apply discounts' }
 	}
 }

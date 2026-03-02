@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { LoadingImage } from '@/components/ui/loading-image'
+import PremiumPriceDisplay from '@/app/components/PremiumPriceDisplay'
+import type { ProductPricePreview } from '@/lib/discounts'
 
 interface Product {
 	id: string
@@ -13,6 +15,7 @@ interface Product {
 	currency: string
 	category: string | null
 	imageUrl: string | null
+	pricing?: ProductPricePreview
 }
 
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } }
@@ -59,6 +62,13 @@ export default function RelatedProducts({ products }: { products: Product[] }) {
 									<div className="w-full h-full bg-stone-200" />
 								)}
 								<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
+								{p.pricing?.hasDiscount && p.pricing.badgeText ? (
+									<div className="absolute top-3 left-3 z-20">
+										<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
+											{p.pricing.badgeText}
+										</span>
+									</div>
+								) : null}
 							</Link>
 							<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
 								{p.category}
@@ -68,16 +78,24 @@ export default function RelatedProducts({ products }: { products: Product[] }) {
 									{p.name}
 								</h3>
 							</Link>
-							<p className="text-sm text-stone-500">
-								{p.currency} {p.price?.toLocaleString()}
-							</p>
+							<PremiumPriceDisplay
+								compact
+								currency={p.currency}
+								originalPrice={p.pricing?.originalPrice ?? p.price}
+								discountedPrice={p.pricing?.discountedPrice ?? p.price}
+								savingsAmount={p.pricing?.savingsAmount ?? 0}
+								savingsPercent={p.pricing?.savingsPercent ?? 0}
+								discountText={p.pricing?.discountText}
+								badgeText={p.pricing?.badgeText}
+								endDate={p.pricing?.endDate}
+							/>
 							<div className="mt-3">
 								<AddToCartButton
 									product={{
 										id: p.id,
 										name: p.name,
 										slug: p.slug,
-										price: p.price,
+										price: p.pricing?.discountedPrice ?? p.price,
 										currency: p.currency,
 										imageUrl: p.imageUrl,
 									}}
