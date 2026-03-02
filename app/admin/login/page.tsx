@@ -15,9 +15,15 @@ export default function AdminLogin() {
 	const [otp, setOtp] = useState('')
 	const [otpSent, setOtpSent] = useState(false)
 	const [loading, setLoading] = useState(false)
+	const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+	const emailError = email.length > 0 && !emailLooksValid ? 'Enter a valid email address.' : ''
+	const otpError = otp.length > 0 && otp.length < 6 ? 'Enter the full 6-digit code.' : ''
 
 	const handleRequestOTP = async () => {
-		if (!email) return
+		if (!emailLooksValid) {
+			toast.error('Please enter a valid admin email')
+			return
+		}
 		setLoading(true)
 		try {
 			const res = await requestOtp(email)
@@ -32,7 +38,10 @@ export default function AdminLogin() {
 	}
 
 	const handleVerifyOTP = async () => {
-		if (otp.length !== 6) return
+		if (otp.length !== 6) {
+			toast.error('Please enter the 6-digit code')
+			return
+		}
 		setLoading(true)
 		try {
 			const res = await verifyOtp(email, otp)
@@ -76,14 +85,21 @@ export default function AdminLogin() {
 									type="email"
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
+									aria-invalid={Boolean(emailError)}
+									aria-describedby={emailError ? 'admin-email-error' : undefined}
 									className="border-0 border-b border-stone-300 rounded-none px-0 py-3 shadow-none focus-visible:ring-0 focus:border-stone-900 bg-transparent"
 									placeholder="admin@example.com"
 								/>
+								{emailError ? (
+									<p id="admin-email-error" className="mt-2 text-xs text-red-600">
+										{emailError}
+									</p>
+								) : null}
 							</div>
 							<Button
 								data-testid="send-otp-btn"
 								onClick={handleRequestOTP}
-								disabled={loading || !email}
+								disabled={loading || !emailLooksValid}
 								className="w-full bg-stone-900 text-white rounded-none h-12 text-xs uppercase tracking-widest hover:bg-yellow-700"
 							>
 								{loading ? 'Sending...' : 'Send Verification Code'}
@@ -125,6 +141,7 @@ export default function AdminLogin() {
 									</InputOTPGroup>
 								</InputOTP>
 							</div>
+							{otpError ? <p className="text-center text-xs text-red-600">{otpError}</p> : null}
 							<div className="space-y-3">
 								<Button
 									data-testid="verify-otp-btn"

@@ -44,7 +44,7 @@ export default function Navbar({
 
 	useEffect(() => {
 		const onScroll = () => setScrolled(window.scrollY > 50)
-		window.addEventListener('scroll', onScroll)
+		window.addEventListener('scroll', onScroll, { passive: true })
 		return () => window.removeEventListener('scroll', onScroll)
 	}, [])
 
@@ -60,7 +60,7 @@ export default function Navbar({
 				isDark ? 'bg-white/90 backdrop-blur-xl border-b border-stone-200/50' : 'bg-transparent'
 			}`}
 		>
-			<div className="max-w-[1800px] mx-auto px-6 md:px-12 lg:px-24">
+			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
 				<div className="flex items-center justify-between h-20">
 					<Link
 						href="/"
@@ -106,7 +106,7 @@ export default function Navbar({
 										className="absolute top-full left-1/2 -translate-x-1/2 pt-6"
 										data-testid="collections-mega-menu"
 									>
-										<div className="bg-white border border-stone-200 p-6 min-w-[520px] shadow-lg">
+										<div className="bg-white border border-stone-200 p-6 min-w-130 shadow-lg">
 											<div className="grid grid-cols-2 gap-3 mb-4">
 												{collections.map((c) => (
 													<Link
@@ -122,7 +122,7 @@ export default function Navbar({
 																alt={c.name}
 																width={56}
 																height={56}
-																className="w-14 h-14 object-cover flex-shrink-0"
+																className="w-14 h-14 object-cover shrink-0"
 															/>
 														)}
 														<div className="min-w-0">
@@ -163,8 +163,9 @@ export default function Navbar({
 
 					<button
 						data-testid="mobile-menu-toggle"
-						className={`md:hidden transition-colors duration-300 ${isDark ? 'text-stone-900' : 'text-white'}`}
+						className={`md:hidden transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-stone-500 ${isDark ? 'text-stone-900' : 'text-white'}`}
 						onClick={() => setMenuOpen(!menuOpen)}
+						aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
 					>
 						{menuOpen ? <X size={20} /> : <Menu size={20} />}
 					</button>
