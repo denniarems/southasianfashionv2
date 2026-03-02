@@ -10,6 +10,7 @@ import Breadcrumb from '../../components/Breadcrumb'
 import SizeGuide from '../../components/SizeGuide'
 import RelatedProducts from '../../components/RelatedProducts'
 import ProductImageGallery from '../../components/ProductImageGallery'
+import ShareButton from '../../components/ShareButton'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { fetchProductCategories } from '../../actions/products'
 
@@ -120,6 +121,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
 	const whatsapp = siteSettings?.whatsappNumber?.replace(/[^0-9]/g, '') || ''
 	const productPath = `/products/${p.slug ?? p.id}`
+	const productAbsoluteUrl = `${siteUrl}${productPath}`
 
 	const productJsonLd = {
 		'@context': 'https://schema.org',
@@ -212,6 +214,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 										<MessageCircleIcon size={16} />
 										Inquire via WhatsApp
 									</a>
+
+									<ShareButton
+										productName={p.name}
+										productUrl={productAbsoluteUrl}
+										productImage={allImages[0] ?? ''}
+										productDescription={p.description ?? ''}
+									/>
 								</div>
 							</div>
 
