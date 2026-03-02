@@ -56,6 +56,7 @@ export default async function CollectionDetailPage({
 											src={p.imageUrl}
 											alt={p.name}
 											fill
+											sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
 											className="object-cover transition-transform duration-700 group-hover:scale-105"
 										/>
 									) : (
@@ -66,7 +67,7 @@ export default async function CollectionDetailPage({
 								<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
 									{p.category}
 								</p>
-								<Link href={`/products/${p.id}`} className="block">
+								<Link href={`/products/${p.slug ?? p.id}`} className="block">
 									<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors">
 										{p.name}
 									</h3>

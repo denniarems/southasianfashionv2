@@ -1,6 +1,7 @@
 import { getDb } from './index'
 import * as schema from './schema'
 import crypto from 'crypto'
+import { slugify } from '../lib/slug'
 
 // Polyfill uuid for Edge runtime / Node
 const generateId = () => crypto.randomUUID()
@@ -115,6 +116,7 @@ export async function seed() {
 		{
 			id: generateId(),
 			name: 'Silk Chanderi Saree',
+			slug: slugify('Silk Chanderi Saree'),
 			description:
 				'Hand-woven silk chanderi saree with gold zari border. A testament to centuries-old weaving traditions.',
 			price: 485,
@@ -128,6 +130,7 @@ export async function seed() {
 		{
 			id: generateId(),
 			name: 'Zardozi Lehenga',
+			slug: slugify('Zardozi Lehenga'),
 			description:
 				'Intricately embroidered lehenga with zardozi work. Perfect for celebrations and grand ceremonies.',
 			price: 1250,
@@ -141,6 +144,7 @@ export async function seed() {
 		{
 			id: generateId(),
 			name: 'Block Print Kurta',
+			slug: slugify('Block Print Kurta'),
 			description:
 				'Hand block-printed cotton kurta in traditional Jaipur motifs. Effortless everyday elegance.',
 			price: 165,
@@ -154,6 +158,7 @@ export async function seed() {
 		{
 			id: generateId(),
 			name: 'Temple Jewelry Set',
+			slug: slugify('Temple Jewelry Set'),
 			description:
 				'Gold-plated temple jewelry set inspired by ancient South Indian artistry. Statement pieces for the modern connoisseur.',
 			price: 320,
@@ -167,6 +172,7 @@ export async function seed() {
 		{
 			id: generateId(),
 			name: 'Royal Sherwani',
+			slug: slugify('Royal Sherwani'),
 			description:
 				'Ivory embroidered sherwani with intricate thread work. Regal attire for the discerning gentleman.',
 			price: 890,
@@ -180,6 +186,7 @@ export async function seed() {
 		{
 			id: generateId(),
 			name: 'Pashmina Stole',
+			slug: slugify('Pashmina Stole'),
 			description:
 				'Pure Kashmiri pashmina with delicate hand embroidery. Timeless warmth meets artisanal luxury.',
 			price: 275,

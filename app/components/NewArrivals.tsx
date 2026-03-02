@@ -7,6 +7,7 @@ import { MessageCircle } from 'lucide-react'
 
 interface Product {
 	id: string
+	slug?: string
 	name: string
 	category: string | null
 	price: number
@@ -73,6 +74,7 @@ export default function NewArrivals({
 										src={p.imageUrl}
 										alt={p.name}
 										fill
+										sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
 										className="object-cover transition-transform duration-700 group-hover:scale-105"
 									/>
 								)}
@@ -96,7 +98,7 @@ export default function NewArrivals({
 								{p.category}
 							</p>
 							<Link
-								href={`/product/${p.id}`}
+								href={`/products/${p.slug ?? p.id}`}
 								className="block"
 								data-testid={`product-link-${p.id}`}
 							>

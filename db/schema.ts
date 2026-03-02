@@ -20,6 +20,7 @@ export const collections = pgTable('collections', {
 export const products = pgTable('products', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
+	slug: text('slug').notNull().unique(),
 	description: text('description').default(''),
 	price: real('price').notNull().default(0),
 	currency: text('currency').notNull().default('USD'),
