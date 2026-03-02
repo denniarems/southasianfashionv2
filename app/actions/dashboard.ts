@@ -5,6 +5,7 @@ import { products, collections, heroBanners, categories, settings } from '@/db/s
 import { and, eq, ne } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { slugify } from '@/lib/slug'
+import { deleteVercelBlobByUrl } from '@/lib/vercel-blob'
 
 async function generateUniqueProductSlug(
 	db: ReturnType<typeof getDb>,
@@ -34,15 +35,39 @@ export async function deleteItem(type: string, id: string) {
 
 	try {
 		switch (type) {
-			case 'products':
+			case 'products': {
+				const existing = await db
+					.select({ imageUrl: products.imageUrl })
+					.from(products)
+					.where(eq(products.id, id))
+					.limit(1)
+
+				await deleteVercelBlobByUrl(existing[0]?.imageUrl, 'product deletion')
 				await db.delete(products).where(eq(products.id, id))
 				break
-			case 'collections':
+			}
+			case 'collections': {
+				const existing = await db
+					.select({ imageUrl: collections.imageUrl })
+					.from(collections)
+					.where(eq(collections.id, id))
+					.limit(1)
+
+				await deleteVercelBlobByUrl(existing[0]?.imageUrl, 'collection deletion')
 				await db.delete(collections).where(eq(collections.id, id))
 				break
-			case 'hero':
+			}
+			case 'hero': {
+				const existing = await db
+					.select({ imageUrl: heroBanners.imageUrl })
+					.from(heroBanners)
+					.where(eq(heroBanners.id, id))
+					.limit(1)
+
+				await deleteVercelBlobByUrl(existing[0]?.imageUrl, 'hero banner deletion')
 				await db.delete(heroBanners).where(eq(heroBanners.id, id))
 				break
+			}
 			case 'categories':
 				await db.delete(categories).where(eq(categories.id, id))
 				break

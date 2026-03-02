@@ -25,6 +25,9 @@ export default function ImageUpload({ value, onChange, label = 'Image' }: ImageU
 
 		const form = new FormData()
 		form.append('file', file)
+		if (value) {
+			form.append('existingImageUrl', value)
+		}
 
 		try {
 			const res = await fetch(`/api/upload`, {
