@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { and, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm'
 import { getDb } from '@/db'
 import { discounts, discountUsages, products } from '@/db/schema'
+import { formatCad, STORE_CURRENCY } from '@/lib/currency'
 
 export interface CartDiscountInput {
 	productId: string
@@ -102,10 +103,10 @@ function toDiscountText(discount: DiscountRow): string {
 
 	const amount = Math.round(discount.discountValue)
 	if (discount.wording?.trim()) {
-		return `${discount.wording.trim()} ₹${amount}`
+		return `${discount.wording.trim()} ${formatCad(amount)}`
 	}
 
-	return `Instant ₹${amount} Price Drop`
+	return `Instant ${formatCad(amount)} Price Drop`
 }
 
 function resolveStacking(discountRows: DiscountRow[]): DiscountRow[] {
@@ -220,7 +221,7 @@ export async function previewProductPrice(product: ProductLookup): Promise<Produ
 	const badgeText = top
 		? top.discountType === 'percentage'
 			? `${Math.round(top.discountValue)}% OFF`
-			: `₹${Math.round(top.discountValue)} OFF`
+			: `${formatCad(Math.round(top.discountValue))} OFF`
 		: ''
 
 	return {
@@ -247,7 +248,7 @@ export async function computeCartDiscounts(
 
 	if (normalizedItems.length === 0) {
 		return {
-			currency: 'INR',
+			currency: STORE_CURRENCY,
 			originalSubtotal: 0,
 			lineDiscountTotal: 0,
 			cartLevelDiscountTotal: 0,
@@ -299,7 +300,7 @@ export async function computeCartDiscounts(
 
 	if (lines.length === 0) {
 		return {
-			currency: 'INR',
+			currency: STORE_CURRENCY,
 			originalSubtotal: 0,
 			lineDiscountTotal: 0,
 			cartLevelDiscountTotal: 0,
@@ -310,7 +311,7 @@ export async function computeCartDiscounts(
 		}
 	}
 
-	const currency = lines[0]?.product.currency || 'INR'
+	const currency = STORE_CURRENCY
 	const originalSubtotal = lines.reduce((sum, line) => sum + line.lineOriginalTotal, 0)
 	const lineDiscountMap = new Map<string, number>()
 	const lineAppliedIds = new Map<string, string[]>()
@@ -440,7 +441,7 @@ export async function computeCartDiscounts(
 			productId: line.product.id,
 			name: line.product.name,
 			category: line.product.category,
-			currency: line.product.currency,
+			currency: STORE_CURRENCY,
 			quantity: line.quantity,
 			unitPrice: line.product.price,
 			lineOriginalTotal: line.lineOriginalTotal,

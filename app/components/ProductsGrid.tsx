@@ -311,7 +311,7 @@ export default function ProductsGrid({
 								</Link>
 								<PremiumPriceDisplay
 									compact
-									currency={p.currency}
+									currency="CAD"
 									originalPrice={p.pricing?.originalPrice ?? p.price}
 									discountedPrice={p.pricing?.discountedPrice ?? p.price}
 									savingsAmount={p.pricing?.savingsAmount ?? 0}
@@ -327,7 +327,7 @@ export default function ProductsGrid({
 											name: p.name,
 											slug: p.slug,
 											price: p.pricing?.discountedPrice ?? p.price,
-											currency: p.currency,
+											currency: 'CAD',
 											imageUrl: p.imageUrl,
 										}}
 										className="w-full flex items-center justify-center gap-3 bg-stone-900 text-white px-6 py-3 text-[11px] uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"

@@ -80,7 +80,7 @@ export default function RelatedProducts({ products }: { products: Product[] }) {
 							</Link>
 							<PremiumPriceDisplay
 								compact
-								currency={p.currency}
+								currency="CAD"
 								originalPrice={p.pricing?.originalPrice ?? p.price}
 								discountedPrice={p.pricing?.discountedPrice ?? p.price}
 								savingsAmount={p.pricing?.savingsAmount ?? 0}
@@ -96,7 +96,7 @@ export default function RelatedProducts({ products }: { products: Product[] }) {
 										name: p.name,
 										slug: p.slug,
 										price: p.pricing?.discountedPrice ?? p.price,
-										currency: p.currency,
+										currency: 'CAD',
 										imageUrl: p.imageUrl,
 									}}
 									className="w-full flex items-center justify-center gap-3 bg-stone-900 text-white px-4 py-2.5 text-[10px] uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"

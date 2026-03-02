@@ -9,16 +9,15 @@ import Trash2Icon from 'lucide-react/dist/esm/icons/trash-2'
 import XIcon from 'lucide-react/dist/esm/icons/x'
 import { useCart } from '@/components/cart/CartContext'
 import { LoadingImage } from '@/components/ui/loading-image'
+import { formatCad } from '@/lib/currency'
 
-function formatMoney(currency: string, amount: number) {
-	return `${currency} ${amount.toLocaleString()}`
+function formatMoney(amount: number) {
+	return formatCad(Math.round(amount))
 }
 
 function buildWhatsAppMessage({
 	items,
 	total,
-	currency,
-	hasMixedCurrencies,
 }: {
 	items: Array<{
 		name: string
@@ -27,17 +26,13 @@ function buildWhatsAppMessage({
 		currency: string
 	}>
 	total: number
-	currency: string | null
-	hasMixedCurrencies: boolean
 }) {
 	const lines = items.map((item, index) => {
 		const lineTotal = item.price * item.quantity
-		return `${index + 1}) ${item.name} — Qty: ${item.quantity} — ${formatMoney(item.currency, item.price)} each — Line: ${formatMoney(item.currency, lineTotal)}`
+		return `${index + 1}) ${item.name} — Qty: ${item.quantity} — ${formatMoney(item.price)} each — Line: ${formatMoney(lineTotal)}`
 	})
 
-	const totalLine = hasMixedCurrencies
-		? `Total: Mixed currencies (${items.map((item) => item.currency).join(', ')})`
-		: `Total: ${formatMoney(currency || 'CAD', total)}`
+	const totalLine = `Total: ${formatMoney(total)}`
 
 	return [
 		'Hello! I would like to inquire about these cart items:',
@@ -60,8 +55,6 @@ export function CartDrawer({
 	const {
 		items,
 		subtotal,
-		currency,
-		hasMixedCurrencies,
 		clearCart,
 		removeItem,
 		updateQuantity,
@@ -81,12 +74,10 @@ export function CartDrawer({
 		const message = buildWhatsAppMessage({
 			items,
 			total: subtotal,
-			currency,
-			hasMixedCurrencies,
 		})
 
 		return `https://wa.me/${sanitizedWhatsApp}?text=${encodeURIComponent(message)}`
-	}, [currency, hasMixedCurrencies, items, sanitizedWhatsApp, subtotal])
+	}, [items, sanitizedWhatsApp, subtotal])
 
 	useEffect(() => {
 		if (!open) {
@@ -171,7 +162,7 @@ export function CartDrawer({
 														{item.name}
 													</p>
 													<p className="text-sm text-stone-500 mt-1">
-														{formatMoney(item.currency, item.price)}
+														{formatMoney(item.price)}
 													</p>
 													<div className="mt-3 flex items-center justify-between">
 														<div className="inline-flex items-center border border-stone-200">
@@ -215,9 +206,7 @@ export function CartDrawer({
 							<div className="flex items-center justify-between">
 								<span className="text-stone-500 text-sm">Subtotal</span>
 								<span className="font-heading text-xl text-stone-900">
-									{hasMixedCurrencies
-										? 'Mixed currencies'
-										: formatMoney(currency || 'CAD', subtotal)}
+									{formatMoney(subtotal)}
 								</span>
 							</div>
 

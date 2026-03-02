@@ -1,4 +1,5 @@
 import type { CartItem, CartState } from '@/components/cart/cart-types'
+import { STORE_CURRENCY } from '@/lib/currency'
 
 const CART_STORAGE_VERSION = 'v1'
 const CART_STORAGE_KEY = `saf_cart:${CART_STORAGE_VERSION}`
@@ -35,7 +36,9 @@ function normalizeCartState(value: unknown): CartState {
 	const maybeState = value as Partial<CartState>
 	const items = Array.isArray(maybeState.items) ? maybeState.items.filter(isValidCartItem) : []
 
-	return { items }
+	return {
+		items: items.map((item) => ({ ...item, currency: STORE_CURRENCY })),
+	}
 }
 
 export function migrateLegacyCartStorage(): void {

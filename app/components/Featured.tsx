@@ -84,7 +84,7 @@ export default function Featured({
 						<p className="text-stone-500 leading-relaxed mb-4 max-w-lg">{item.description}</p>
 						<div className="mb-10">
 							<PremiumPriceDisplay
-								currency={item.currency}
+								currency="CAD"
 								originalPrice={item.pricing?.originalPrice ?? item.price}
 								discountedPrice={item.pricing?.discountedPrice ?? item.price}
 								savingsAmount={item.pricing?.savingsAmount ?? 0}
@@ -101,7 +101,7 @@ export default function Featured({
 									name: item.name,
 									slug: item.slug,
 									price: item.pricing?.discountedPrice ?? item.price,
-									currency: item.currency,
+									currency: 'CAD',
 									imageUrl: item.imageUrl,
 								}}
 								className="inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"

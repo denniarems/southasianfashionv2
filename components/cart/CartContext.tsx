@@ -15,6 +15,7 @@ import {
 	migrateLegacyCartStorage,
 	saveCartState,
 } from '@/components/cart/cart-storage'
+import { STORE_CURRENCY } from '@/lib/currency'
 
 const EMPTY_CART_STATE: CartState = { items: [] }
 
@@ -38,7 +39,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 	useEffect(() => {
 		migrateLegacyCartStorage()
-		setState(loadCartState())
+		const loaded = loadCartState()
+		setState({
+			items: loaded.items.map((item) => ({ ...item, currency: STORE_CURRENCY })),
+		})
 		setHydrated(true)
 	}, [])
 
@@ -60,7 +64,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 			if (existingIndex === -1) {
 				return {
-					items: [...currentState.items, { ...product, quantity }],
+					items: [...currentState.items, { ...product, currency: STORE_CURRENCY, quantity }],
 				}
 			}
 
@@ -68,6 +72,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 			const existingItem = items[existingIndex]
 			items[existingIndex] = {
 				...existingItem,
+				currency: STORE_CURRENCY,
 				quantity: existingItem.quantity + quantity,
 			}
 
@@ -111,13 +116,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 		[state.items],
 	)
 
-	const currencies = useMemo(
-		() => Array.from(new Set(state.items.map((item) => item.currency))),
-		[state.items],
-	)
-
-	const currency = currencies.length === 1 ? currencies[0] : null
-	const hasMixedCurrencies = currencies.length > 1
+	const currency = state.items.length > 0 ? STORE_CURRENCY : null
+	const hasMixedCurrencies = false
 
 	const value = useMemo<CartContextValue>(
 		() => ({

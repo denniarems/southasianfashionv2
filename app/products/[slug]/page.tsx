@@ -198,7 +198,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 		sku: p.id,
 		offers: {
 			'@type': 'Offer',
-			priceCurrency: p.currency,
+			priceCurrency: 'CAD',
 			price: String(p.price),
 			availability: 'https://schema.org/InStock',
 			url: `${siteUrl}${productPath}`,
@@ -251,7 +251,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 							</h1>
 							<div className="mb-6 md:mb-8">
 								<PremiumPriceDisplay
-									currency={p.currency}
+									currency="CAD"
 									originalPrice={pricingPreview.originalPrice}
 									discountedPrice={pricingPreview.discountedPrice}
 									savingsAmount={pricingPreview.savingsAmount}
@@ -274,7 +274,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 											name: p.name,
 											slug: p.slug,
 											price: pricingPreview.discountedPrice,
-											currency: p.currency,
+											currency: 'CAD',
 											imageUrl: p.imageUrl,
 										}}
 										className="w-full sm:w-auto sm:min-w-52 flex items-center justify-center gap-3 bg-stone-900 text-white px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"

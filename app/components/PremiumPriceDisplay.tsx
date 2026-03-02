@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { formatCad } from '@/lib/currency'
 
 interface PremiumPriceDisplayProps {
 	currency?: string
@@ -15,15 +16,8 @@ interface PremiumPriceDisplayProps {
 }
 
 function formatCurrency(currency: string, amount: number): string {
-	if (currency.toUpperCase() === 'INR') {
-		return `₹${Math.round(amount).toLocaleString('en-IN')}`
-	}
-
-	return new Intl.NumberFormat('en-IN', {
-		style: 'currency',
-		currency: currency || 'INR',
-		maximumFractionDigits: 0,
-	}).format(amount)
+	void currency
+	return formatCad(Math.round(amount))
 }
 
 function useCountdownLabel(endDate?: string | null): string | null {
@@ -46,7 +40,7 @@ function useCountdownLabel(endDate?: string | null): string | null {
 }
 
 export default function PremiumPriceDisplay({
-	currency = 'INR',
+	currency = 'CAD',
 	originalPrice,
 	discountedPrice,
 	savingsAmount,

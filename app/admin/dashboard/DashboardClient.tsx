@@ -30,6 +30,7 @@ import {
 import { logout } from '@/app/actions/auth'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { LoadingImage } from '@/components/ui/loading-image'
+import { formatCad } from '@/lib/currency'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
@@ -78,14 +79,14 @@ function DiscountLivePreview({ form }: { form: any }) {
 			<p className="text-[10px] uppercase tracking-[0.16em] text-[#7A1E2C]">Live Customer Preview</p>
 			<p className="text-xs text-stone-500 mt-1">Preview based on an example item price.</p>
 			<div className="mt-3 flex items-end gap-3">
-				<p className="text-xl font-semibold text-stone-900">CAD {Math.round(discounted).toLocaleString()}</p>
-				<p className="text-sm text-stone-400 line-through">CAD {Math.round(base).toLocaleString()}</p>
+				<p className="text-xl font-semibold text-stone-900">{formatCad(Math.round(discounted))}</p>
+				<p className="text-sm text-stone-400 line-through">{formatCad(Math.round(base))}</p>
 			</div>
 			<div className="mt-2 flex items-center gap-2">
 				<span className="text-[10px] uppercase tracking-[0.12em] bg-[#7A1E2C]/10 text-[#7A1E2C] px-2 py-0.5 border border-[#7A1E2C]/20">
 					{form.wording || 'Instant Price Drop'}
 				</span>
-				<span className="text-xs text-[#B8860B] font-medium">Save CAD {Math.round(savings).toLocaleString()}</span>
+				<span className="text-xs text-[#B8860B] font-medium">Save {formatCad(Math.round(savings))}</span>
 			</div>
 		</div>
 	)
@@ -415,7 +416,7 @@ export default function DashboardClient({
 											<div className="flex-1 min-w-0">
 												<h3 className="font-heading text-sm text-stone-900 truncate">{p.name}</h3>
 												<p className="text-xs text-stone-400 mt-1">
-													{p.category} &middot; {p.currency} {p.price}
+													{p.category} &middot; {formatCad(p.price)}
 												</p>
 												<p className="text-[11px] text-stone-500 mt-1">
 													Size Guide:{' '}

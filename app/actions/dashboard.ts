@@ -223,6 +223,7 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 				const { additionalImages, ...productFields } = data
 				const productData = {
 					...productFields,
+					currency: 'CAD',
 						collectionId: productFields.collectionId || null,
 						sizeGuideId: productFields.sizeGuideId || null,
 					slug: await generateUniqueProductSlug(

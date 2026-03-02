@@ -103,7 +103,7 @@ export default function NewArrivals({
 											name: p.name,
 											slug: p.slug,
 											price: p.pricing?.discountedPrice ?? p.price,
-											currency: p.currency,
+											currency: 'CAD',
 											imageUrl: p.imageUrl,
 										}}
 										className="mb-2 flex items-center justify-center gap-2 bg-white/95 backdrop-blur-sm text-stone-900 py-3 text-xs uppercase tracking-widest font-medium hover:bg-yellow-700 hover:text-white transition-colors duration-300 w-full"
@@ -136,7 +136,7 @@ export default function NewArrivals({
 							</Link>
 							<PremiumPriceDisplay
 								compact
-								currency={p.currency}
+								currency="CAD"
 								originalPrice={p.pricing?.originalPrice ?? p.price}
 								discountedPrice={p.pricing?.discountedPrice ?? p.price}
 								savingsAmount={p.pricing?.savingsAmount ?? 0}
