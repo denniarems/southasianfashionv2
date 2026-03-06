@@ -182,7 +182,7 @@ function getDefaultDiscountForm() {
 		minCartValue: 0,
 		priority: 10,
 		maxUses: '',
-		productId: '',
+		applicableProductIds: [] as string[],
 		applicableCategories: [] as string[],
 		bundleProductIds: [] as string[],
 		tierRulesJson: TIER_TEMPLATE,
@@ -197,13 +197,22 @@ function normalizeDiscountFormData(data: any) {
 
 	if (!data) return defaults
 
+	const { productId: legacyProductId, ...rest } = data
+	const parsedApplicableProductIds = parseStringArrayFromMixed(data.applicableProductIds)
+
 	return {
 		...defaults,
-		...data,
+		...rest,
 		startDate: data.startDate
 			? new Date(data.startDate).toISOString().slice(0, 16)
 			: defaults.startDate,
 		endDate: data.endDate ? new Date(data.endDate).toISOString().slice(0, 16) : '',
+		applicableProductIds:
+			parsedApplicableProductIds.length > 0
+				? parsedApplicableProductIds
+				: typeof legacyProductId === 'string' && legacyProductId.trim()
+					? [legacyProductId.trim()]
+					: defaults.applicableProductIds,
 		applicableCategories: parseStringArrayFromMixed(data.applicableCategories),
 		bundleProductIds: parseStringArrayFromMixed(data.bundleProductIds),
 		tierRulesJson:
@@ -1017,6 +1026,7 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 	const { open, type, mode, data } = dlg
 	const [form, setForm] = useState<any>(data || {})
 	const [errors, setErrors] = useState<Record<string, string>>({})
+	const [discountProductSearch, setDiscountProductSearch] = useState('')
 	const [isSaving, startSavingTransition] = useTransition()
 
 	useEffect(() => {
@@ -1026,6 +1036,7 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 		} else {
 			setForm(data || {})
 		}
+		setDiscountProductSearch('')
 		setErrors({})
 	}, [open, data, type])
 
@@ -1532,11 +1543,26 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 			)
 		}
 		if (type === 'discounts') {
+			const selectedApplicableProducts = parseStringArrayFromMixed(form.applicableProductIds)
 			const selectedCategories = parseStringArrayFromMixed(form.applicableCategories)
 			const selectedBundleProducts = parseStringArrayFromMixed(form.bundleProductIds)
+			const normalizedProductSearch = discountProductSearch.trim().toLowerCase()
+			const filteredProducts = products.filter((product: any) => {
+				if (!normalizedProductSearch) return true
+				const name = String(product.name || '').toLowerCase()
+				const category = String(product.category || '').toLowerCase()
+				return name.includes(normalizedProductSearch) || category.includes(normalizedProductSearch)
+			})
 			const currentStrategy =
 				DISCOUNT_STRATEGIES.find((strategy) => strategy.id === form.discountType) ||
 				DISCOUNT_STRATEGIES[0]
+
+			const toggleApplicableProduct = (productId: string) => {
+				const next = selectedApplicableProducts.includes(productId)
+					? selectedApplicableProducts.filter((id: string) => id !== productId)
+					: [...selectedApplicableProducts, productId]
+				setForm({ ...form, applicableProductIds: next })
+			}
 
 			const toggleCategory = (categoryName: string) => {
 				const next = selectedCategories.includes(categoryName)
@@ -1767,20 +1793,88 @@ function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides
 
 					<div className="rounded-none border border-stone-200 p-4 space-y-4">
 						<p className="text-[11px] uppercase tracking-[0.16em] text-stone-500">Targeting</p>
-						<Field label="Product Scope">
-							<select
-								value={form.productId || ''}
-								onChange={(e) => setForm({ ...form, productId: e.target.value })}
-								className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
-							>
-								<option value="">All products</option>
-								{products.map((product: any) => (
-									<option key={product.id} value={product.id}>
-										{product.name}
-									</option>
-								))}
-							</select>
-						</Field>
+							<Field label="Applicable Products">
+								<div className="space-y-3">
+									<Input
+										data-testid="dlg-discount-product-search"
+										value={discountProductSearch}
+										onChange={(e) => setDiscountProductSearch(e.target.value)}
+										placeholder="Search products by name or category"
+										className="rounded-none"
+									/>
+									<div className="flex items-center justify-between gap-3 text-[11px] text-stone-500">
+										<p>
+											{selectedApplicableProducts.length > 0
+												? `${selectedApplicableProducts.length} selected`
+												: 'Leave empty to target all matching products'}
+										</p>
+										<p>{filteredProducts.length} shown</p>
+									</div>
+									{selectedApplicableProducts.length > 0 ? (
+										<div className="flex flex-wrap gap-2">
+											{selectedApplicableProducts.map((productId: string) => {
+												const selectedProduct = products.find((product: any) => product.id === productId)
+												if (!selectedProduct) return null
+
+												return (
+													<button
+														key={productId}
+														type="button"
+														onClick={() => toggleApplicableProduct(productId)}
+														className="px-3 py-1 text-[11px] uppercase tracking-[0.14em] border bg-stone-900 text-white border-stone-900"
+													>
+														{selectedProduct.name}
+													</button>
+												)
+											})}
+										</div>
+									) : null}
+									<div className="max-h-56 overflow-y-auto border border-stone-200 p-2">
+										<div className="grid grid-cols-1 gap-1">
+											{filteredProducts.length > 0 ? (
+												filteredProducts.map((product: any) => {
+													const selected = selectedApplicableProducts.includes(product.id)
+													return (
+														<button
+															key={product.id}
+															data-testid={`dlg-discount-applicable-product-${product.id}`}
+															type="button"
+															onClick={() => toggleApplicableProduct(product.id)}
+															className={`w-full border px-3 py-2 text-left transition-colors ${
+																selected
+																	? 'bg-stone-900 text-white border-stone-900'
+																	: 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
+															}`}
+														>
+															<div className="flex items-start justify-between gap-3">
+																<div>
+																	<p className="text-xs font-medium uppercase tracking-[0.12em]">
+																		{product.name}
+																	</p>
+																	<p
+																		className={`mt-1 text-[11px] ${
+																			selected ? 'text-stone-200' : 'text-stone-500'
+																		}`}
+																	>
+																		{product.category || 'Uncategorized'}
+																	</p>
+																</div>
+																<p className={`text-xs ${selected ? 'text-stone-200' : 'text-stone-500'}`}>
+																	{formatCad(Math.round(Number(product.price) || 0))}
+																</p>
+															</div>
+														</button>
+													)
+												})
+											) : (
+												<p className="px-3 py-6 text-center text-xs text-stone-500">
+													No products match this search.
+												</p>
+											)}
+										</div>
+									</div>
+								</div>
+							</Field>
 
 						<Field label="Applicable Categories">
 							<div className="flex flex-wrap gap-2">

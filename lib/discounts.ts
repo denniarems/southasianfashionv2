@@ -113,7 +113,11 @@ function resolveStacking(discountRows: DiscountRow[]): DiscountRow[] {
 }
 
 function canApplyToProduct(discount: DiscountRow, product: ProductLookup): boolean {
-	if (discount.productId && discount.productId !== product.id) {
+	if (discount.applicableProductIds.length > 0) {
+		if (!discount.applicableProductIds.includes(product.id)) {
+			return false
+		}
+	} else if (discount.productId && discount.productId !== product.id) {
 		return false
 	}
 
@@ -122,7 +126,7 @@ function canApplyToProduct(discount: DiscountRow, product: ProductLookup): boole
 		return discount.applicableCategories.includes(product.category)
 	}
 
-	if (discount.productId) {
+	if (discount.applicableProductIds.length > 0 || discount.productId) {
 		return true
 	}
 
@@ -401,6 +405,7 @@ export async function computeCartDiscounts(
 		const isTiered = discount.discountType === 'tiered'
 		const isStorewideFlatOrPercentage =
 			(discount.discountType === 'flat' || discount.discountType === 'percentage') &&
+			discount.applicableProductIds.length === 0 &&
 			!discount.productId &&
 			discount.applicableCategories.length === 0
 

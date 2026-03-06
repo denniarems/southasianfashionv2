@@ -98,7 +98,7 @@ export default function Navbar({
 								className="h-8 w-auto md:h-9"
 							/>
 							<span
-								className={`font-heading text-sm md:text-base tracking-wider transition-colors duration-500 ${isDark ? 'text-stone-900' : 'text-white'}`}
+								className={`font-heading font-bold text-sm md:text-base tracking-wider transition-colors duration-500 ${isDark ? 'text-stone-900' : 'text-white'}`}
 							>
 								{brandName}
 							</span>

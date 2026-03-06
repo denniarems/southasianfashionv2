@@ -111,6 +111,10 @@ export const discounts = pgTable(
 		startDate: timestamp('start_date', { withTimezone: true }).notNull().defaultNow(),
 		endDate: timestamp('end_date', { withTimezone: true }),
 		minCartValue: real('min_cart_value').notNull().default(0),
+			applicableProductIds: text('applicable_product_ids')
+				.array()
+				.notNull()
+				.default(sql`'{}'::text[]`),
 		applicableCategories: text('applicable_categories')
 			.array()
 			.notNull()

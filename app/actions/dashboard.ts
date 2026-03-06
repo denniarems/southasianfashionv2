@@ -300,6 +300,8 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 			case 'discounts': {
 				const startDate = data.startDate ? new Date(data.startDate) : new Date()
 				const endDate = data.endDate ? new Date(data.endDate) : null
+					const legacyProductId = typeof data.productId === 'string' ? data.productId.trim() : ''
+					const applicableProductIds = parseStringArray(data.applicableProductIds)
 				const payload = {
 					id: data.id,
 					name: data.name || 'Untitled Discount',
@@ -313,12 +315,18 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 					startDate,
 					endDate,
 					minCartValue: Number(data.minCartValue) || 0,
+						applicableProductIds:
+							applicableProductIds.length > 0
+								? applicableProductIds
+								: legacyProductId
+									? [legacyProductId]
+									: [],
 					applicableCategories: parseStringArray(data.applicableCategories),
 					stackable: Boolean(data.stackable),
 					maxUses: data.maxUses === undefined || data.maxUses === '' ? null : Number(data.maxUses),
 					priority: Number(data.priority) || 0,
 					isActive: data.isActive !== false,
-					productId: data.productId || null,
+						productId: null,
 					bundleProductIds: parseStringArray(data.bundleProductIds),
 					tierRulesJson: normalizeTierRulesJson(data.tierRulesJson),
 					wording: data.wording || 'Instant Price Drop',

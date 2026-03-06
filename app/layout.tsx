@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from "next/script";
 import { Playfair_Display, Manrope, Cormorant_Garamond } from 'next/font/google'
 import { ClientWrapper } from './ClientWrapper'
 import './globals.css'
@@ -73,6 +74,21 @@ export default function RootLayout({
 			className={`${playfair.variable} ${manrope.variable} ${cormorant.variable}`}
 			suppressHydrationWarning
 		>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/@react-grab/mcp/dist/client.global.js"
+            strategy="lazyOnload"
+          />
+        )}
+      </head>
 			<body className="antialiased min-h-screen font-body overflow-x-hidden">
 				<ClientWrapper>{children}</ClientWrapper>
 			</body>
