@@ -275,7 +275,7 @@ export default function ProductsGrid({
 									duration: 0.4,
 									delay: (index % PAGE_SIZE) * 0.05,
 								}}
-								className="group"
+								className="group h-full flex flex-col"
 							>
 								<Link
 									href={`/products/${p.slug ?? p.id}`}
@@ -295,32 +295,35 @@ export default function ProductsGrid({
 									<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
 									{p.pricing?.hasDiscount && p.pricing.badgeText ? (
 										<div className="absolute top-3 left-3 z-10">
-											<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
+											<span className="inline-flex rounded-full border border-[#7A1E2C]/30 bg-[#FDF3D4]/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6B1320] shadow-sm backdrop-blur-[1px] discount-badge-pulse">
 												{p.pricing.badgeText}
 											</span>
 										</div>
 									) : null}
 								</Link>
-								<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
-									{p.category}
-								</p>
-								<Link href={`/products/${p.slug ?? p.id}`} className="block">
-									<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors">
-										{p.name}
-									</h3>
-								</Link>
-								<PremiumPriceDisplay
-									compact
-									currency="CAD"
-									originalPrice={p.pricing?.originalPrice ?? p.price}
-									discountedPrice={p.pricing?.discountedPrice ?? p.price}
-									savingsAmount={p.pricing?.savingsAmount ?? 0}
-									savingsPercent={p.pricing?.savingsPercent ?? 0}
-									discountText={p.pricing?.discountText}
-									badgeText={p.pricing?.badgeText}
-									endDate={p.pricing?.endDate}
-								/>
-								<div className="mt-4">
+								<div className="flex flex-1 flex-col">
+									<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
+										{p.category}
+									</p>
+									<Link href={`/products/${p.slug ?? p.id}`} className="block">
+										<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors min-h-14 leading-tight line-clamp-2">
+											{p.name}
+										</h3>
+									</Link>
+									<div>
+										<PremiumPriceDisplay
+											compact
+											currency="CAD"
+											originalPrice={p.pricing?.originalPrice ?? p.price}
+											discountedPrice={p.pricing?.discountedPrice ?? p.price}
+											savingsAmount={p.pricing?.savingsAmount ?? 0}
+											savingsPercent={p.pricing?.savingsPercent ?? 0}
+											discountText={p.pricing?.discountText}
+											badgeText={undefined}
+											endDate={p.pricing?.endDate}
+										/>
+									</div>
+									<div className="mt-auto pt-4">
 									<AddToCartButton
 										product={{
 											id: p.id,
@@ -332,6 +335,7 @@ export default function ProductsGrid({
 										}}
 										className="w-full flex items-center justify-center gap-3 bg-stone-900 text-white px-6 py-3 text-[11px] uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
 									/>
+									</div>
 								</div>
 							</motion.div>
 						))}

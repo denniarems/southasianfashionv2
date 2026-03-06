@@ -69,7 +69,7 @@ export default function NewArrivals({
 						<motion.div
 							key={p.id}
 							variants={fadeUp}
-							className="group"
+							className="group h-full flex flex-col"
 							data-testid={`product-card-${p.id}`}
 						>
 							<div className="relative overflow-hidden aspect-3/4 mb-6">
@@ -85,7 +85,7 @@ export default function NewArrivals({
 								<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
 								{p.pricing?.hasDiscount && p.pricing.badgeText ? (
 									<div className="absolute top-3 left-3 z-20">
-										<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
+										<span className="inline-flex rounded-full border border-[#7A1E2C]/30 bg-[#FDF3D4]/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6B1320] shadow-sm backdrop-blur-[1px] discount-badge-pulse">
 											{p.pricing.badgeText}
 										</span>
 									</div>
@@ -122,29 +122,31 @@ export default function NewArrivals({
 								</div>
 							</div>
 
-							<p className="text-[11px] uppercase tracking-widest text-stone-400 mb-2">
-								{p.category}
-							</p>
-							<Link
-								href={`/products/${p.slug ?? p.id}`}
-								className="block"
-								data-testid={`product-link-${p.id}`}
-							>
-								<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors">
-									{p.name}
-								</h3>
-							</Link>
-							<PremiumPriceDisplay
-								compact
-								currency="CAD"
-								originalPrice={p.pricing?.originalPrice ?? p.price}
-								discountedPrice={p.pricing?.discountedPrice ?? p.price}
-								savingsAmount={p.pricing?.savingsAmount ?? 0}
-								savingsPercent={p.pricing?.savingsPercent ?? 0}
-								discountText={p.pricing?.discountText}
-								badgeText={p.pricing?.badgeText}
-								endDate={p.pricing?.endDate}
-							/>
+							<div className="flex flex-1 flex-col">
+								<p className="text-[11px] uppercase tracking-widest text-stone-400 mb-2">
+									{p.category}
+								</p>
+								<Link
+									href={`/products/${p.slug ?? p.id}`}
+									className="block"
+									data-testid={`product-link-${p.id}`}
+								>
+									<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors min-h-14 leading-tight line-clamp-2">
+										{p.name}
+									</h3>
+								</Link>
+								<PremiumPriceDisplay
+									compact
+									currency="CAD"
+									originalPrice={p.pricing?.originalPrice ?? p.price}
+									discountedPrice={p.pricing?.discountedPrice ?? p.price}
+									savingsAmount={p.pricing?.savingsAmount ?? 0}
+									savingsPercent={p.pricing?.savingsPercent ?? 0}
+									discountText={p.pricing?.discountText}
+									badgeText={undefined}
+									endDate={p.pricing?.endDate}
+								/>
+							</div>
 						</motion.div>
 					))}
 				</motion.div>

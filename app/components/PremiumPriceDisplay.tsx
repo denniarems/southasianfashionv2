@@ -63,7 +63,7 @@ export default function PremiumPriceDisplay({
 
 	return (
 		<div className="space-y-1.5">
-			{badgeText ? (
+			{!compact && badgeText ? (
 				<motion.span
 					initial={{ opacity: 0, scale: 0.92 }}
 					animate={{ opacity: 1, scale: 1 }}
@@ -109,8 +109,8 @@ export default function PremiumPriceDisplay({
 				{savingsPercent > 0 ? ` (${Math.round(savingsPercent)}%)` : ''}
 			</motion.p>
 
-			{discountText ? <p className="text-xs text-stone-500">{discountText}</p> : null}
-			{countdown ? <p className="text-[11px] text-[#7A1E2C]">{countdown}</p> : null}
+			{!compact && discountText ? <p className="text-xs text-stone-500">{discountText}</p> : null}
+			{!compact && countdown ? <p className="text-[11px] text-[#7A1E2C]">{countdown}</p> : null}
 		</div>
 	)
 }
