@@ -31,11 +31,15 @@ function createRawEmail(input: {
 	html: string
 }) {
 	const boundary = `saf-boundary-${crypto.randomUUID()}`
+	const messageId = `<${crypto.randomUUID()}@southasianfashion.ca>`
+	const date = new Date().toUTCString()
 
 	return [
 		`From: SouthAsianFashion <${input.from}>`,
 		`To: ${input.to}`,
 		`Subject: ${input.subject}`,
+		`Message-ID: ${messageId}`,
+		`Date: ${date}`,
 		'MIME-Version: 1.0',
 		`Content-Type: multipart/alternative; boundary="${boundary}"`,
 		'',

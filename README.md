@@ -55,15 +55,18 @@ bun run db:seed:local
 
 Use `alchemy.run.ts` to keep production infrastructure and `wrangler.jsonc` in sync:
 
-1. Authenticate Alchemy with Cloudflare.
-2. Run `bun run alchemy:deploy` to adopt/create D1 + R2 and regenerate `wrangler.jsonc`.
-3. Ensure `JWT_SECRET` is set as a Wrangler secret.
-4. Run `bun run deploy:production` for the full production flow.
+1. Authenticate Cloudflare for Wrangler/Alchemy.
+2. Set the production env values used by `alchemy.run.ts`.
+3. Run `bun run alchemy:deploy` to adopt/create D1 + R2 and regenerate `wrangler.jsonc`.
+4. Set `JWT_SECRET` as a Wrangler secret.
+5. Run `bun run db:migrate:remote` if migrations changed.
+6. Run `bun run deploy:production` for the full production flow.
 
 Notes:
 
 - The app deploy still uses `vinext deploy` so the `vinext/server/app-router-entry` runtime stays intact.
 - The OTP `send_email` binding is preserved through generated Wrangler config because Alchemy does not yet expose it as a first-class Worker binding.
+- For the full checklist, see [`docs/production-deployment-guide.md`](docs/production-deployment-guide.md).
 
 ## Project Structure
 

@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "setup": "bun run scripts/setup.ts",
+    "predev": "node -e \"const fs=require('fs'); if(!fs.existsSync('wrangler.jsonc')) fs.copyFileSync('wrangler.example.jsonc', 'wrangler.jsonc')\"",
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",

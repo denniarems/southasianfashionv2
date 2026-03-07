@@ -59,12 +59,11 @@ This step:
 - Adopts or creates the D1 database `southasianfashion`
 - Adopts or creates the R2 bucket `southasianfashion-media`
 - Keeps the Images binding
-- Regenerates `wrangler.jsonc`
-- Rewrites the `send_email` allowlists from the values in `alchemy.run.ts`
+- Generates a local `wrangler.jsonc` file (which is git-ignored) using the values from `alchemy.run.ts`
 
-After it finishes, confirm `wrangler.jsonc` looks correct:
+After it finishes, you can optionally inspect the generated `wrangler.jsonc` to confirm it looks correct:
 
-- `d1_databases[0].database_id` is no longer `REPLACE_WITH_D1_DATABASE_ID`
+- `d1_databases[0].database_id` contains a real Cloudflare UUID
 - `vars.ADMIN_EMAIL` matches the full admin allowlist
 - `vars.SENDER_EMAIL` is `no-reply@southasianfashion.ca`
 - `send_email[0].allowed_destination_addresses` contains the same 4 admin emails
@@ -151,7 +150,7 @@ For later releases, use this shorter flow:
 
 ## Troubleshooting
 
-- If `wrangler.jsonc` still contains placeholder values, rerun `bun run alchemy:deploy` after confirming Cloudflare auth
+- If `wrangler.jsonc` fails to generate or does not contain real Cloudflare IDs, rerun `bun run alchemy:deploy` after confirming Cloudflare auth
 - If OTP email fails, verify Email Routing is enabled and the sender/destination addresses are allowed in `send_email`
 - If uploads work but images do not load, verify `R2_PUBLIC_URL` and `CLOUDFLARE_IMAGES_DELIVERY_HOST`
 - If production metadata or sitemap points to localhost, reset `NEXT_PUBLIC_SITE_URL`, rerun `bun run alchemy:deploy`, and redeploy

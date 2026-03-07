@@ -14,16 +14,16 @@ const envValue = (name: string, fallback: string) => {
 
 const adminEmails = envValue(
 	'ADMIN_EMAIL',
-	'[email protected],[email protected]',
+	'denniarems@gmail.com,binumv1998@gmail.com,binumv19982023@gmail.com,babusimon30@gmail.com',
 )
 	.split(',')
 	.map((email) => email.trim())
 	.filter(Boolean)
 
-const senderEmail = envValue('SENDER_EMAIL', '[email protected]')
+const senderEmail = envValue('SENDER_EMAIL', 'no-reply@southasianfashion.ca')
 const publicR2Url = envValue(
 	'R2_PUBLIC_URL',
-	'https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev',
+	'https://media.southasianfashion.ca',
 )
 const imagesDeliveryHost = envValue(
 	'CLOUDFLARE_IMAGES_DELIVERY_HOST',
@@ -31,7 +31,7 @@ const imagesDeliveryHost = envValue(
 )
 const siteUrl = envValue(
 	'NEXT_PUBLIC_SITE_URL',
-	'https://southasianfashion.example.com',
+	'https://southasianfashion.ca',
 )
 
 export const database = await D1Database('database', {
