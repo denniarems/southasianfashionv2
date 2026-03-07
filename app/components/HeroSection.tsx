@@ -31,14 +31,14 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 						fill
 						priority
 						sizes="100vw"
-						className="object-cover"
+						className="object-cover object-[62%_24%] md:object-[68%_20%] lg:object-[72%_18%]"
 					/>
 				)}
 				<div className="absolute inset-0 bg-linear-to-t from-stone-900/45 via-stone-900/12 to-white/30" />
 			</div>
 
 			<div className="relative z-10 max-w-450 mx-auto px-6 md:px-12 lg:px-24 w-full pb-20 md:pb-24">
-				<div className="max-w-2xl bg-white/85 backdrop-blur-md border border-white/70 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.55)] p-8 md:p-10">
+				<div className="max-w-lg bg-white/85 backdrop-blur-md border border-white/70 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.55)] p-8 md:p-10">
 					<motion.p
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}

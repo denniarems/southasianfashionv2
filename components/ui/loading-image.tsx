@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image, { type ImageProps } from 'next/image'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +16,7 @@ type LoadingImageProps = ImageProps & {
 export function LoadingImage({
 	className,
 	onLoad,
+	onError,
 	placeholder,
 	blurDataURL,
 	src,
@@ -25,6 +26,45 @@ export function LoadingImage({
 	...props
 }: LoadingImageProps) {
 	const [loaded, setLoaded] = useState(false)
+	const resolvedSrc = useMemo(() => {
+		if (typeof src === 'string') {
+			return src
+		}
+
+		return 'src' in src ? src.src : ''
+	}, [src])
+
+	useEffect(() => {
+		if (!resolvedSrc) {
+			setLoaded(true)
+			return
+		}
+
+		setLoaded(false)
+
+		const preloadImage = new window.Image()
+		let cancelled = false
+
+		const markLoaded = () => {
+			if (!cancelled) {
+				setLoaded(true)
+			}
+		}
+
+		preloadImage.onload = markLoaded
+		preloadImage.onerror = markLoaded
+		preloadImage.src = resolvedSrc
+
+		if (preloadImage.complete && preloadImage.naturalWidth > 0) {
+			markLoaded()
+		}
+
+		return () => {
+			cancelled = true
+			preloadImage.onload = null
+			preloadImage.onerror = null
+		}
+	}, [resolvedSrc])
 
 	const resolvedBlurDataURL =
 		blurDataURL ?? (!disableAutoBlur && typeof src === 'string' ? DEFAULT_BLUR_DATA_URL : undefined)
@@ -45,6 +85,10 @@ export function LoadingImage({
 			onLoad={(event) => {
 				setLoaded(true)
 				onLoad?.(event)
+			}}
+			onError={(event) => {
+				setLoaded(true)
+				onError?.(event)
 			}}
 		/>
 	)
