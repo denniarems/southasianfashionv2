@@ -1,7 +1,7 @@
 'use server'
 
 import { getDb } from '@/db'
-import { products } from '@/db/schema'
+import { categories, products } from '@/db/schema'
 import { and, asc, count, desc, eq, ilike, isNotNull, or } from 'drizzle-orm'
 import { previewProductPrice, type ProductPricePreview } from '@/lib/discounts'
 
@@ -87,13 +87,25 @@ export async function fetchProducts({
 
 export async function fetchProductCategories(): Promise<string[]> {
 	const db = getDb()
-	const rows = await db
-		.selectDistinct({ category: products.category })
+	const configuredCategories = await db
+		.select({ name: categories.name })
+		.from(categories)
+		.orderBy(asc(categories.name))
+
+	if (configuredCategories.length > 0) {
+		return configuredCategories
+			.map((row: { name: string | null }) => row.name?.trim() ?? '')
+			.filter((name: string) => name.length > 0)
+	}
+
+	const productCategoryRows = await db
+		.select({ category: products.category })
 		.from(products)
 		.where(isNotNull(products.category))
+		.groupBy(products.category)
 		.orderBy(asc(products.category))
 
-	return rows
-		.map((r: { category: string | null }) => r.category)
-		.filter((c: string | null): c is string => Boolean(c))
+	return productCategoryRows
+		.map((row: { category: string | null }) => row.category?.trim() ?? '')
+		.filter((category: string) => category.length > 0)
 }

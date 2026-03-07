@@ -130,3 +130,16 @@ After deployment, verify the production Worker URL:
 - Use `bun run deploy:dry-run` before the first real deployment if you want to inspect the generated output.
 - Do not use `getPlatformProxy()` or custom worker entries for bindings; this repository now relies on `cloudflare:workers` imports.
 - If local email sends are tested through Wrangler, inspect the generated `.eml` files in the local Wrangler temp output.
+
+## Phase 8: Alchemy production orchestration
+
+This repository now includes `alchemy.run.ts` to make production deployment easier without changing the vinext runtime entrypoint.
+
+- `bun run alchemy:deploy` provisions or adopts the production D1 database and R2 bucket.
+- The same step regenerates `wrangler.jsonc` with the latest D1 database ID, R2 bucket binding, Images binding, runtime vars, and OTP `send_email` config.
+- `bun run deploy:production` runs the Alchemy sync first, then performs the real `vinext deploy`.
+
+Important:
+
+- `JWT_SECRET` should remain a Wrangler secret and is intentionally not written into `wrangler.jsonc`.
+- The Alchemy file is currently production-focused and uses the stable resource names already used by this app.

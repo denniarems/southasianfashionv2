@@ -34,12 +34,36 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - `bun run build` - Build vinext for production
 - `bun run start` - Start vinext production server
 - `bun run deploy` - Build and deploy to Cloudflare Workers
+- `bun run alchemy:deploy` - Provision/adopt Cloudflare infrastructure and refresh `wrangler.jsonc`
+- `bun run deploy:production` - Sync infrastructure with Alchemy, then deploy the vinext app
 - `bun run cf:types` - Generate Cloudflare binding types
 - `bun run db:generate` - Generate D1 migrations from Drizzle schema
 - `bun run db:migrate:local` - Apply D1 migrations locally
 - `bun run db:migrate:remote` - Apply D1 migrations remotely
+- `bun run db:seed:local` - Seed the local D1 database from `db/seed.sql`
 - `bun run lint` - Run linter
 - `bun run fmt` - Format code
+
+For a fresh local database, run migrations before seeding:
+
+```bash
+bun run db:migrate:local
+bun run db:seed:local
+```
+
+## Production deployment with Alchemy
+
+Use `alchemy.run.ts` to keep production infrastructure and `wrangler.jsonc` in sync:
+
+1. Authenticate Alchemy with Cloudflare.
+2. Run `bun run alchemy:deploy` to adopt/create D1 + R2 and regenerate `wrangler.jsonc`.
+3. Ensure `JWT_SECRET` is set as a Wrangler secret.
+4. Run `bun run deploy:production` for the full production flow.
+
+Notes:
+
+- The app deploy still uses `vinext deploy` so the `vinext/server/app-router-entry` runtime stays intact.
+- The OTP `send_email` binding is preserved through generated Wrangler config because Alchemy does not yet expose it as a first-class Worker binding.
 
 ## Project Structure
 
