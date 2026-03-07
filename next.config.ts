@@ -1,5 +1,18 @@
 import type { NextConfig } from 'next'
 
+function getHostname(url?: string) {
+	if (!url) return null
+
+	try {
+		return new URL(url).hostname
+	} catch {
+		return null
+	}
+}
+
+const r2PublicHost = getHostname(process.env.R2_PUBLIC_URL)
+const cloudflareImagesHost = process.env.CLOUDFLARE_IMAGES_DELIVERY_HOST || 'imagedelivery.net'
+
 const nextConfig: NextConfig = {
 	images: {
 		formats: ['image/avif', 'image/webp'],
@@ -9,12 +22,12 @@ const nextConfig: NextConfig = {
 		remotePatterns: [
 			{
 				protocol: 'https',
-				hostname: '*.public.blob.vercel-storage.com',
+				hostname: r2PublicHost || '**.r2.dev',
 				port: '',
 			},
 			{
 				protocol: 'https',
-				hostname: '*.private.blob.vercel-storage.com',
+				hostname: cloudflareImagesHost,
 				port: '',
 			},
 			{

@@ -1,20 +1,18 @@
 import { sql } from 'drizzle-orm'
 import {
-	boolean,
 	index,
 	integer,
-	pgEnum,
-	pgTable,
 	real,
-	serial,
+	sqliteTable,
 	text,
-	timestamp,
 	uniqueIndex,
-} from 'drizzle-orm/pg-core'
+} from 'drizzle-orm/sqlite-core'
 
-export const discountTypeEnum = pgEnum('discount_type', ['flat', 'percentage', 'tiered', 'bundle'])
+const discountTypes = ['flat', 'percentage', 'tiered', 'bundle'] as const
 
-export const categories = pgTable('categories', {
+export type DiscountType = (typeof discountTypes)[number]
+
+export const categories = sqliteTable('categories', {
 	id: text('id').primaryKey(), // uuid from mongo
 	name: text('name').notNull().unique(),
 	slug: text('slug').notNull().unique(),
@@ -22,7 +20,7 @@ export const categories = pgTable('categories', {
 	createdAt: text('created_at').notNull(), // ISO string
 })
 
-export const collections = pgTable('collections', {
+export const collections = sqliteTable('collections', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	description: text('description').default(''),
@@ -31,7 +29,7 @@ export const collections = pgTable('collections', {
 	createdAt: text('created_at').notNull(),
 })
 
-export const sizeGuides = pgTable('size_guides', {
+export const sizeGuides = sqliteTable('size_guides', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	productType: text('product_type').default(''),
@@ -39,11 +37,11 @@ export const sizeGuides = pgTable('size_guides', {
 	note: text('note').default(''),
 	columnsJson: text('columns_json').notNull().default('[]'),
 	rowsJson: text('rows_json').notNull().default('[]'),
-	isActive: boolean('is_active').notNull().default(true),
+	isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 	createdAt: text('created_at').notNull(),
 })
 
-export const products = pgTable('products', {
+export const products = sqliteTable('products', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	slug: text('slug').notNull().unique(),
@@ -52,36 +50,36 @@ export const products = pgTable('products', {
 	currency: text('currency').notNull().default('CAD'),
 	category: text('category'),
 	imageUrl: text('image_url').default(''),
-	isNew: boolean('is_new').default(true),
-	isFeatured: boolean('is_featured').default(false),
+	isNew: integer('is_new', { mode: 'boolean' }).default(true),
+	isFeatured: integer('is_featured', { mode: 'boolean' }).default(false),
 	collectionId: text('collection_id').references(() => collections.id),
 	sizeGuideId: text('size_guide_id').references(() => sizeGuides.id, { onDelete: 'set null' }),
 	createdAt: text('created_at').notNull(),
 })
 
-export const productImages = pgTable('product_images', {
+export const productImages = sqliteTable('product_images', {
 	id: text('id').primaryKey(),
 	productId: text('product_id')
 		.notNull()
 		.references(() => products.id, { onDelete: 'cascade' }),
 	imageUrl: text('image_url').notNull(),
-	sortOrder: real('sort_order').notNull().default(0),
+	sortOrder: integer('sort_order').notNull().default(0),
 	createdAt: text('created_at').notNull(),
 })
 
-export const heroBanners = pgTable('hero_banners', {
+export const heroBanners = sqliteTable('hero_banners', {
 	id: text('id').primaryKey(),
 	title: text('title').notNull(),
 	subtitle: text('subtitle').default(''),
 	imageUrl: text('image_url').default(''),
 	ctaText: text('cta_text').default('Explore Collection'),
 	ctaLink: text('cta_link').default('#new-arrivals'),
-	isActive: boolean('is_active').default(true),
+	isActive: integer('is_active', { mode: 'boolean' }).default(true),
 	createdAt: text('created_at').notNull(),
 })
 
-export const settings = pgTable('settings', {
-	id: serial('id').primaryKey(),
+export const settings = sqliteTable('settings', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
 	whatsappNumber: text('whatsapp_number').default(''),
 	whatsappMessage: text('whatsapp_message').default(''),
 	brandName: text('brand_name').default('SouthAsianFashion'),
@@ -91,43 +89,43 @@ export const settings = pgTable('settings', {
 	facebookUrl: text('facebook_url').default(''),
 })
 
-export const otpCodes = pgTable('otp_codes', {
-	id: serial('id').primaryKey(),
+export const otpCodes = sqliteTable('otp_codes', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
 	email: text('email').notNull(),
 	otp: text('otp').notNull(),
 	createdAt: text('created_at').notNull(),
 	expiresAt: text('expires_at').notNull(),
 })
 
-export const discounts = pgTable(
+export const discounts = sqliteTable(
 	'discounts',
 	{
 		id: text('id').primaryKey(),
 		name: text('name').notNull(),
 		description: text('description').default(''),
-		discountType: discountTypeEnum('discount_type').notNull(),
+		discountType: text('discount_type', { enum: discountTypes }).$type<DiscountType>().notNull(),
 		discountValue: real('discount_value').notNull().default(0),
 		originalPrice: real('original_price'),
-		startDate: timestamp('start_date', { withTimezone: true }).notNull().defaultNow(),
-		endDate: timestamp('end_date', { withTimezone: true }),
+		startDate: text('start_date').notNull(),
+		endDate: text('end_date'),
 		minCartValue: real('min_cart_value').notNull().default(0),
-			applicableProductIds: text('applicable_product_ids')
-				.array()
-				.notNull()
-				.default(sql`'{}'::text[]`),
-		applicableCategories: text('applicable_categories')
-			.array()
+		applicableProductIds: text('applicable_product_ids', { mode: 'json' })
+			.$type<string[]>()
 			.notNull()
-			.default(sql`'{}'::text[]`),
-		stackable: boolean('stackable').notNull().default(false),
+			.default(sql`(json_array())`),
+		applicableCategories: text('applicable_categories', { mode: 'json' })
+			.$type<string[]>()
+			.notNull()
+			.default(sql`(json_array())`),
+		stackable: integer('stackable', { mode: 'boolean' }).notNull().default(false),
 		maxUses: integer('max_uses'),
 		priority: integer('priority').notNull().default(0),
-		isActive: boolean('is_active').notNull().default(true),
+		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 		productId: text('product_id').references(() => products.id, { onDelete: 'cascade' }),
-		bundleProductIds: text('bundle_product_ids')
-			.array()
+		bundleProductIds: text('bundle_product_ids', { mode: 'json' })
+			.$type<string[]>()
 			.notNull()
-			.default(sql`'{}'::text[]`),
+			.default(sql`(json_array())`),
 		tierRulesJson: text('tier_rules_json').notNull().default('[]'),
 		usageCount: integer('usage_count').notNull().default(0),
 		wording: text('wording').notNull().default('Instant Price Drop'),
@@ -142,10 +140,10 @@ export const discounts = pgTable(
 	}),
 )
 
-export const discountUsages = pgTable(
+export const discountUsages = sqliteTable(
 	'discount_usages',
 	{
-		id: serial('id').primaryKey(),
+		id: integer('id').primaryKey({ autoIncrement: true }),
 		discountId: text('discount_id')
 			.notNull()
 			.references(() => discounts.id, { onDelete: 'cascade' }),

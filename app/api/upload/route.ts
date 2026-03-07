@@ -1,13 +1,22 @@
-import { put } from '@vercel/blob'
+import { env } from 'cloudflare:workers'
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { deleteVercelBlobByUrl } from '@/lib/vercel-blob'
+import { buildR2ObjectUrl, deleteR2ObjectByUrl } from '@/lib/cloudflare-r2'
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 // 10MB
+const MIME_TYPES: Record<string, string> = {
+	avif: 'image/avif',
+	gif: 'image/gif',
+	jpeg: 'image/jpeg',
+	jpg: 'image/jpeg',
+	png: 'image/png',
+	svg: 'image/svg+xml',
+	webp: 'image/webp',
+}
 
 function getUploadErrorCode(message: string) {
-	if (/token|auth|unauthori[sz]ed|forbidden/i.test(message)) {
-		return 'blob_auth_error'
+	if (/binding|bucket|auth|unauthori[sz]ed|forbidden|permission/i.test(message)) {
+		return 'storage_auth_error'
 	}
 
 	if (/too large|payload|413|entity too large|size/i.test(message)) {
@@ -23,9 +32,9 @@ function getUploadErrorCode(message: string) {
 
 export async function POST(request: Request) {
 	try {
-		if (!process.env.BLOB_READ_WRITE_TOKEN) {
+		if (!env.PRODUCT_MEDIA) {
 			return NextResponse.json(
-				{ error: 'Blob token is not configured', code: 'missing_blob_token' },
+				{ error: 'R2 bucket binding is not configured', code: 'missing_r2_binding' },
 				{ status: 500 },
 			)
 		}
@@ -56,15 +65,25 @@ export async function POST(request: Request) {
 			)
 		}
 
-		const filename = `${crypto.randomUUID()}.${ext}`
+		const objectKey = `products/${crypto.randomUUID()}.${ext}`
+		const contentType = file.type || MIME_TYPES[ext] || 'application/octet-stream'
 
-		const blob = await put(filename, file, { access: 'public' })
+		await env.PRODUCT_MEDIA.put(objectKey, await file.arrayBuffer(), {
+			httpMetadata: {
+				contentType,
+			},
+			customMetadata: {
+				originalName: file.name,
+			},
+		})
 
-		await deleteVercelBlobByUrl(previousImageUrl, 'image replacement upload')
+		await deleteR2ObjectByUrl(previousImageUrl, 'image replacement upload')
+
+		const publicUrl = buildR2ObjectUrl(objectKey)
 
 		return NextResponse.json({
-			url: blob.url,
-			filename, // you can store this in the db if needed
+			url: publicUrl,
+			filename: objectKey,
 		})
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Unknown upload error'

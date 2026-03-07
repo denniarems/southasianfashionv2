@@ -1,13 +1,14 @@
-import { drizzle } from 'drizzle-orm/neon-http'
-import { neon } from '@neondatabase/serverless'
+import { env } from 'cloudflare:workers'
+import { drizzle } from 'drizzle-orm/d1'
 import * as schema from './schema'
 
-let dbInstance: any = null
+const createDb = () => drizzle(env.SAF_DB, { schema })
+
+let dbInstance: ReturnType<typeof createDb> | null = null
 
 export function getDb() {
 	if (!dbInstance) {
-		const sql = neon(process.env.DATABASE_URL!)
-		dbInstance = drizzle(sql, { schema })
+		dbInstance = createDb()
 	}
 	return dbInstance
 }

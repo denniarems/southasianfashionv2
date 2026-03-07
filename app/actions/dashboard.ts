@@ -15,7 +15,7 @@ import {
 import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { slugify } from '@/lib/slug'
-import { deleteVercelBlobByUrl } from '@/lib/vercel-blob'
+import { deleteR2ObjectByUrl } from '@/lib/cloudflare-r2'
 import { computeCartDiscounts } from '@/lib/discounts'
 import crypto from 'crypto'
 
@@ -66,6 +66,7 @@ function normalizeTierRulesJson(input: unknown): string {
 function isMissingProductImagesTableError(error: unknown): boolean {
 	const message = error instanceof Error ? error.message : String(error)
 	return (
+		message.includes('no such table: product_images') ||
 		message.includes('relation "product_images" does not exist') ||
 		message.includes('relation "product_images"')
 	)
@@ -119,10 +120,10 @@ export async function deleteItem(type: string, id: string) {
 				}
 
 				for (const img of additionalImgs) {
-					await deleteVercelBlobByUrl(img.imageUrl, 'product additional image deletion')
+					await deleteR2ObjectByUrl(img.imageUrl, 'product additional image deletion')
 				}
 
-				await deleteVercelBlobByUrl(existing[0]?.imageUrl, 'product deletion')
+				await deleteR2ObjectByUrl(existing[0]?.imageUrl, 'product deletion')
 				try {
 					await db.delete(productImages).where(eq(productImages.productId, id))
 				} catch (error) {
@@ -140,7 +141,7 @@ export async function deleteItem(type: string, id: string) {
 					.where(eq(collections.id, id))
 					.limit(1)
 
-				await deleteVercelBlobByUrl(existing[0]?.imageUrl, 'collection deletion')
+				await deleteR2ObjectByUrl(existing[0]?.imageUrl, 'collection deletion')
 				await db.delete(collections).where(eq(collections.id, id))
 				break
 			}
@@ -151,7 +152,7 @@ export async function deleteItem(type: string, id: string) {
 					.where(eq(heroBanners.id, id))
 					.limit(1)
 
-				await deleteVercelBlobByUrl(existing[0]?.imageUrl, 'hero banner deletion')
+				await deleteR2ObjectByUrl(existing[0]?.imageUrl, 'hero banner deletion')
 				await db.delete(heroBanners).where(eq(heroBanners.id, id))
 				break
 			}
@@ -193,7 +194,7 @@ export async function saveSettings(data: any) {
 
 export async function fetchProductImagesForAdmin(): Promise<Record<string, string[]>> {
 	const db = getDb()
-	let allImages: Awaited<ReturnType<typeof db.select>> = []
+	let allImages: Array<typeof productImages.$inferSelect> = []
 
 	try {
 		allImages = await db.select().from(productImages).orderBy(asc(productImages.sortOrder))
@@ -251,7 +252,7 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 						const newUrlSet = new Set(additionalImages as string[])
 						for (const img of existingImgs) {
 							if (!newUrlSet.has(img.imageUrl)) {
-								await deleteVercelBlobByUrl(img.imageUrl, 'product image removed')
+								await deleteR2ObjectByUrl(img.imageUrl, 'product image removed')
 							}
 						}
 
@@ -298,10 +299,12 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 				}
 				break
 			case 'discounts': {
-				const startDate = data.startDate ? new Date(data.startDate) : new Date()
-				const endDate = data.endDate ? new Date(data.endDate) : null
-					const legacyProductId = typeof data.productId === 'string' ? data.productId.trim() : ''
-					const applicableProductIds = parseStringArray(data.applicableProductIds)
+				const startDate = data.startDate
+					? new Date(data.startDate).toISOString()
+					: new Date().toISOString()
+				const endDate = data.endDate ? new Date(data.endDate).toISOString() : null
+				const legacyProductId = typeof data.productId === 'string' ? data.productId.trim() : ''
+				const applicableProductIds = parseStringArray(data.applicableProductIds)
 				const payload = {
 					id: data.id,
 					name: data.name || 'Untitled Discount',
@@ -315,18 +318,18 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 					startDate,
 					endDate,
 					minCartValue: Number(data.minCartValue) || 0,
-						applicableProductIds:
-							applicableProductIds.length > 0
-								? applicableProductIds
-								: legacyProductId
-									? [legacyProductId]
-									: [],
+					applicableProductIds:
+						applicableProductIds.length > 0
+							? applicableProductIds
+							: legacyProductId
+								? [legacyProductId]
+								: [],
 					applicableCategories: parseStringArray(data.applicableCategories),
 					stackable: Boolean(data.stackable),
 					maxUses: data.maxUses === undefined || data.maxUses === '' ? null : Number(data.maxUses),
 					priority: Number(data.priority) || 0,
 					isActive: data.isActive !== false,
-						productId: null,
+					productId: null,
 					bundleProductIds: parseStringArray(data.bundleProductIds),
 					tierRulesJson: normalizeTierRulesJson(data.tierRulesJson),
 					wording: data.wording || 'Instant Price Drop',

@@ -13,6 +13,10 @@ interface MultiImageUploadProps {
 	label?: string
 }
 
+interface UploadResponse {
+	url: string
+}
+
 export default function MultiImageUpload({
 	values,
 	onChange,
@@ -35,7 +39,7 @@ export default function MultiImageUpload({
 			try {
 				const res = await fetch('/api/upload', { method: 'POST', body: form })
 				if (!res.ok) throw new Error('Upload failed')
-				const data = await res.json()
+				const data = (await res.json()) as UploadResponse
 				newUrls.push(data.url)
 			} catch {
 				toast.error(`Failed to upload ${file.name}`)

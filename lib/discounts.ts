@@ -154,7 +154,7 @@ function computeDiscountAmount(
 
 const getActiveDiscountsCached = cache(async () => {
 	const db = getDb()
-	const now = new Date()
+	const now = new Date().toISOString()
 
 	return db
 		.select()
@@ -237,7 +237,7 @@ export async function previewProductPrice(product: ProductLookup): Promise<Produ
 		savingsPercent,
 		discountText,
 		badgeText,
-		endDate: top?.endDate ? top.endDate.toISOString() : null,
+		endDate: top?.endDate ?? null,
 	}
 }
 

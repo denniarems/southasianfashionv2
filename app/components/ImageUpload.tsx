@@ -14,6 +14,10 @@ interface ImageUploadProps {
 	label?: string
 }
 
+interface UploadResponse {
+	url: string
+}
+
 export default function ImageUpload({ value, onChange, label = 'Image' }: ImageUploadProps) {
 	const [uploading, setUploading] = useState(false)
 	const fileRef = useRef<HTMLInputElement>(null)
@@ -37,7 +41,7 @@ export default function ImageUpload({ value, onChange, label = 'Image' }: ImageU
 
 			if (!res.ok) throw new Error('Upload failed')
 
-			const data = await res.json()
+			const data = (await res.json()) as UploadResponse
 			onChange(data.url)
 			toast.success('Image uploaded')
 		} catch {
