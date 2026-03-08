@@ -80,11 +80,11 @@ export default function Navbar({
 					isDark ? 'bg-white/90 backdrop-blur-xl border-b border-stone-200/50' : 'bg-transparent'
 				}`}
 			>
-				<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
+				<div className="max-w-450 mx-auto px-4 sm:px-6 md:px-12 lg:px-24">
 					<div className="flex items-center justify-between h-20">
 						<Link
 							href="/"
-							className="inline-flex items-center gap-3"
+							className="inline-flex min-w-0 items-center gap-2 sm:gap-3"
 							data-testid="nav-logo"
 							aria-label={brandName}
 						>
@@ -98,7 +98,7 @@ export default function Navbar({
 								className="h-8 w-auto md:h-9"
 							/>
 							<span
-								className={`font-heading font-bold text-sm md:text-base tracking-wider transition-colors duration-500 ${isDark ? 'text-stone-900' : 'text-white'}`}
+								className={`min-w-0 truncate font-heading text-sm font-bold tracking-[0.12em] transition-colors duration-500 md:text-base ${isDark ? 'text-stone-900' : 'text-white'}`}
 							>
 								{brandName}
 							</span>
@@ -287,7 +287,7 @@ export default function Navbar({
 							exit={{ opacity: 0, height: 0 }}
 							className="md:hidden bg-white/95 backdrop-blur-xl border-b border-stone-200 overflow-hidden"
 						>
-							<div className="px-6 py-8 space-y-6">
+							<div className="space-y-6 px-4 py-6 sm:px-6 sm:py-8">
 								<a
 									href="/#new-arrivals"
 									onClick={() => setMenuOpen(false)}

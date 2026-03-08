@@ -29,9 +29,13 @@ interface Settings {
 
 export default function Footer({ settings, year }: { settings?: Settings; year: number }) {
 	return (
-		<footer id="contact" data-testid="footer" className="bg-stone-900 text-white py-24 md:py-32">
-			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16 mb-20">
+		<footer
+			id="contact"
+			data-testid="footer"
+			className="bg-stone-900 py-16 text-white md:py-24 lg:py-32"
+		>
+			<div className="max-w-450 mx-auto px-4 sm:px-6 md:px-12 lg:px-24">
+				<div className="mb-16 grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-12 lg:grid-cols-4 lg:gap-16 lg:mb-20">
 					<div className="lg:col-span-2">
 						<h3 className="font-heading text-2xl tracking-wide mb-4">
 							{settings?.brandName || 'SouthAsianFashion'}
@@ -113,7 +117,7 @@ export default function Footer({ settings, year }: { settings?: Settings; year: 
 					</div>
 				</div>
 
-				<div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+				<div className="flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 md:flex-row md:items-center">
 					<p className="text-xs text-white/20 tracking-wider">
 						&copy; {year} {settings?.brandName || 'SouthAsianFashion'}. All rights reserved.
 					</p>

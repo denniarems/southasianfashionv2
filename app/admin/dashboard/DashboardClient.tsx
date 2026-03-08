@@ -23,7 +23,6 @@ import ImageUpload from '@/app/components/ImageUpload'
 import MultiImageUpload from '@/app/components/MultiImageUpload'
 import {
 	deleteItem,
-	fetchProductImagesForAdmin,
 	saveItem,
 	saveSettings,
 } from '@/app/actions/dashboard'
@@ -231,6 +230,7 @@ export default function DashboardClient({
 	initialSizeGuides,
 	initialDiscounts,
 	initialSettings,
+	initialProductImagesMap,
 }: any) {
 	const router = useRouter()
 	const sizeGuideNameById = Object.fromEntries(
@@ -250,11 +250,7 @@ export default function DashboardClient({
 		label: '',
 	})
 	const [isMutating, startMutatingTransition] = useTransition()
-	const [productImagesMap, setProductImagesMap] = useState<Record<string, string[]>>({})
-
-	useEffect(() => {
-		fetchProductImagesForAdmin().then(setProductImagesMap)
-	}, [initialProducts])
+	const [productImagesMap, setProductImagesMap] = useState<Record<string, string[]>>(initialProductImagesMap || {})
 
 	const openDeleteConfirmation = (type: string, id: string, label: string) => {
 		setPendingDelete({

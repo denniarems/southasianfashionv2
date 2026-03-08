@@ -10,6 +10,7 @@ import {
 } from '@/db/schema'
 import { desc } from 'drizzle-orm'
 import DashboardClient from './DashboardClient'
+import { fetchProductImagesForAdmin } from '@/app/actions/dashboard'
 
 export default async function AdminDashboardPage() {
 	const db = getDb()
@@ -22,6 +23,7 @@ export default async function AdminDashboardPage() {
 		allSizeGuides,
 		allDiscounts,
 		[siteSettings],
+		productImagesMap,
 	] = await Promise.all([
 		db.select().from(products).orderBy(desc(products.createdAt)),
 		db.select().from(collections).orderBy(desc(collections.createdAt)),
@@ -30,6 +32,7 @@ export default async function AdminDashboardPage() {
 		db.select().from(sizeGuides).orderBy(desc(sizeGuides.createdAt)),
 		db.select().from(discounts).orderBy(desc(discounts.priority), desc(discounts.createdAt)),
 		db.select().from(settings).limit(1),
+		fetchProductImagesForAdmin(),
 	])
 
 	return (
@@ -41,6 +44,7 @@ export default async function AdminDashboardPage() {
 			initialSizeGuides={allSizeGuides}
 			initialDiscounts={allDiscounts}
 			initialSettings={siteSettings || {}}
+			initialProductImagesMap={productImagesMap}
 		/>
 	)
 }

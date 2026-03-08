@@ -36,12 +36,16 @@ export default function Featured({
 	if (!item) return null
 
 	return (
-		<section id="featured" data-testid="featured-section" className="py-24 md:py-32">
-			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+		<section
+			id="featured"
+			data-testid="featured-section"
+			className="overflow-x-clip py-16 md:py-24 lg:py-32"
+		>
+			<div className="max-w-450 mx-auto px-4 sm:px-6 md:px-12 lg:px-24">
+				<div className="grid grid-cols-1 items-center gap-8 md:gap-12 lg:grid-cols-2 lg:gap-24">
 					<motion.div
-						initial={{ opacity: 0, x: -40 }}
-						whileInView={{ opacity: 1, x: 0 }}
+						initial={{ opacity: 0, y: 28 }}
+						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true }}
 						transition={{ duration: 0.8 }}
 						className="relative overflow-hidden aspect-3/4"
@@ -70,8 +74,8 @@ export default function Featured({
 					</motion.div>
 
 					<motion.div
-						initial={{ opacity: 0, x: 40 }}
-						whileInView={{ opacity: 1, x: 0 }}
+						initial={{ opacity: 0, y: 28 }}
+						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true }}
 						transition={{ duration: 0.8, delay: 0.2 }}
 					>
@@ -82,7 +86,7 @@ export default function Featured({
 							{item.name}
 						</h2>
 						<p className="text-stone-500 leading-relaxed mb-4 max-w-lg">{item.description}</p>
-						<div className="mb-10">
+						<div className="mb-8 md:mb-10">
 							<PremiumPriceDisplay
 								currency="CAD"
 								originalPrice={item.pricing?.originalPrice ?? item.price}
@@ -94,7 +98,7 @@ export default function Featured({
 								endDate={item.pricing?.endDate}
 							/>
 						</div>
-						<div className="flex flex-col sm:flex-row gap-3">
+						<div className="flex flex-col gap-3 sm:flex-row">
 							<AddToCartButton
 								product={{
 									id: item.id,
@@ -104,7 +108,7 @@ export default function Featured({
 									currency: 'CAD',
 									imageUrl: item.imageUrl,
 								}}
-								className="inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+								className="inline-flex w-full items-center justify-center gap-3 bg-stone-900 px-10 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors duration-300 hover:bg-yellow-700 sm:w-auto"
 							/>
 
 							<a
@@ -112,7 +116,7 @@ export default function Featured({
 								target="_blank"
 								rel="noopener noreferrer"
 								data-testid="featured-whatsapp-btn"
-								className="inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+								className="inline-flex w-full items-center justify-center gap-3 bg-stone-900 px-10 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors duration-300 hover:bg-yellow-700 sm:w-auto"
 							>
 								<MessageCircleIcon size={16} />
 								Inquire Now

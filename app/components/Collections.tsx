@@ -26,15 +26,15 @@ export default function Collections({ collections }: { collections: Collection[]
 		<section
 			id="collections"
 			data-testid="collections-section"
-			className="py-24 md:py-32 bg-stone-100"
+			className="bg-stone-100 py-16 md:py-24 lg:py-32"
 		>
-			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
+			<div className="max-w-450 mx-auto px-4 sm:px-6 md:px-12 lg:px-24">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					viewport={{ once: true }}
 					transition={{ duration: 0.6 }}
-					className="mb-16"
+					className="mb-12 md:mb-16"
 				>
 					<p className="font-accent italic text-yellow-700 text-base md:text-lg mb-2">Curated</p>
 					<h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-stone-900 tracking-tight">
@@ -47,7 +47,7 @@ export default function Collections({ collections }: { collections: Collection[]
 					initial="hidden"
 					whileInView="show"
 					viewport={{ once: true }}
-					className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
+					className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8"
 				>
 					{collections.map((c, i) => (
 						<motion.div
@@ -55,7 +55,7 @@ export default function Collections({ collections }: { collections: Collection[]
 							variants={fadeUp}
 							data-testid={`collection-card-${c.id}`}
 							className={`group relative overflow-hidden cursor-pointer ${
-								i === 0 ? 'md:row-span-2 min-h-100 md:min-h-150' : 'min-h-70 md:min-h-72.5'
+								i === 0 ? 'min-h-84 md:row-span-2 md:min-h-150' : 'min-h-64 md:min-h-72.5'
 							}`}
 						>
 							<Link
@@ -74,7 +74,7 @@ export default function Collections({ collections }: { collections: Collection[]
 							)}
 							<div className="absolute inset-0 bg-linear-to-t from-stone-900/70 via-stone-900/20 to-transparent" />
 
-							<div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
+							<div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-10">
 								<p className="font-accent italic text-white/60 text-sm mb-1">
 									{c.slug?.replace(/-/g, ' ')}
 								</p>

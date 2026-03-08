@@ -41,14 +41,18 @@ export default function NewArrivals({
 	if (!products?.length) return null
 
 	return (
-		<section id="new-arrivals" data-testid="new-arrivals-section" className="py-24 md:py-32">
-			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
+		<section
+			id="new-arrivals"
+			data-testid="new-arrivals-section"
+			className="py-16 md:py-24 lg:py-32"
+		>
+			<div className="max-w-450 mx-auto px-4 sm:px-6 md:px-12 lg:px-24">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					viewport={{ once: true }}
 					transition={{ duration: 0.6 }}
-					className="mb-16"
+					className="mb-12 md:mb-16"
 				>
 					<p className="font-accent italic text-yellow-700 text-base md:text-lg mb-2">
 						Just Arrived
@@ -63,7 +67,7 @@ export default function NewArrivals({
 					initial="hidden"
 					whileInView="show"
 					viewport={{ once: true }}
-					className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12"
+					className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-10 lg:grid-cols-3 lg:gap-12"
 				>
 					{products.map((p) => (
 						<motion.div

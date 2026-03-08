@@ -21,7 +21,7 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 	return (
 		<section
 			data-testid="hero-section"
-			className="relative min-h-screen flex items-end overflow-hidden bg-stone-50"
+			className="relative flex min-h-[100svh] items-end overflow-hidden bg-stone-50 pt-24 sm:min-h-screen sm:pt-0"
 		>
 			<div className="absolute inset-0">
 				{hero.imageUrl && (
@@ -31,19 +31,19 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 						fill
 						priority
 						sizes="100vw"
-						className="object-cover object-[62%_24%] md:object-[68%_20%] lg:object-[72%_18%]"
+						className="object-cover object-center"
 					/>
 				)}
 				<div className="absolute inset-0 bg-linear-to-t from-stone-900/45 via-stone-900/12 to-white/30" />
 			</div>
 
-			<div className="relative z-10 max-w-450 mx-auto px-6 md:px-12 lg:px-24 w-full pb-20 md:pb-24">
-				<div className="max-w-lg bg-white/85 backdrop-blur-md border border-white/70 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.55)] p-8 md:p-10">
+			<div className="relative z-10 mx-auto w-full max-w-450 px-4 sm:px-6 md:px-12 lg:px-24 pb-8 sm:pb-16 md:pb-24">
+				<div className="max-w-lg bg-white/85 backdrop-blur-md border border-white/70 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.55)] p-6 sm:p-8 md:p-10">
 					<motion.p
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.8, delay: 0.2 }}
-						className="font-accent italic text-stone-600 text-base md:text-lg mb-4"
+						className="mb-3 font-accent text-sm italic text-stone-600 sm:mb-4 sm:text-base md:text-lg"
 					>
 						{subtitle}
 					</motion.p>
@@ -51,7 +51,7 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 						initial={{ opacity: 0, y: 30 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.8, delay: 0.5 }}
-						className="font-heading text-4xl sm:text-5xl lg:text-6xl text-stone-900 leading-tight tracking-tight"
+						className="font-heading text-[clamp(2.75rem,13vw,4.5rem)] text-stone-900 leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl"
 					>
 						{title}
 					</motion.h1>
@@ -59,12 +59,12 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.8, delay: 0.9 }}
-						className="mt-10"
+						className="mt-8 sm:mt-10"
 					>
 						<a
 							href={hero.ctaLink || '#new-arrivals'}
 							data-testid="hero-cta-btn"
-							className="inline-block bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-[#B8860B] transition-colors duration-300"
+							className="inline-flex w-full items-center justify-center bg-stone-900 px-8 py-4 text-center text-xs font-semibold uppercase tracking-widest text-white transition-colors duration-300 hover:bg-[#B8860B] sm:w-auto sm:px-10"
 						>
 							{ctaText}
 						</a>
