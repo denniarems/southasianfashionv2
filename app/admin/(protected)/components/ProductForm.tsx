@@ -54,6 +54,17 @@ export function ProductForm({ mode, initialData, collections, categories, sizeGu
 		return Array.from(new Set(urls))
 	}, [form.additionalImages, form.imageUrl])
 
+	const getImageNameFromUrl = (url: string, index: number) => {
+		try {
+			const fileName = decodeURIComponent(new URL(url).pathname.split('/').pop() || '')
+			return fileName || `Uploaded Image ${index + 1}`
+		} catch {
+			const sanitizedUrl = decodeURIComponent(url.split('?')[0] || '')
+			const fileName = sanitizedUrl.split('/').pop() || ''
+			return fileName || `Uploaded Image ${index + 1}`
+		}
+	}
+
 	useEffect(() => {
 		if (selectedModelId) return
 		if (models.length > 0) {
@@ -324,7 +335,7 @@ export function ProductForm({ mode, initialData, collections, categories, sizeGu
 							<option value="">No back shot</option>
 							{uploadedClothingImages.map((url, index) => (
 								<option key={url} value={url}>
-									{`Uploaded Image ${index + 1}`}
+									{getImageNameFromUrl(url, index)}
 								</option>
 							))}
 						</select>
