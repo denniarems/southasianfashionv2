@@ -1,46 +1,34 @@
 import { getDb } from '@/db'
-import {
-	products,
-	collections,
-	heroBanners,
-	categories,
-	settings,
-	sizeGuides,
-	discounts,
-} from '@/db/schema'
+import { heroBanners } from '@/db/schema'
 import { desc } from 'drizzle-orm'
-import DashboardClient from './DashboardClient'
+import HeroesClient from './HeroesClient'
+// Import other tables if they are needed by ItemDialog (which requires products, collections, categories, sizeGuides)
+import { products, collections, categories, sizeGuides } from '@/db/schema'
 
-export default async function AdminDashboardPage() {
+export default async function HeroesPage() {
 	const db = getDb()
 
 	const [
+		items,
 		allProducts,
 		allCollections,
-		allHeroes,
 		allCategories,
 		allSizeGuides,
-		allDiscounts,
-		[siteSettings],
 	] = await Promise.all([
+		db.select().from(heroBanners).orderBy(desc(heroBanners.createdAt)),
 		db.select().from(products).orderBy(desc(products.createdAt)),
 		db.select().from(collections).orderBy(desc(collections.createdAt)),
-		db.select().from(heroBanners).orderBy(desc(heroBanners.createdAt)),
 		db.select().from(categories).orderBy(desc(categories.createdAt)),
 		db.select().from(sizeGuides).orderBy(desc(sizeGuides.createdAt)),
-		db.select().from(discounts).orderBy(desc(discounts.priority), desc(discounts.createdAt)),
-		db.select().from(settings).limit(1),
 	])
 
 	return (
-		<DashboardClient
+		<HeroesClient
+			items={items}
 			initialProducts={allProducts}
 			initialCollections={allCollections}
-			initialHeroes={allHeroes}
 			initialCategories={allCategories}
 			initialSizeGuides={allSizeGuides}
-			initialDiscounts={allDiscounts}
-			initialSettings={siteSettings || {}}
 		/>
 	)
 }

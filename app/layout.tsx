@@ -89,7 +89,7 @@ export default function RootLayout({
           />
         )}
       </head>
-			<body className="antialiased min-h-screen font-body overflow-x-hidden">
+			<body className="antialiased min-h-screen font-body overflow-x-hidden" suppressHydrationWarning>
 				<ClientWrapper>{children}</ClientWrapper>
 			</body>
 		</html>

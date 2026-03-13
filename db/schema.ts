@@ -162,3 +162,16 @@ export const discountUsages = pgTable(
 		discountUsageUserIdx: index('discount_usages_user_idx').on(table.userKey),
 	}),
 )
+
+export const models = pgTable('models', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	description: text('description').default(''),
+	ageRange: text('age_range').default(''),
+	gender: text('gender').default(''),
+	ethnicity: text('ethnicity').default(''),
+	imageUrl: text('image_url').notNull(),
+	promptUsed: text('prompt_used').default(''),
+	createdAt: text('created_at').notNull(),
+	updatedAt: text('updated_at').notNull(),
+})

@@ -82,7 +82,10 @@ export async function verifyOtp(email: string, otp: string) {
 	return { success: true }
 }
 
+import { redirect } from 'next/navigation'
+
 export async function logout() {
 	const cookieStore = (await cookies()) as any
 	cookieStore.delete('saf_admin_session')
+	redirect('/admin/login')
 }
