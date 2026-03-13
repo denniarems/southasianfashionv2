@@ -14,8 +14,7 @@ import {
 	saveModel,
 	deleteModel,
 	generateModelImage,
-	uploadExternalImageToBlob,
-} from '@/app/actions/models'
+} from '@/app/actions/admin/models'
 
 export default function ModelsClient({ initialModels }: { initialModels: any[] }) {
 	const [models] = useState(initialModels)
@@ -46,7 +45,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 			const res = await generateModelImage(description, style, ageRange, gender, ethnicity)
 			if (res.error) throw new Error(res.error)
 
-			setGeneratedImageUrl(res.imageUrl)
+			setGeneratedImageUrl(res.imageUrl || '')
 			toast.success('Model generated successfully!')
 		} catch (e: any) {
 			toast.error(e.message || 'Generation failed')
@@ -67,21 +66,13 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 
 		startSaving(async () => {
 			try {
-				const uploadRes = await uploadExternalImageToBlob(
-					generatedImageUrl,
-					`model-${Date.now()}.png`
-				)
-
-				if (uploadRes.error) throw new Error(uploadRes.error)
-				const finalImageUrl = uploadRes.url
-
 				const res = await saveModel({
 					name,
 					description,
 					ageRange,
 					gender,
 					ethnicity,
-					imageUrl: finalImageUrl,
+					imageUrl: generatedImageUrl,
 					promptUsed: `Subject: ${ageRange} ${ethnicity} ${gender} | Style: ${style} | Prompt: ${description}`,
 				})
 

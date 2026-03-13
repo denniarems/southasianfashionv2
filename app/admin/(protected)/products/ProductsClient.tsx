@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { deleteItem, fetchProductImagesForAdmin } from '@/app/actions/dashboard'
+import { deleteItem, fetchProductImagesForAdmin } from '@/app/actions/admin/dashboard'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { LoadingImage } from '@/components/ui/loading-image'
 import { ItemDialog } from '../components/ItemDialog'
@@ -20,7 +21,8 @@ export default function ProductsClient({ items, initialProducts, initialCollecti
 	const [isMutating, startMutatingTransition] = useTransition()
 	const sizeGuideNameById = Object.fromEntries((initialSizeGuides || []).map((guide: any) => [guide.id, guide.name]))
     
-    const [productImagesMap, setProductImagesMap] = useState<Record<string, string[]>>({})
+    const router = useRouter()
+	const [productImagesMap, setProductImagesMap] = useState<Record<string, string[]>>({})
 	useEffect(() => {
 		fetchProductImagesForAdmin().then(setProductImagesMap)
 	}, [initialProducts])
@@ -62,7 +64,7 @@ export default function ProductsClient({ items, initialProducts, initialCollecti
 								</h2>
 								<Button
 									data-testid="add-product-btn"
-									onClick={() => setDlg({ open: true, type: 'products', mode: 'add', data: null })}
+									onClick={() => router.push('/admin/products/add')}
 									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
 								>
 									<Plus size={14} className="mr-2" /> Add Product

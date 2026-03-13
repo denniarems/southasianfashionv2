@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogOut, ArrowLeft, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { logout } from '@/app/actions/auth'
+import { logout } from '@/app/actions/admin/auth'
 
 export function AdminSidebar() {
 	const [isOpen, setIsOpen] = useState(false)

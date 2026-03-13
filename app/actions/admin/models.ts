@@ -4,7 +4,9 @@ import { getDb } from '@/db'
 import { models } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { put } from '@vercel/blob'
+import { put, del } from '@vercel/blob'
+import sharp from 'sharp'
+import { OpenRouter } from '@openrouter/sdk'
 
 export async function saveModel(data: any) {
 	try {
@@ -50,7 +52,23 @@ export async function saveModel(data: any) {
 export async function deleteModel(id: string) {
 	try {
 		const db = getDb()
+		
+		// 1. Fetch the model to get its imageUrl
+		const [model] = await db.select().from(models).where(eq(models.id, id))
+		
+		if (model?.imageUrl) {
+			// 2. Delete from Vercel Blob
+			try {
+				await del(model.imageUrl, { token: process.env.BLOB_READ_WRITE_TOKEN })
+			} catch (blobError) {
+				console.error('Failed to delete blob:', blobError)
+				// Continue to delete the DB record even if blob deletion fails
+			}
+		}
+
+		// 3. Delete from database
 		await db.delete(models).where(eq(models.id, id))
+		
 		revalidatePath('/admin/models')
 		return { success: true }
 	} catch (e: any) {
@@ -69,41 +87,47 @@ export async function generateModelImage(
 		const apiKey = process.env.OPENROUTER_API_KEY
 		if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set')
 
-		const fullPrompt = `Generate a high-quality fashion model image. Subject: ${ageRange} ${ethnicity} ${gender}. ${prompt}. Style: ${style}.`
+		const fullPrompt = `Generate a high-quality fashion model image. Subject: ${ageRange} ${ethnicity} ${gender}.${prompt ? ` ${prompt}.` : ''} Style: ${style}, sharp focus.`
 
-		// Call Nano Banana OpenRouter API
-		// Assuming OpenRouter chat/completions endpoint returning an image URL for the requested model.
-		const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-			method: 'POST',
-			headers: {
-				Authorization: `Bearer ${apiKey}`,
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				model: 'meta-llama/llama-3-8b-instruct:free', // Replace with specific Nano Banana model if applicable
+		const openrouter = new OpenRouter({
+			apiKey,
+		})
+
+		const result = await openrouter.chat.send({
+			chatGenerationParams: {
+				model: 'google/gemini-3.1-flash-image-preview',
 				messages: [
 					{
 						role: 'user',
-						content: `${fullPrompt} Please output ONLY a direct image URL (starting with http) in your response, no other text.`,
+						content: fullPrompt,
 					},
 				],
-			}),
+				imageConfig: {
+					image_size : '1K',
+					aspectRatio: '9:16'
+				},
+				modalities: ['image', 'text'],
+			}
 		})
 
-		if (!res.ok) {
-			const err = await res.text()
-			throw new Error(`OpenRouter API error: ${err}`)
+	const message = result.choices[0]?.message
+		if (message?.images && message.images.length > 0) {
+			const base64Data = message.images[0].imageUrl.url
+			const base64WithoutPrefix = base64Data.replace(/^data:image\/\w+;base64,/, '')
+			const buffer = Buffer.from(base64WithoutPrefix, 'base64')
+			
+			const webpBuffer = await sharp(buffer).webp({ quality: 75 }).toBuffer()
+			
+			const filename = `model-${Date.now()}.webp`
+			const { url: blobUrl } = await put(filename, webpBuffer, {
+				access: 'public',
+				token: process.env.BLOB_READ_WRITE_TOKEN,
+			})
+			
+			return { imageUrl: String(blobUrl) }
 		}
 
-		const data = await res.json()
-		const textResponse = data.choices?.[0]?.message?.content || ''
-
-		const urlMatch = textResponse.match(/https?:\/\/[^\s)\]"']+/)
-		if (!urlMatch) {
-			throw new Error('No image URL returned from the AI. Response was: ' + textResponse)
-		}
-
-		return { imageUrl: urlMatch[0] }
+		throw new Error('No image returned from the AI.')
 	} catch (e: any) {
 		return { error: e.message }
 	}

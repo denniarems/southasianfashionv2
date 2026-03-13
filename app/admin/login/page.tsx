@@ -7,7 +7,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { requestOtp, verifyOtp } from '@/app/actions/auth'
+import { requestOtp, verifyOtp } from '@/app/actions/admin/auth'
 
 export default function AdminLogin() {
 	const router = useRouter()
