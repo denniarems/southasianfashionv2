@@ -20,28 +20,67 @@ interface PhotoshootModelDetails {
 }
 
 function buildPhotoshootPrompt(model: PhotoshootModelDetails, shotType: PhotoshootShotType) {
-	const shotInstructions: Record<PhotoshootShotType, string> = {
-		front: 'Model wearing the clothing item, facing the camera directly in a clean fashion-editorial composition.',
-		side: 'Model wearing the clothing item, captured in a clear side-profile pose with full garment visibility.',
-		back: 'Model wearing the clothing item, photographed from the back to showcase rear garment details.',
-		walking: 'Model wearing the clothing item in a natural walking pose with subtle motion and runway energy.',
-		'close-up': 'Detailed close-up of the model wearing the clothing item with emphasis on fabric, texture, and fit.',
+	const shotInstructions: Record<PhotoshootShotType, {
+		pose: string
+		camera: string
+		lighting: string
+	}> = {
+		front: {
+			pose: 'Model faces camera directly, shoulders relaxed, weight slightly shifted to one leg for a natural stance.',
+			camera: 'Shot at eye level, 50mm lens perspective, centered framing with clean negative space.',
+			lighting: 'Soft front-facing studio light, minimal shadows, even exposure across the garment.',
+		},
+		side: {
+			pose: 'Clean 90-degree side profile, chin slightly lifted, arms naturally positioned to not obscure garment.',
+			camera: 'True side angle, full body or 3/4 length, sharp garment silhouette against neutral background.',
+			lighting: 'Rim lighting to define body silhouette, soft fill light to retain garment detail.',
+		},
+		back: {
+			pose: 'Model faces away from camera, posture upright, hair styled to fully expose back neckline and collar.',
+			camera: 'Centered rear angle, full body or 3/4 length, emphasis on back garment construction.',
+			lighting: 'Even studio lighting across the back, no blown-out highlights, seams and stitching clearly visible.',
+		},
+		walking: {
+			pose: 'Natural mid-stride walking pose, slight arm swing, confident runway energy without motion blur.',
+			camera: 'Slight 3/4 front angle, full body frame, shot as if captured mid-walk on editorial set.',
+			lighting: 'Dynamic editorial lighting, slight directional shadow to convey movement and depth.',
+		},
+		'close-up': {
+			pose: 'Upper body or waist-up framing, model posed to highlight garment details — lapels, collar, embroidery, or texture.',
+			camera: 'Macro or 85mm portrait lens perspective, shallow depth of field with garment in sharp focus.',
+			lighting: 'Controlled soft-box lighting to reveal fabric texture, weave, and surface detail without glare.',
+		},
 	}
 
-	const demographics = [model.ageRange, model.ethnicity, model.gender].filter(Boolean).join(' ')
+	const shot = shotInstructions[shotType]
+	const demographics = [model.ageRange, model.ethnicity, model.gender].filter(Boolean).join(', ')
 
-	return [
-		'Create a photorealistic high-fashion photoshoot image.',
-		demographics ? `Model profile: ${demographics}.` : null,
+	const segments = [
+		// Intent
+		'Photorealistic high-fashion editorial photograph, indistinguishable from a professional studio shoot.',
+
+		// Model profile
+		demographics ? `Model: ${demographics}.` : null,
 		model.description ? `Model details: ${model.description}.` : null,
-		model.promptUsed ? `Style guidance: ${model.promptUsed}.` : null,
-		`Shot type: ${shotType}.`,
-		shotInstructions[shotType],
-		'Use the provided clothing reference image. Keep garment design, colors, embroidery, and silhouette accurate.',
-		'Deliver polished studio/editorial quality with realistic skin, lighting, and proportions.',
+
+		// Style guidance
+		model.promptUsed ? `Visual style: ${model.promptUsed}.` : null,
+
+		// Shot type block
+		`Shot type: ${shotType.toUpperCase()}.`,
+		shot.pose,
+		shot.camera,
+		shot.lighting,
+
+		// Garment fidelity — critical
+		'Garment accuracy is paramount: replicate the exact colors, cut, silhouette, fabric texture, embroidery, buttons, seams, and any graphic elements from the reference image. Do not alter or stylize the clothing.',
+
+		// Output quality anchors
+		'Skin texture is natural and photorealistic. Proportions are anatomically accurate. Background is clean and non-distracting.',
+		'Final image quality: editorial magazine standard, sharp focus, no artifacts, no distortion.',
 	]
-		.filter(Boolean)
-		.join(' ')
+
+	return segments.filter(Boolean).join(' ')
 }
 
 export async function saveModel(data: any) {

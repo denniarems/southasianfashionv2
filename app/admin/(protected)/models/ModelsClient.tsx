@@ -97,10 +97,10 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 	}
 
 	const styleOptions = [
+		'Minimalist Studio Portrait',
 		'Realistic Fashion Editorial',
 		'Cinematic Lighting',
 		'Vintage Film Photography',
-		'Minimalist Studio Portrait',
 		'Street Style',
 	]
 
