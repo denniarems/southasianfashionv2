@@ -45,6 +45,7 @@ export function ProductForm({ mode, initialData, collections, categories, sizeGu
 	const [isSaving, startSavingTransition] = useTransition()
 	const [isGeneratingPhotoshoot, setIsGeneratingPhotoshoot] = useState(false)
 	const [selectedModelId, setSelectedModelId] = useState('')
+	const [customPhotoshootPrompt, setCustomPhotoshootPrompt] = useState('')
 	const [backViewImageUrl, setBackViewImageUrl] = useState('')
 
 	const uploadedClothingImages = useMemo(() => {
@@ -128,6 +129,7 @@ export function ProductForm({ mode, initialData, collections, categories, sizeGu
 		}
 
 		const baseShots: PhotoshootShotType[] = ['front', 'side', 'walking', 'close-up']
+		const normalizedCustomPhotoshootPrompt = customPhotoshootPrompt.trim()
 
 		setIsGeneratingPhotoshoot(true)
 
@@ -138,17 +140,16 @@ export function ProductForm({ mode, initialData, collections, categories, sizeGu
 					shotTypes.push('back')
 				}
 
-				const productContext = [form.name, form.description].filter(Boolean).join('. ')
-
 				return shotTypes.map((shotType) =>
 					generateModelPhotoshootImage({
 						model: {
 							name: selectedModel.name,
-							description: [selectedModel.description, productContext ? `Wearing: ${productContext}` : ''].filter(Boolean).join('. '),
+							description: selectedModel.description || '',
 							ageRange: selectedModel.ageRange || '',
 							gender: selectedModel.gender || '',
 							ethnicity: selectedModel.ethnicity || '',
 							promptUsed: selectedModel.promptUsed || '',
+							customPrompt: normalizedCustomPhotoshootPrompt,
 						},
 						clothingImageUrl,
 						shotType,
@@ -326,6 +327,16 @@ export function ProductForm({ mode, initialData, collections, categories, sizeGu
 								</option>
 							))}
 						</select>
+					</Field>
+
+					<Field label="Custom Prompt (Optional)">
+						<Textarea
+							value={customPhotoshootPrompt}
+							onChange={(e) => setCustomPhotoshootPrompt(e.target.value)}
+							placeholder="e.g. Editorial luxury campaign, soft golden-hour mood, emphasize embroidery and drape"
+							rows={3}
+							className="rounded-none"
+						/>
 					</Field>
 
 					<Field label="Back View Clothing Image (Optional)">

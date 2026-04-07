@@ -17,6 +17,7 @@ interface PhotoshootModelDetails {
 	gender?: string
 	ethnicity?: string
 	promptUsed?: string
+	customPrompt?: string
 }
 
 function buildPhotoshootPrompt(model: PhotoshootModelDetails, shotType: PhotoshootShotType) {
@@ -65,6 +66,7 @@ function buildPhotoshootPrompt(model: PhotoshootModelDetails, shotType: Photosho
 
 		// Style guidance
 		model.promptUsed ? `Visual style: ${model.promptUsed}.` : null,
+		model.customPrompt ? `Custom product direction: ${model.customPrompt}.` : null,
 
 		// Shot type block
 		`Shot type: ${shotType.toUpperCase()}.`,
