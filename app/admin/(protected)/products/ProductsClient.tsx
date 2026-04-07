@@ -2,8 +2,9 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { deleteItem, fetchProductImagesForAdmin } from '@/app/actions/admin/dashboard'
@@ -62,13 +63,24 @@ export default function ProductsClient({ items, initialProducts, initialCollecti
 								<h2 className="font-heading text-xl text-stone-900">
 									Products ({activeItems.length})
 								</h2>
-								<Button
-									data-testid="add-product-btn"
-									onClick={() => router.push('/admin/products/add')}
-									className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
-								>
-									<Plus size={14} className="mr-2" /> Add Product
-								</Button>
+								<div className="flex items-center gap-2">
+									<Button
+										asChild
+										variant="outline"
+										className="rounded-none text-xs uppercase tracking-widest"
+									>
+										<Link href="/admin/products/batch">
+											<Upload size={14} className="mr-2" /> Batch Import
+										</Link>
+									</Button>
+									<Button
+										data-testid="add-product-btn"
+										onClick={() => router.push('/admin/products/add')}
+										className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
+									>
+										<Plus size={14} className="mr-2" /> Add Product
+									</Button>
+								</div>
 							</div>
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 								{activeItems.map((p: any) => (
