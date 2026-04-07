@@ -138,11 +138,13 @@ export function ProductForm({ mode, initialData, collections, categories, sizeGu
 					shotTypes.push('back')
 				}
 
+				const productContext = [form.name, form.description].filter(Boolean).join('. ')
+
 				return shotTypes.map((shotType) =>
 					generateModelPhotoshootImage({
 						model: {
 							name: selectedModel.name,
-							description: selectedModel.description || '',
+							description: [selectedModel.description, productContext ? `Wearing: ${productContext}` : ''].filter(Boolean).join('. '),
 							ageRange: selectedModel.ageRange || '',
 							gender: selectedModel.gender || '',
 							ethnicity: selectedModel.ethnicity || '',
