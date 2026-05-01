@@ -1,9 +1,15 @@
 import { put } from '@vercel/blob'
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { AdminAuthError, requireAdmin } from '@/lib/admin-auth'
+import {
+	ALLOWED_IMAGE_EXTENSIONS,
+	getFileExtension,
+	isValidImageFile,
+	isValidTextFile,
+} from '@/lib/upload-validation'
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024 // 10MB per file
-const ALLOWED_IMAGE_EXT = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'])
 
 function getFileKey(file: File) {
 	const candidate = (file as File & { webkitRelativePath?: string }).webkitRelativePath
@@ -13,14 +19,24 @@ function getFileKey(file: File) {
 	return file.name
 }
 
-function getSafeBlobExtension(file: File) {
-	const ext = file.name.split('.').pop()?.toLowerCase() || ''
-	if (ALLOWED_IMAGE_EXT.has(ext)) return ext
-	if (ext === 'txt') return 'txt'
+async function getSafeBlobExtension(file: File) {
+	const ext = getFileExtension(file.name)
+	if (ALLOWED_IMAGE_EXTENSIONS.has(ext) && (await isValidImageFile(file, ext))) return ext
+	if (isValidTextFile(file, ext)) return 'txt'
 	return ''
 }
 
 export async function POST(request: Request) {
+	try {
+		await requireAdmin()
+	} catch (error) {
+		if (!(error instanceof AdminAuthError)) {
+			console.error('Batch upload auth configuration error:', error)
+			return NextResponse.json({ error: 'Upload auth is not configured' }, { status: 500 })
+		}
+		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	}
+
 	try {
 		if (!process.env.BLOB_READ_WRITE_TOKEN) {
 			return NextResponse.json(
@@ -30,7 +46,7 @@ export async function POST(request: Request) {
 		}
 
 		const formData = await request.formData()
-		const entries = formData.getAll('files') as File[]
+		const entries = formData.getAll('files').filter((entry): entry is File => entry instanceof File)
 
 		if (!entries.length) {
 			return NextResponse.json({ error: 'No files provided' }, { status: 400 })
@@ -40,7 +56,7 @@ export async function POST(request: Request) {
 		const errors: string[] = []
 
 		for (const file of entries) {
-			const ext = getSafeBlobExtension(file)
+			const ext = await getSafeBlobExtension(file)
 			const key = getFileKey(file)
 
 			if (!ext) {

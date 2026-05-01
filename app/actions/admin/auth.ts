@@ -5,12 +5,12 @@ import { otpCodes } from '@/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { Resend } from 'resend'
 import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
+import { redirect } from 'next/navigation'
+import { ADMIN_SESSION_COOKIE, createAdminSessionToken } from '@/lib/admin-auth'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const ADMIN_EMAILS_CONFIG = process.env.ADMIN_EMAIL || 'denniarems@gmail.com'
 const ADMIN_EMAILS = ADMIN_EMAILS_CONFIG.split(',').map((e) => e.trim())
-const JWT_SECRET = process.env.JWT_SECRET || 'saf_default_secret'
 
 export async function requestOtp(email: string) {
 	if (!ADMIN_EMAILS.includes(email)) {
@@ -69,10 +69,10 @@ export async function verifyOtp(email: string, otp: string) {
 
 	await db.delete(otpCodes).where(eq(otpCodes.email, email))
 
-	const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '24h' })
+	const token = createAdminSessionToken(email)
 
 	const cookieStore = (await cookies()) as any
-	cookieStore.set('saf_admin_session', token, {
+	cookieStore.set(ADMIN_SESSION_COOKIE, token, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === 'production',
 		sameSite: 'lax',
@@ -82,10 +82,8 @@ export async function verifyOtp(email: string, otp: string) {
 	return { success: true }
 }
 
-import { redirect } from 'next/navigation'
-
 export async function logout() {
 	const cookieStore = (await cookies()) as any
-	cookieStore.delete('saf_admin_session')
+	cookieStore.delete(ADMIN_SESSION_COOKIE)
 	redirect('/admin/login')
 }

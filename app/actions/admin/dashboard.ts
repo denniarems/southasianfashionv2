@@ -17,6 +17,7 @@ import { revalidatePath } from 'next/cache'
 import { slugify } from '@/lib/slug'
 import { deleteVercelBlobByUrl } from '@/lib/vercel-blob'
 import { computeCartDiscounts } from '@/lib/discounts'
+import { requireAdmin } from '@/lib/admin-auth'
 import crypto from 'crypto'
 
 function parseStringArray(input: unknown): string[] {
@@ -95,6 +96,7 @@ async function generateUniqueProductSlug(
 }
 
 export async function deleteItem(type: string, id: string) {
+	await requireAdmin()
 	const db = getDb()
 
 	try {
@@ -175,6 +177,7 @@ export async function deleteItem(type: string, id: string) {
 }
 
 export async function saveSettings(data: any) {
+	await requireAdmin()
 	const db = getDb()
 	try {
 		// Upsert logic for settings (since there is only one row)
@@ -192,6 +195,7 @@ export async function saveSettings(data: any) {
 }
 
 export async function fetchProductImagesForAdmin(): Promise<Record<string, string[]>> {
+	await requireAdmin()
 	const db = getDb()
 	let allImages: Awaited<ReturnType<typeof db.select>> = []
 
@@ -215,6 +219,7 @@ export async function fetchProductImagesForAdmin(): Promise<Record<string, strin
 }
 
 export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
+	await requireAdmin()
 	const db = getDb()
 
 	try {
@@ -300,8 +305,8 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 			case 'discounts': {
 				const startDate = data.startDate ? new Date(data.startDate) : new Date()
 				const endDate = data.endDate ? new Date(data.endDate) : null
-					const legacyProductId = typeof data.productId === 'string' ? data.productId.trim() : ''
-					const applicableProductIds = parseStringArray(data.applicableProductIds)
+				const legacyProductId = typeof data.productId === 'string' ? data.productId.trim() : ''
+				const applicableProductIds = parseStringArray(data.applicableProductIds)
 				const payload = {
 					id: data.id,
 					name: data.name || 'Untitled Discount',
@@ -315,18 +320,18 @@ export async function saveItem(type: string, mode: 'add' | 'edit', data: any) {
 					startDate,
 					endDate,
 					minCartValue: Number(data.minCartValue) || 0,
-						applicableProductIds:
-							applicableProductIds.length > 0
-								? applicableProductIds
-								: legacyProductId
-									? [legacyProductId]
-									: [],
+					applicableProductIds:
+						applicableProductIds.length > 0
+							? applicableProductIds
+							: legacyProductId
+								? [legacyProductId]
+								: [],
 					applicableCategories: parseStringArray(data.applicableCategories),
 					stackable: Boolean(data.stackable),
 					maxUses: data.maxUses === undefined || data.maxUses === '' ? null : Number(data.maxUses),
 					priority: Number(data.priority) || 0,
 					isActive: data.isActive !== false,
-						productId: null,
+					productId: null,
 					bundleProductIds: parseStringArray(data.bundleProductIds),
 					tierRulesJson: normalizeTierRulesJson(data.tierRulesJson),
 					wording: data.wording || 'Instant Price Drop',
@@ -373,6 +378,7 @@ export async function applyDiscountsToCart(input: {
 	userKey?: string
 	commitUsage?: boolean
 }) {
+	await requireAdmin()
 	try {
 		if (!input?.items || !Array.isArray(input.items)) {
 			return { error: 'Invalid cart payload' }

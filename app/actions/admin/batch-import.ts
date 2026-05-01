@@ -8,6 +8,7 @@ import { slugify } from '@/lib/slug'
 import { generateModelPhotoshootImage, type PhotoshootShotType } from '@/app/actions/admin/models'
 import crypto from 'crypto'
 import { OpenRouter } from '@openrouter/sdk'
+import { requireAdmin } from '@/lib/admin-auth'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -33,10 +34,7 @@ export interface BatchImportResult {
 
 // ─── Slug helper (same logic as dashboard.ts) ─────────────────────────────
 
-async function generateUniqueProductSlug(
-	db: ReturnType<typeof getDb>,
-	name: string,
-) {
+async function generateUniqueProductSlug(db: ReturnType<typeof getDb>, name: string) {
 	const base = slugify(name)
 	let candidate = base
 	let counter = 2
@@ -63,6 +61,7 @@ export async function generateProductDescription(params: {
 	price: number
 	rawNotes: string
 }): Promise<{ description: string; error?: string }> {
+	await requireAdmin()
 	try {
 		const apiKey = process.env.OPENROUTER_API_KEY
 		if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set')
@@ -99,9 +98,9 @@ Rules:
 				? content
 				: Array.isArray(content)
 					? content
-						.map((item: any) => (typeof item?.text === 'string' ? item.text : ''))
-						.join(' ')
-						.trim()
+							.map((item: any) => (typeof item?.text === 'string' ? item.text : ''))
+							.join(' ')
+							.trim()
 					: ''
 
 		if (!text) {
@@ -174,6 +173,7 @@ export async function batchImportProducts(params: {
 	rows: BatchProductRow[]
 	modelId: string
 }): Promise<BatchImportResult> {
+	await requireAdmin()
 	if (!params?.modelId || !Array.isArray(params.rows) || params.rows.length === 0) {
 		return {
 			created: 0,
@@ -194,11 +194,7 @@ export async function batchImportProducts(params: {
 	}
 
 	// Fetch model details
-	const [model] = await db
-		.select()
-		.from(models)
-		.where(eq(models.id, params.modelId))
-		.limit(1)
+	const [model] = await db.select().from(models).where(eq(models.id, params.modelId)).limit(1)
 
 	if (!model) {
 		result.errors.push('Selected model not found')
@@ -270,7 +266,9 @@ export async function batchImportProducts(params: {
 						generateModelPhotoshootImage({
 							model: {
 								name: model.name,
-								description: [model.description, productContext ? `Wearing: ${productContext}` : ''].filter(Boolean).join('. '),
+								description: [model.description, productContext ? `Wearing: ${productContext}` : '']
+									.filter(Boolean)
+									.join('. '),
 								ageRange: model.ageRange || '',
 								gender: model.gender || '',
 								ethnicity: model.ethnicity || '',
