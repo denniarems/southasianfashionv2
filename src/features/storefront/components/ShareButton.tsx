@@ -9,6 +9,7 @@ import SmartphoneIcon from 'lucide-react/dist/esm/icons/smartphone'
 import CheckIcon from 'lucide-react/dist/esm/icons/check'
 import { toast } from 'sonner'
 import { trackAnalyticsEvent } from '@/lib/analytics'
+import { cn } from '@/lib/utils'
 
 type ShareButtonProps = {
 	productId: string
@@ -18,6 +19,7 @@ type ShareButtonProps = {
 	productUrl: string
 	productImage: string
 	productDescription: string
+	className?: string
 }
 
 function buildDescriptionSnippet(description: string) {
@@ -35,6 +37,7 @@ export default function ShareButton({
 	productUrl,
 	productImage,
 	productDescription,
+	className,
 }: ShareButtonProps) {
 	const [copied, setCopied] = useState(false)
 
@@ -44,10 +47,7 @@ export default function ShareButton({
 	)
 
 	const shareText = useMemo(
-		() =>
-			[productName, shareSnippet, `Image: ${productImage}`, `Link: ${productUrl}`].join(
-				'\n\n',
-			),
+		() => [productName, shareSnippet, `Image: ${productImage}`, `Link: ${productUrl}`].join('\n\n'),
 		[productImage, productName, productUrl, shareSnippet],
 	)
 
@@ -103,7 +103,10 @@ export default function ShareButton({
 			<PopoverPrimitive.Trigger asChild>
 				<button
 					type="button"
-					className="w-full sm:w-auto sm:min-w-40 flex items-center justify-center gap-3 border border-stone-300 bg-white text-stone-900 px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-stone-50 transition-colors duration-300"
+					className={cn(
+						'w-full sm:w-auto sm:min-w-40 flex items-center justify-center gap-3 border border-stone-300 bg-white text-stone-900 px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-stone-50 transition-colors duration-300',
+						className,
+					)}
 				>
 					<Share2Icon size={16} />
 					Share

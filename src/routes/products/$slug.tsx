@@ -138,6 +138,15 @@ function ProductDetailPage() {
 	const productOccasion = product.occasion
 		? occasionLabelForSlug(product.occasion, data.occasionLinks)
 		: ''
+	const productDetails = [
+		['Occasion', productOccasion],
+		['Fabric', product.fabric],
+		['Color', product.color],
+		[
+			'Availability',
+			product.isReadyToShip ? 'Ready to ship' : product.availabilityStatus?.replace(/-/g, ' '),
+		],
+	].filter((item): item is [string, string] => Boolean(item[1]))
 
 	const collectionForBreadcrumb = product.collectionId
 		? data.allCollections.find((collection) => collection.id === product.collectionId)
@@ -236,80 +245,84 @@ function ProductDetailPage() {
 								<p className="leading-relaxed">{product.description}</p>
 							</div>
 
-							<div className="mb-8 grid grid-cols-2 gap-px overflow-hidden border border-stone-200 bg-stone-200 text-sm">
-								{[
-									['Occasion', productOccasion],
-									['Fabric', product.fabric],
-									['Color', product.color],
-									[
-										'Availability',
-										product.isReadyToShip
-											? 'Ready to ship'
-											: product.availabilityStatus?.replace(/-/g, ' '),
-									],
-								]
-									.filter((item): item is [string, string] => Boolean(item[1]))
-									.map(([label, value]) => (
-										<div key={label} className="bg-white px-4 py-3">
+							<div className="mb-8 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+								{productDetails.map(([label, value], index) => {
+									const spansFullRow =
+										productDetails.length % 2 === 1 && index === productDetails.length - 1
+
+									return (
+										<div
+											key={label}
+											className={`border border-stone-200 bg-white px-5 py-4 ${
+												spansFullRow ? 'sm:col-span-2' : ''
+											}`}
+										>
 											<p className="text-[10px] uppercase tracking-widest text-stone-400">
 												{label}
 											</p>
 											<p className="mt-1 capitalize text-stone-700">{value}</p>
 										</div>
-									))}
+									)
+								})}
 							</div>
 
 							<div className="border-t border-b border-stone-200 py-6 md:py-8 mb-8 md:mb-12">
-								<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-									<AddToCartButton
-										product={{
-											id: product.id,
-											name: product.name,
-											slug: product.slug,
-											price: data.pricingPreview.discountedPrice,
-											currency: 'CAD',
-											imageUrl: product.imageUrl,
-										}}
-										className="w-full sm:w-auto sm:min-w-52 flex items-center justify-center gap-3 bg-stone-900 text-white px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
-									/>
+								<div className="grid gap-3">
+									<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+										<AddToCartButton
+											product={{
+												id: product.id,
+												name: product.name,
+												slug: product.slug,
+												price: data.pricingPreview.discountedPrice,
+												currency: 'CAD',
+												imageUrl: product.imageUrl,
+											}}
+											className="flex h-14 w-full items-center justify-center gap-3 bg-stone-900 px-6 text-xs font-semibold uppercase tracking-widest text-white transition-colors duration-300 hover:bg-yellow-700"
+										/>
 
-									<a
-										href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(
-											`Hello! I'm interested in the ${product.name}. Could you share more details?`,
-										)}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										onClick={() =>
-											trackAnalyticsEvent({
-												eventName: 'whatsapp_click',
-												productId: product.id,
-												productSlug: product.slug || undefined,
-												category: product.category || undefined,
-											})
-										}
-										className="w-full sm:w-auto sm:min-w-70 flex items-center justify-center gap-3 bg-stone-900 text-white px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
-									>
-										<MessageCircleIcon size={16} />
-										Inquire via WhatsApp
-									</a>
+										<a
+											href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(
+												`Hello! I'm interested in the ${product.name}. Could you share more details?`,
+											)}`}
+											target="_blank"
+											rel="noopener noreferrer"
+											onClick={() =>
+												trackAnalyticsEvent({
+													eventName: 'whatsapp_click',
+													productId: product.id,
+													productSlug: product.slug || undefined,
+													category: product.category || undefined,
+												})
+											}
+											className="flex h-14 w-full items-center justify-center gap-3 bg-stone-900 px-6 text-xs font-semibold uppercase tracking-widest text-white transition-colors duration-300 hover:bg-yellow-700"
+										>
+											<MessageCircleIcon size={16} />
+											Inquire via WhatsApp
+										</a>
+									</div>
 
-									<ShareButton
-										productId={product.id}
-										productSlug={product.slug}
-										category={product.category}
-										productName={product.name}
-										productUrl={productAbsoluteUrl}
-										productImage={data.productImages[0] ?? ''}
-										productDescription={product.description ?? ''}
-									/>
+									<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+										<ShareButton
+											productId={product.id}
+											productSlug={product.slug}
+											category={product.category}
+											productName={product.name}
+											productUrl={productAbsoluteUrl}
+											productImage={data.productImages[0] ?? ''}
+											productDescription={product.description ?? ''}
+											className="h-14 min-w-0 px-6"
+										/>
 
-									<WishlistButton
-										productId={product.id}
-										productSlug={product.slug}
-										productName={product.name}
-										category={product.category}
-										className="h-12 w-full border-stone-300 bg-white sm:w-12"
-									/>
+										<WishlistButton
+											productId={product.id}
+											productSlug={product.slug}
+											productName={product.name}
+											category={product.category}
+											showLabel
+											className="h-14 w-full gap-3 border-stone-300 bg-white px-6 shadow-none backdrop-blur-none hover:border-stone-900 hover:bg-stone-50"
+										/>
+									</div>
 								</div>
 							</div>
 

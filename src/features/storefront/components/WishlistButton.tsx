@@ -11,7 +11,9 @@ function readWishlist() {
 	if (typeof window === 'undefined') return [] as string[]
 	try {
 		const parsed = JSON.parse(window.localStorage.getItem(WISHLIST_STORAGE_KEY) || '[]')
-		return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+		return Array.isArray(parsed)
+			? parsed.filter((item): item is string => typeof item === 'string')
+			: []
 	} catch {
 		return []
 	}
@@ -28,12 +30,14 @@ export default function WishlistButton({
 	productName,
 	category,
 	className,
+	showLabel = false,
 }: {
 	productId: string
 	productSlug?: string | null
 	productName: string
 	category?: string | null
 	className?: string
+	showLabel?: boolean
 }) {
 	const [saved, setSaved] = useState(false)
 
@@ -76,7 +80,12 @@ export default function WishlistButton({
 				className,
 			)}
 		>
-			<HeartIcon size={17} fill={saved ? 'currentColor' : 'none'} />
+			<HeartIcon size={showLabel ? 16 : 17} fill={saved ? 'currentColor' : 'none'} />
+			{showLabel && (
+				<span className="text-xs font-semibold uppercase tracking-widest">
+					{saved ? 'Saved' : 'Save'}
+				</span>
+			)}
 		</button>
 	)
 }

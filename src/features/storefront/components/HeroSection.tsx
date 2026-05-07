@@ -21,7 +21,7 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 	return (
 		<section
 			data-testid="hero-section"
-			className="relative min-h-[92vh] flex items-end overflow-hidden bg-stone-950"
+			className="relative flex min-h-screen items-end overflow-hidden bg-stone-950"
 		>
 			<div className="absolute inset-0">
 				{hero.imageUrl && (
