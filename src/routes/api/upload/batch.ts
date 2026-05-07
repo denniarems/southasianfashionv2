@@ -18,6 +18,10 @@ function getFileKey(file: File) {
 	return file.name
 }
 
+function getClientFileKey(value: unknown) {
+	return typeof value === 'string' && value.trim().length > 0 ? value.trim() : ''
+}
+
 async function getSafeExtension(file: File) {
 	const ext = getFileExtension(file.name)
 	if (ALLOWED_IMAGE_EXTENSIONS.has(ext) && (await isValidImageFile(file, ext))) return ext
@@ -44,6 +48,7 @@ export const Route = createFileRoute('/api/upload/batch')({
 					const entries = formData
 						.getAll('files')
 						.filter((entry): entry is File => entry instanceof File)
+					const fileKeys = formData.getAll('fileKeys').map(getClientFileKey)
 
 					if (!entries.length) {
 						return Response.json({ error: 'No files provided' }, { status: 400 })
@@ -52,9 +57,9 @@ export const Route = createFileRoute('/api/upload/batch')({
 					const results: Record<string, string> = {}
 					const errors: string[] = []
 
-					for (const file of entries) {
+					for (const [index, file] of entries.entries()) {
 						const ext = await getSafeExtension(file)
-						const key = getFileKey(file)
+						const key = fileKeys[index] || getFileKey(file)
 
 						if (!ext) {
 							errors.push(`${key}: invalid file type`)

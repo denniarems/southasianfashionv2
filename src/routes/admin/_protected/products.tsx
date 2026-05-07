@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Outlet, createFileRoute, useLocation } from '@tanstack/react-router'
 import ProductsClient from '@/features/admin/products/ProductsClient'
 import { getAdminCrudDataFn } from '@/server/admin/data.functions'
 
@@ -9,7 +9,13 @@ export const Route = createFileRoute('/admin/_protected/products')({
 })
 
 function ProductsPage() {
+	const pathname = useLocation({ select: (location) => location.pathname })
 	const data = Route.useLoaderData()
+
+	if (pathname !== '/admin/products') {
+		return <Outlet />
+	}
+
 	return (
 		<ProductsClient
 			items={data.items}

@@ -5,7 +5,7 @@ import { getDb } from '@/db'
 import { categories, collections, models, productImages, products } from '@/db/schema'
 import { slugify } from '@/lib/slug'
 import { generateModelPhotoshootImageInternal, type PhotoshootShotType } from './models.functions'
-import { adminOnly } from './middleware'
+import { requireAdmin } from './auth.server'
 
 export interface BatchProductRow {
 	index: number
@@ -163,9 +163,9 @@ async function findCollectionId(
 }
 
 export const generateProductDescriptionFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: ProductDescriptionInput) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		try {
 			return { description: await generateProductDescriptionInternal(data) }
 		} catch (error) {
@@ -177,9 +177,9 @@ export const generateProductDescriptionFn = createServerFn({ method: 'POST' })
 	})
 
 export const batchImportProductsFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: BatchImportInput) => data)
 	.handler(async ({ data }): Promise<BatchImportResult> => {
+		await requireAdmin()
 		if (!data?.modelId || !Array.isArray(data.rows) || data.rows.length === 0) {
 			return {
 				created: 0,

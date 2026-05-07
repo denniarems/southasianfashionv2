@@ -2,7 +2,6 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useAppRouter as useRouter } from '@/components/router-hooks'
-import Link from '@/components/router-link'
 import { motion } from 'framer-motion'
 import { Plus, Pencil, Trash2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -76,15 +75,16 @@ export default function ProductsClient({
 					<h2 className="font-heading text-xl text-stone-900">Products ({activeItems.length})</h2>
 					<div className="flex items-center gap-2">
 						<Button
-							asChild
+							type="button"
+							data-testid="batch-import-btn"
 							variant="outline"
+							onClick={() => router.push('/admin/products/batch')}
 							className="rounded-none text-xs uppercase tracking-widest"
 						>
-							<Link href="/admin/products/batch">
-								<Upload size={14} className="mr-2" /> Batch Import
-							</Link>
+							<Upload size={14} className="mr-2" /> Batch Import
 						</Button>
 						<Button
+							type="button"
 							data-testid="add-product-btn"
 							onClick={() => router.push('/admin/products/add')}
 							className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"

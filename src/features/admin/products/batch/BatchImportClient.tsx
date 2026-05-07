@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import { useAppRouter as useRouter } from '@/components/router-hooks'
 import {
@@ -238,6 +238,7 @@ export default function BatchImportClient({
 	const [summary, setSummary] = useState<BatchImportResult | null>(null)
 	const [progressCompleted, setProgressCompleted] = useState(0)
 	const [progressLabel, setProgressLabel] = useState('Waiting to start...')
+	const previewUrlsRef = useRef<Set<string>>(new Set())
 
 	const existingCategorySet = useMemo(
 		() => new Set(categories.map((c) => c.name.trim().toLowerCase())),
@@ -306,13 +307,12 @@ export default function BatchImportClient({
 
 	useEffect(() => {
 		return () => {
-			for (const row of previewRows) {
-				for (const image of row.images) {
-					URL.revokeObjectURL(image.previewUrl)
-				}
+			for (const previewUrl of previewUrlsRef.current) {
+				URL.revokeObjectURL(previewUrl)
 			}
+			previewUrlsRef.current.clear()
 		}
-	}, [previewRows])
+	}, [])
 
 	const hydratePreviewRows = (rows: CsvRow[], folders: Record<string, FolderContent>) => {
 		const hydrated = rows.map((row) => {
@@ -360,6 +360,11 @@ export default function BatchImportClient({
 		try {
 			const entries = Array.from(files)
 			const nextMap: Record<string, FolderContent> = {}
+			for (const previewUrl of previewUrlsRef.current) {
+				URL.revokeObjectURL(previewUrl)
+			}
+			previewUrlsRef.current.clear()
+			setLightboxImage('')
 
 			for (const file of entries) {
 				const fileKey = getRelativeKey(file)
@@ -378,10 +383,12 @@ export default function BatchImportClient({
 				}
 
 				if (ACCEPTED_IMAGE_EXT.has(extension)) {
+					const previewUrl = URL.createObjectURL(file)
+					previewUrlsRef.current.add(previewUrl)
 					nextMap[indexKey].images.push({
 						file,
 						fileKey,
-						previewUrl: URL.createObjectURL(file),
+						previewUrl,
 					})
 				}
 			}
@@ -405,7 +412,7 @@ export default function BatchImportClient({
 	}
 
 	const canProceedToPreview =
-		selectedModelId.trim().length > 0 && csvRows.length > 0 && Object.keys(folderMap).length > 0
+		csvRows.length > 0 && Object.keys(folderMap).length > 0
 
 	const generatePreviewDescription = () => {
 		startPreviewDescriptionTransition(() => {
@@ -472,13 +479,15 @@ export default function BatchImportClient({
 						const key = image.fileKey
 						if (seenKeys.has(key)) continue
 						seenKeys.add(key)
-						uploadForm.append('files', image.file)
+						uploadForm.append('files', image.file, key)
+						uploadForm.append('fileKeys', key)
 					}
 					const descKey = row.descFileKey
 					if (descKey) {
 						const folder = folderMap[String(row.index)]
 						if (folder?.descFile) {
-							uploadForm.append('files', folder.descFile)
+							uploadForm.append('files', folder.descFile, descKey)
+							uploadForm.append('fileKeys', descKey)
 						}
 					}
 				}

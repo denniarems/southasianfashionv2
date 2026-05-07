@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { OpenRouter } from '@openrouter/sdk'
 import { getDb } from '@/db'
 import { models } from '@/db/schema'
-import { adminOnly } from './middleware'
+import { requireAdmin } from './auth.server'
 
 export type PhotoshootShotType = 'front' | 'side' | 'back' | 'walking' | 'close-up'
 
@@ -176,9 +176,9 @@ export async function generateModelPhotoshootImageInternal(params: GenerateModel
 }
 
 export const saveModelFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: any) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		try {
 			const db = await getDb()
 			const id = data.id || crypto.randomUUID()
@@ -220,9 +220,9 @@ export const saveModelFn = createServerFn({ method: 'POST' })
 	})
 
 export const deleteModelFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: { id: string }) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		try {
 			const db = await getDb()
 			const [model] = await db.select().from(models).where(eq(models.id, data.id)).limit(1)
@@ -241,9 +241,9 @@ export const deleteModelFn = createServerFn({ method: 'POST' })
 	})
 
 export const generateModelImageFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: GenerateModelImageInput) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		try {
 			const fullPrompt = `Generate a high-quality fashion model image. Subject: ${data.ageRange} ${data.ethnicity} ${data.gender}.${data.prompt ? ` ${data.prompt}.` : ''} Style: ${data.style}, sharp focus.`
 			const openrouter = getOpenRouter()
@@ -279,9 +279,9 @@ export const generateModelImageFn = createServerFn({ method: 'POST' })
 	})
 
 export const uploadExternalImageToR2Fn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: { url: string; filename: string }) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		try {
 			const response = await fetch(data.url)
 			if (!response.ok) throw new Error('Failed to fetch external image')
@@ -297,9 +297,9 @@ export const uploadExternalImageToR2Fn = createServerFn({ method: 'POST' })
 	})
 
 export const generateModelPhotoshootImageFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: GenerateModelPhotoshootInput) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		try {
 			return await generateModelPhotoshootImageInternal(data)
 		} catch (error) {

@@ -15,7 +15,7 @@ import {
 import { computeCartDiscounts } from '@/lib/discounts'
 import { slugify } from '@/lib/slug'
 import { deleteR2ObjectByUrl } from '@/server/storage/r2'
-import { adminOnly } from './middleware'
+import { requireAdmin } from './auth.server'
 
 type SaveItemInput = {
 	type: string
@@ -111,9 +111,9 @@ async function generateUniqueProductSlug(
 }
 
 export const deleteItemFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: DeleteItemInput) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		const db = await getDb()
 
 		try {
@@ -194,9 +194,9 @@ export const deleteItemFn = createServerFn({ method: 'POST' })
 	})
 
 export const saveSettingsFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: any) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		const db = await getDb()
 
 		try {
@@ -215,8 +215,8 @@ export const saveSettingsFn = createServerFn({ method: 'POST' })
 	})
 
 export const fetchProductImagesForAdminFn = createServerFn({ method: 'GET' })
-	.middleware([adminOnly])
 	.handler(async (): Promise<Record<string, string[]>> => {
+		await requireAdmin()
 		const db = await getDb()
 		let allImages: Array<typeof productImages.$inferSelect> = []
 
@@ -240,25 +240,37 @@ export const fetchProductImagesForAdminFn = createServerFn({ method: 'GET' })
 	})
 
 export const saveItemFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: SaveItemInput) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		const db = await getDb()
 
 		try {
 			switch (data.type) {
 				case 'products': {
 					const { additionalImages, ...productFields } = data.data
+					const productId = productFields.id || data.data.id
+					const now = new Date().toISOString()
 					const productData = {
-						...productFields,
+						id: productId,
+						name: productFields.name,
+						description: productFields.description || '',
+						price: Number(productFields.price) || 0,
 						currency: 'CAD',
+						category: productFields.category || null,
+						imageUrl: productFields.imageUrl || '',
 						collectionId: productFields.collectionId || null,
 						sizeGuideId: productFields.sizeGuideId || null,
+						createdAt: productFields.createdAt || now,
 						slug: await generateUniqueProductSlug(
 							db,
 							data.data?.name || 'product',
 							data.mode === 'edit' ? data.data.id : undefined,
 						),
+						...(typeof productFields.isNew === 'boolean' ? { isNew: productFields.isNew } : {}),
+						...(typeof productFields.isFeatured === 'boolean'
+							? { isFeatured: productFields.isFeatured }
+							: {}),
 					}
 
 					if (data.mode === 'add') {
@@ -268,8 +280,6 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 					}
 
 					if (Array.isArray(additionalImages)) {
-						const productId = productData.id || data.data.id
-
 						try {
 							const existingImgs = await db
 								.select({ imageUrl: productImages.imageUrl })
@@ -412,9 +422,9 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 	})
 
 export const applyAdminDiscountsToCartFn = createServerFn({ method: 'POST' })
-	.middleware([adminOnly])
 	.inputValidator((data: ApplyDiscountsInput) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		try {
 			if (!data?.items || !Array.isArray(data.items)) {
 				return { error: 'Invalid cart payload' }

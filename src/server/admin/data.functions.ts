@@ -11,7 +11,7 @@ import {
 	settings,
 	sizeGuides,
 } from '@/db/schema'
-import { adminOnly } from './middleware'
+import { requireAdmin } from './auth.server'
 
 type CrudType =
 	| 'products'
@@ -40,8 +40,8 @@ async function getAdminReferenceData() {
 }
 
 export const getDashboardOverviewDataFn = createServerFn({ method: 'GET' })
-	.middleware([adminOnly])
 	.handler(async () => {
+		await requireAdmin()
 		const db = await getDb()
 		const [
 			totalProductsResult,
@@ -72,9 +72,9 @@ export const getDashboardOverviewDataFn = createServerFn({ method: 'GET' })
 	})
 
 export const getAdminCrudDataFn = createServerFn({ method: 'GET' })
-	.middleware([adminOnly])
 	.inputValidator((data: { type: CrudType }) => data)
 	.handler(async ({ data }) => {
+		await requireAdmin()
 		const db = await getDb()
 		const references = await getAdminReferenceData()
 
@@ -123,8 +123,8 @@ export const getAdminCrudDataFn = createServerFn({ method: 'GET' })
 	})
 
 export const getModelsAdminDataFn = createServerFn({ method: 'GET' })
-	.middleware([adminOnly])
 	.handler(async () => {
+		await requireAdmin()
 		const db = await getDb()
 		return {
 			models: await db.select().from(models).orderBy(desc(models.createdAt)),
@@ -132,8 +132,8 @@ export const getModelsAdminDataFn = createServerFn({ method: 'GET' })
 	})
 
 export const getProductFormDataFn = createServerFn({ method: 'GET' })
-	.middleware([adminOnly])
 	.handler(async () => {
+		await requireAdmin()
 		const db = await getDb()
 		const [allCollections, allCategories, allSizeGuides, allModels] = await Promise.all([
 			db.select().from(collections).orderBy(asc(collections.name)),
@@ -151,8 +151,8 @@ export const getProductFormDataFn = createServerFn({ method: 'GET' })
 	})
 
 export const getBatchImportDataFn = createServerFn({ method: 'GET' })
-	.middleware([adminOnly])
 	.handler(async () => {
+		await requireAdmin()
 		const db = await getDb()
 		const [allCollections, allCategories, allModels] = await Promise.all([
 			db.select().from(collections).orderBy(asc(collections.name)),
