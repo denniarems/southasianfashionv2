@@ -1,0 +1,156 @@
+'use client'
+
+import Link from '@/components/router-link'
+import { motion } from 'framer-motion'
+import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
+import { AddToCartButton } from '@/components/cart/AddToCartButton'
+import { LoadingImage } from '@/components/ui/loading-image'
+import PremiumPriceDisplay from '@/features/storefront/components/PremiumPriceDisplay'
+import type { ProductPricePreview } from '@/lib/discounts'
+
+interface Product {
+	id: string
+	slug?: string
+	name: string
+	category: string | null
+	price: number
+	currency: string
+	imageUrl: string | null
+	pricing?: ProductPricePreview
+}
+
+interface Settings {
+	whatsappNumber?: string | null
+}
+
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } }
+const fadeUp = {
+	hidden: { opacity: 0, y: 30 },
+	show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+}
+
+export default function NewArrivals({
+	products,
+	settings,
+}: {
+	products: Product[]
+	settings?: Settings
+}) {
+	const whatsapp = settings?.whatsappNumber?.replace(/[^0-9]/g, '') || ''
+
+	if (!products?.length) return null
+
+	return (
+		<section id="new-arrivals" data-testid="new-arrivals-section" className="py-24 md:py-32">
+			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
+					transition={{ duration: 0.6 }}
+					className="mb-16"
+				>
+					<p className="font-accent italic text-yellow-700 text-base md:text-lg mb-2">
+						Just Arrived
+					</p>
+					<h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-stone-900 tracking-tight">
+						New Arrivals
+					</h2>
+				</motion.div>
+
+				<motion.div
+					variants={stagger}
+					initial="hidden"
+					whileInView="show"
+					viewport={{ once: true }}
+					className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12"
+				>
+					{products.map((p) => (
+						<motion.div
+							key={p.id}
+							variants={fadeUp}
+							className="group h-full flex flex-col"
+							data-testid={`product-card-${p.id}`}
+						>
+							<div className="relative overflow-hidden aspect-3/4 mb-6">
+								{p.imageUrl && (
+									<LoadingImage
+										src={p.imageUrl}
+										alt={p.name}
+										fill
+										sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+										className="object-cover transition-transform duration-700 group-hover:scale-105"
+									/>
+								)}
+								<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
+								{p.pricing?.hasDiscount && p.pricing.badgeText ? (
+									<div className="absolute top-3 left-3 z-20">
+										<span className="inline-flex rounded-full border border-[#7A1E2C]/30 bg-[#FDF3D4]/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6B1320] shadow-sm backdrop-blur-[1px] discount-badge-pulse">
+											{p.pricing.badgeText}
+										</span>
+									</div>
+								) : null}
+								<Link
+									href={`/products/${p.slug ?? p.id}`}
+									className="absolute inset-0 z-10"
+									aria-label={`View ${p.name}`}
+								/>
+
+								<div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-500 p-4 z-20">
+									<AddToCartButton
+										product={{
+											id: p.id,
+											name: p.name,
+											slug: p.slug,
+											price: p.pricing?.discountedPrice ?? p.price,
+											currency: 'CAD',
+											imageUrl: p.imageUrl,
+										}}
+										className="mb-2 flex items-center justify-center gap-2 bg-white/95 backdrop-blur-sm text-stone-900 py-3 text-xs uppercase tracking-widest font-medium hover:bg-yellow-700 hover:text-white transition-colors duration-300 w-full"
+									/>
+
+									<a
+										href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! I'm interested in the ${p.name}. Could you tell me more?`)}`}
+										target="_blank"
+										rel="noopener noreferrer"
+										data-testid={`product-whatsapp-${p.id}`}
+										className="flex items-center justify-center gap-2 bg-white/95 backdrop-blur-sm text-stone-900 py-3 text-xs uppercase tracking-widest font-medium hover:bg-yellow-700 hover:text-white transition-colors duration-300 w-full"
+									>
+										<MessageCircleIcon size={14} />
+										Inquire via WhatsApp
+									</a>
+								</div>
+							</div>
+
+							<div className="flex flex-1 flex-col">
+								<p className="text-[11px] uppercase tracking-widest text-stone-400 mb-2">
+									{p.category}
+								</p>
+								<Link
+									href={`/products/${p.slug ?? p.id}`}
+									className="block"
+									data-testid={`product-link-${p.id}`}
+								>
+									<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors min-h-14 leading-tight line-clamp-2">
+										{p.name}
+									</h3>
+								</Link>
+								<PremiumPriceDisplay
+									compact
+									currency="CAD"
+									originalPrice={p.pricing?.originalPrice ?? p.price}
+									discountedPrice={p.pricing?.discountedPrice ?? p.price}
+									savingsAmount={p.pricing?.savingsAmount ?? 0}
+									savingsPercent={p.pricing?.savingsPercent ?? 0}
+									discountText={p.pricing?.discountText}
+									badgeText={undefined}
+									endDate={p.pricing?.endDate}
+								/>
+							</div>
+						</motion.div>
+					))}
+				</motion.div>
+			</div>
+		</section>
+	)
+}

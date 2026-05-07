@@ -1,0 +1,26 @@
+"$schema" = "node_modules/wrangler/config-schema.json"
+name = "southasianfashion"
+compatibility_date = "2026-05-04"
+compatibility_flags = ["nodejs_compat"]
+main = "@tanstack/react-start/server-entry"
+
+[observability]
+enabled = true
+
+[vars]
+SITE_URL = "https://southasianfashion.example"
+R2_PUBLIC_URL = "https://media.example.com"
+ADMIN_EMAIL = "admin@example.com"
+SENDER_EMAIL = "SouthAsianFashion <admin@example.com>"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "southasianfashion-prod"
+database_id = "<cloudflare-d1-database-id>"
+preview_database_id = "DB"
+migrations_dir = "migrations-d1"
+
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "southasianfashion-media"
+preview_bucket_name = "southasianfashion-media-preview"
