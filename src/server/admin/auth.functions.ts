@@ -58,7 +58,7 @@ export const requestOtpFn = createServerFn({ method: 'POST' })
 			const resend = new Resend(process.env.RESEND_API_KEY)
 
 			await resend.emails.send({
-				from: process.env.SENDER_EMAIL || 'onboarding@resend.dev',
+				from: `SouthAsianFashion Login Code <${process.env.SENDER_EMAIL}>`,
 				to: email,
 				subject: 'SouthAsianFashion Admin - Your Login Code',
 				html: `

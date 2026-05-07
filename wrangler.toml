@@ -21,10 +21,10 @@ head_sampling_rate = 1
 
 
 [vars]
-SITE_URL = "https://southasianfashion.example"
-R2_PUBLIC_URL = "https://media.example.com"
-ADMIN_EMAIL = "admin@example.com"
-SENDER_EMAIL = "SouthAsianFashion <admin@example.com>"
+SITE_URL = "https://southasianfashion.ca"
+R2_PUBLIC_URL = "https://media.southasianfashion.ca"
+ADMIN_EMAIL = "denniarems@gmail.com,binumv1998@gmail.com,binumv19982023@gmail.com,babusimon30@gmail.com"
+SENDER_EMAIL = "no-replay@southasianfashion.ca"
 
 [[d1_databases]]
 binding = "DB"
