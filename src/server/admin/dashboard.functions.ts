@@ -15,16 +15,42 @@ import {
 import { computeCartDiscounts } from '@/lib/discounts'
 import { slugify } from '@/lib/slug'
 import { deleteR2ObjectByUrl } from '@/server/storage/r2'
+import {
+	asRecord,
+	booleanValue,
+	dateValue,
+	enumValue,
+	isoStringValue,
+	jsonArrayString,
+	numberValue,
+	optionalNumber,
+	optionalString,
+	requiredString,
+	stringArrayValue,
+	stringWithDefault,
+	type UnknownRecord,
+} from './input-validators'
 import { requireAdmin } from './auth.server'
 
+const SAVE_ITEM_TYPES = [
+	'products',
+	'collections',
+	'categories',
+	'hero',
+	'size-guides',
+	'discounts',
+] as const
+const DELETE_ITEM_TYPES = SAVE_ITEM_TYPES
+const DISCOUNT_TYPES = ['flat', 'percentage', 'tiered', 'bundle'] as const
+
 type SaveItemInput = {
-	type: string
+	type: (typeof SAVE_ITEM_TYPES)[number]
 	mode: 'add' | 'edit'
-	data: any
+	data: UnknownRecord
 }
 
 type DeleteItemInput = {
-	type: string
+	type: (typeof DELETE_ITEM_TYPES)[number]
 	id: string
 }
 
@@ -34,49 +60,196 @@ type ApplyDiscountsInput = {
 	commitUsage?: boolean
 }
 
-function parseStringArray(input: unknown): string[] {
-	if (Array.isArray(input)) {
-		return input.filter((value): value is string => typeof value === 'string').map((v) => v.trim())
+function parseSaveItemInput(value: unknown): SaveItemInput {
+	const input = asRecord(value, 'Save item request')
+
+	return {
+		type: enumValue(input.type, SAVE_ITEM_TYPES, 'Item type'),
+		mode: enumValue(input.mode, ['add', 'edit'] as const, 'Save mode'),
+		data: asRecord(input.data, 'Item data'),
+	}
+}
+
+function parseDeleteItemInput(value: unknown): DeleteItemInput {
+	const input = asRecord(value, 'Delete item request')
+
+	return {
+		type: enumValue(input.type, DELETE_ITEM_TYPES, 'Item type'),
+		id: requiredString(input.id, 'Item ID'),
+	}
+}
+
+function parseSettingsInput(value: unknown) {
+	const input = asRecord(value, 'Settings')
+
+	return {
+		whatsappNumber: stringWithDefault(input.whatsappNumber),
+		whatsappMessage: stringWithDefault(input.whatsappMessage),
+		brandName: stringWithDefault(input.brandName, 'SouthAsianFashion'),
+		brandTagline: stringWithDefault(input.brandTagline),
+		contactEmail: stringWithDefault(input.contactEmail),
+		instagramUrl: stringWithDefault(input.instagramUrl),
+		facebookUrl: stringWithDefault(input.facebookUrl),
+	}
+}
+
+function parseApplyDiscountsInput(value: unknown): ApplyDiscountsInput {
+	const input = asRecord(value, 'Discount application request')
+	const items = Array.isArray(input.items)
+		? input.items.map((item) => {
+				const row = asRecord(item, 'Cart item')
+				return {
+					productId: requiredString(row.productId, 'Product ID'),
+					quantity: numberValue(row.quantity, 'Quantity', { min: 1 }),
+				}
+			})
+		: []
+
+	if (items.length === 0) {
+		throw new Error('At least one cart item is required')
 	}
 
-	if (typeof input === 'string') {
-		const trimmed = input.trim()
-		if (!trimmed) return []
-
-		try {
-			const parsed = JSON.parse(trimmed)
-			if (!Array.isArray(parsed)) return []
-			return parsed
-				.filter((value): value is string => typeof value === 'string')
-				.map((v) => v.trim())
-		} catch {
-			return trimmed
-				.split(',')
-				.map((value) => value.trim())
-				.filter(Boolean)
-		}
+	return {
+		items,
+		userKey: optionalString(input.userKey),
+		commitUsage: booleanValue(input.commitUsage),
 	}
+}
 
-	return []
+function idForMode(input: UnknownRecord, mode: SaveItemInput['mode'], label: string) {
+	const id = optionalString(input.id)
+	if (mode === 'edit' && !id) {
+		throw new Error(`${label} ID is required`)
+	}
+	return id || crypto.randomUUID()
+}
+
+function requirePositivePrice(value: unknown) {
+	return numberValue(value, 'Price', { min: 0.01 })
+}
+
+function normalizeProductPayload(input: UnknownRecord, mode: SaveItemInput['mode'], slug: string) {
+	return {
+		id: idForMode(input, mode, 'Product'),
+		name: requiredString(input.name, 'Product name'),
+		description: stringWithDefault(input.description),
+		price: requirePositivePrice(input.price),
+		currency: 'CAD',
+		category: optionalString(input.category) || null,
+		imageUrl: stringWithDefault(input.imageUrl),
+		collectionId: optionalString(input.collectionId) || null,
+		sizeGuideId: optionalString(input.sizeGuideId) || null,
+		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+		slug,
+		isNew: booleanValue(input.isNew, true),
+		isFeatured: booleanValue(input.isFeatured),
+	}
+}
+
+function normalizeCollectionPayload(input: UnknownRecord, mode: SaveItemInput['mode']) {
+	return {
+		id: idForMode(input, mode, 'Collection'),
+		name: requiredString(input.name, 'Collection name'),
+		description: stringWithDefault(input.description),
+		imageUrl: stringWithDefault(input.imageUrl),
+		slug: optionalString(input.slug) || slugify(requiredString(input.name, 'Collection name')),
+		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+	}
+}
+
+function normalizeCategoryPayload(input: UnknownRecord, mode: SaveItemInput['mode']) {
+	return {
+		id: idForMode(input, mode, 'Category'),
+		name: requiredString(input.name, 'Category name'),
+		slug: optionalString(input.slug) || slugify(requiredString(input.name, 'Category name')),
+		description: stringWithDefault(input.description),
+		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+	}
+}
+
+function normalizeHeroPayload(input: UnknownRecord, mode: SaveItemInput['mode']) {
+	return {
+		id: idForMode(input, mode, 'Hero banner'),
+		title: requiredString(input.title, 'Hero title'),
+		subtitle: stringWithDefault(input.subtitle),
+		imageUrl: stringWithDefault(input.imageUrl),
+		ctaText: stringWithDefault(input.ctaText, 'Explore Collection'),
+		ctaLink: stringWithDefault(input.ctaLink, '#new-arrivals'),
+		isActive: booleanValue(input.isActive, true),
+		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+	}
+}
+
+function normalizeSizeGuidePayload(input: UnknownRecord, mode: SaveItemInput['mode']) {
+	return {
+		id: idForMode(input, mode, 'Size guide'),
+		name: requiredString(input.name, 'Size guide name'),
+		productType: stringWithDefault(input.productType),
+		unit: enumValue(input.unit || 'in', ['in', 'cm'] as const, 'Measurement unit'),
+		note: stringWithDefault(input.note),
+		columnsJson: jsonArrayString(input.columnsJson, 'Columns JSON'),
+		rowsJson: jsonArrayString(input.rowsJson, 'Rows JSON'),
+		isActive: booleanValue(input.isActive, true),
+		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+	}
 }
 
 function normalizeTierRulesJson(input: unknown): string {
-	if (typeof input === 'string') {
-		const trimmed = input.trim()
-		if (!trimmed) return '[]'
+	const normalized = jsonArrayString(input, 'Tier rules JSON')
+	const parsed = JSON.parse(normalized) as unknown[]
 
-		try {
-			return JSON.stringify(JSON.parse(trimmed))
-		} catch {
-			return '[]'
+	for (const rule of parsed) {
+		const row = asRecord(rule, 'Tier rule')
+		numberValue(row.minCartValue, 'Tier minimum cart value', { min: 0.01 })
+		numberValue(row.discountValue, 'Tier discount value', { min: 0.01 })
+		if (row.discountType !== undefined) {
+			enumValue(row.discountType, ['flat', 'percentage'] as const, 'Tier discount type')
 		}
 	}
 
-	if (Array.isArray(input)) {
-		return JSON.stringify(input)
+	return normalized
+}
+
+function normalizeDiscountPayload(input: UnknownRecord, mode: SaveItemInput['mode']) {
+	const discountType = enumValue(input.discountType || 'flat', DISCOUNT_TYPES, 'Discount type')
+	const startDate = dateValue(input.startDate, 'Start date', new Date())
+	const endDate = input.endDate ? dateValue(input.endDate, 'End date') : null
+	if (endDate && endDate <= startDate) {
+		throw new Error('End date must be after start date')
 	}
 
-	return '[]'
+	const legacyProductId = optionalString(input.productId)
+	const applicableProductIds = stringArrayValue(input.applicableProductIds)
+	const maxUses = optionalNumber(input.maxUses, 'Max uses', 1)
+
+	return {
+		id: idForMode(input, mode, 'Discount'),
+		name: requiredString(input.name, 'Discount name'),
+		description: stringWithDefault(input.description),
+		discountType,
+		discountValue: numberValue(input.discountValue, 'Discount value', { min: 0.01 }),
+		originalPrice: optionalNumber(input.originalPrice, 'Original price', 0.01),
+		startDate,
+		endDate,
+		minCartValue: numberValue(input.minCartValue, 'Minimum cart value', { min: 0, fallback: 0 }),
+		applicableProductIds:
+			applicableProductIds.length > 0
+				? applicableProductIds
+				: legacyProductId
+					? [legacyProductId]
+					: [],
+		applicableCategories: stringArrayValue(input.applicableCategories),
+		stackable: booleanValue(input.stackable),
+		maxUses,
+		priority: numberValue(input.priority, 'Priority', { fallback: 0 }),
+		isActive: booleanValue(input.isActive, true),
+		productId: null,
+		bundleProductIds: stringArrayValue(input.bundleProductIds),
+		tierRulesJson: discountType === 'tiered' ? normalizeTierRulesJson(input.tierRulesJson) : '[]',
+		wording: stringWithDefault(input.wording, 'Instant Price Drop'),
+		updatedAt: new Date().toISOString(),
+		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+	}
 }
 
 function isMissingProductImagesTableError(error: unknown): boolean {
@@ -111,7 +284,7 @@ async function generateUniqueProductSlug(
 }
 
 export const deleteItemFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: DeleteItemInput) => data)
+	.inputValidator(parseDeleteItemInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		const db = await getDb()
@@ -194,7 +367,7 @@ export const deleteItemFn = createServerFn({ method: 'POST' })
 	})
 
 export const saveSettingsFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: any) => data)
+	.inputValidator(parseSettingsInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		const db = await getDb()
@@ -214,8 +387,8 @@ export const saveSettingsFn = createServerFn({ method: 'POST' })
 		}
 	})
 
-export const fetchProductImagesForAdminFn = createServerFn({ method: 'GET' })
-	.handler(async (): Promise<Record<string, string[]>> => {
+export const fetchProductImagesForAdminFn = createServerFn({ method: 'GET' }).handler(
+	async (): Promise<Record<string, string[]>> => {
 		await requireAdmin()
 		const db = await getDb()
 		let allImages: Array<typeof productImages.$inferSelect> = []
@@ -237,10 +410,11 @@ export const fetchProductImagesForAdminFn = createServerFn({ method: 'GET' })
 			map[img.productId].push(img.imageUrl)
 		}
 		return map
-	})
+	},
+)
 
 export const saveItemFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: SaveItemInput) => data)
+	.inputValidator(parseSaveItemInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		const db = await getDb()
@@ -248,166 +422,103 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 		try {
 			switch (data.type) {
 				case 'products': {
-					const { additionalImages, ...productFields } = data.data
-					const productId = productFields.id || data.data.id
-					const now = new Date().toISOString()
-					const productData = {
-						id: productId,
-						name: productFields.name,
-						description: productFields.description || '',
-						price: Number(productFields.price) || 0,
-						currency: 'CAD',
-						category: productFields.category || null,
-						imageUrl: productFields.imageUrl || '',
-						collectionId: productFields.collectionId || null,
-						sizeGuideId: productFields.sizeGuideId || null,
-						createdAt: productFields.createdAt || now,
-						slug: await generateUniqueProductSlug(
+					const productId = idForMode(data.data, data.mode, 'Product')
+					const productName = requiredString(data.data.name, 'Product name')
+					const productData = normalizeProductPayload(
+						{ ...data.data, id: productId },
+						data.mode,
+						await generateUniqueProductSlug(
 							db,
-							data.data?.name || 'product',
-							data.mode === 'edit' ? data.data.id : undefined,
+							productName,
+							data.mode === 'edit' ? productId : undefined,
 						),
-						...(typeof productFields.isNew === 'boolean' ? { isNew: productFields.isNew } : {}),
-						...(typeof productFields.isFeatured === 'boolean'
-							? { isFeatured: productFields.isFeatured }
-							: {}),
-					}
+					)
+					const additionalImages = stringArrayValue(data.data.additionalImages)
 
 					if (data.mode === 'add') {
 						await db.insert(products).values(productData).run()
 					} else {
-						await db.update(products).set(productData).where(eq(products.id, data.data.id)).run()
+						await db.update(products).set(productData).where(eq(products.id, productId)).run()
 					}
 
-					if (Array.isArray(additionalImages)) {
-						try {
-							const existingImgs = await db
-								.select({ imageUrl: productImages.imageUrl })
-								.from(productImages)
-								.where(eq(productImages.productId, productId))
+					try {
+						const existingImgs = await db
+							.select({ imageUrl: productImages.imageUrl })
+							.from(productImages)
+							.where(eq(productImages.productId, productId))
 
-							const newUrlSet = new Set(additionalImages as string[])
-							for (const img of existingImgs) {
-								if (!newUrlSet.has(img.imageUrl)) {
-									await deleteR2ObjectByUrl(img.imageUrl, 'product image removed')
-								}
+						const newUrlSet = new Set(additionalImages)
+						for (const img of existingImgs) {
+							if (!newUrlSet.has(img.imageUrl)) {
+								await deleteR2ObjectByUrl(img.imageUrl, 'product image removed')
 							}
+						}
 
-							await db.delete(productImages).where(eq(productImages.productId, productId)).run()
+						await db.delete(productImages).where(eq(productImages.productId, productId)).run()
 
-							if (additionalImages.length > 0) {
-								await db
-									.insert(productImages)
-									.values(
-										(additionalImages as string[]).map((url, i) => ({
-											id: crypto.randomUUID(),
-											productId,
-											imageUrl: url,
-											sortOrder: i,
-											createdAt: new Date().toISOString(),
-										})),
-									)
-									.run()
-							}
-						} catch (error) {
-							if (!isMissingProductImagesTableError(error)) {
-								throw error
-							}
+						if (additionalImages.length > 0) {
+							await db
+								.insert(productImages)
+								.values(
+									additionalImages.map((url, i) => ({
+										id: crypto.randomUUID(),
+										productId,
+										imageUrl: url,
+										sortOrder: i,
+										createdAt: new Date().toISOString(),
+									})),
+								)
+								.run()
+						}
+					} catch (error) {
+						if (!isMissingProductImagesTableError(error)) {
+							throw error
 						}
 					}
 					break
 				}
-				case 'collections':
+				case 'collections': {
+					const payload = normalizeCollectionPayload(data.data, data.mode)
 					if (data.mode === 'add') {
-						await db.insert(collections).values(data.data).run()
+						await db.insert(collections).values(payload).run()
 					} else {
-						await db
-							.update(collections)
-							.set(data.data)
-							.where(eq(collections.id, data.data.id))
-							.run()
+						await db.update(collections).set(payload).where(eq(collections.id, payload.id)).run()
 					}
 					break
-				case 'hero':
+				}
+				case 'hero': {
+					const payload = normalizeHeroPayload(data.data, data.mode)
 					if (data.mode === 'add') {
-						await db.insert(heroBanners).values(data.data).run()
+						await db.insert(heroBanners).values(payload).run()
 					} else {
-						await db
-							.update(heroBanners)
-							.set(data.data)
-							.where(eq(heroBanners.id, data.data.id))
-							.run()
+						await db.update(heroBanners).set(payload).where(eq(heroBanners.id, payload.id)).run()
 					}
 					break
-				case 'categories':
+				}
+				case 'categories': {
+					const payload = normalizeCategoryPayload(data.data, data.mode)
 					if (data.mode === 'add') {
-						await db.insert(categories).values(data.data).run()
+						await db.insert(categories).values(payload).run()
 					} else {
-						await db.update(categories).set(data.data).where(eq(categories.id, data.data.id)).run()
+						await db.update(categories).set(payload).where(eq(categories.id, payload.id)).run()
 					}
 					break
+				}
 				case 'discounts': {
-					const startDate = data.data.startDate ? new Date(data.data.startDate) : new Date()
-					const endDate = data.data.endDate ? new Date(data.data.endDate) : null
-					const legacyProductId =
-						typeof data.data.productId === 'string' ? data.data.productId.trim() : ''
-					const applicableProductIds = parseStringArray(data.data.applicableProductIds)
-					const payload = {
-						id: data.data.id,
-						name: data.data.name || 'Untitled Discount',
-						description: data.data.description || '',
-						discountType: data.data.discountType || 'flat',
-						discountValue: Number(data.data.discountValue) || 0,
-						originalPrice:
-							data.data.originalPrice === undefined || data.data.originalPrice === ''
-								? null
-								: Number(data.data.originalPrice),
-						startDate,
-						endDate,
-						minCartValue: Number(data.data.minCartValue) || 0,
-						applicableProductIds:
-							applicableProductIds.length > 0
-								? applicableProductIds
-								: legacyProductId
-									? [legacyProductId]
-									: [],
-						applicableCategories: parseStringArray(data.data.applicableCategories),
-						stackable: Boolean(data.data.stackable),
-						maxUses:
-							data.data.maxUses === undefined || data.data.maxUses === ''
-								? null
-								: Number(data.data.maxUses),
-						priority: Number(data.data.priority) || 0,
-						isActive: data.data.isActive !== false,
-						productId: null,
-						bundleProductIds: parseStringArray(data.data.bundleProductIds),
-						tierRulesJson: normalizeTierRulesJson(data.data.tierRulesJson),
-						wording: data.data.wording || 'Instant Price Drop',
-						updatedAt: new Date().toISOString(),
-						createdAt: data.mode === 'add' ? new Date().toISOString() : data.data.createdAt,
-					}
-
+					const payload = normalizeDiscountPayload(data.data, data.mode)
 					if (data.mode === 'add') {
 						await db.insert(discounts).values(payload).run()
 					} else {
-						await db.update(discounts).set(payload).where(eq(discounts.id, data.data.id)).run()
+						await db.update(discounts).set(payload).where(eq(discounts.id, payload.id)).run()
 					}
 					break
 				}
 				case 'size-guides': {
-					const payload = {
-						...data.data,
-						unit: data.data.unit || 'in',
-						note: data.data.note || '',
-						productType: data.data.productType || '',
-						columnsJson: data.data.columnsJson || '[]',
-						rowsJson: data.data.rowsJson || '[]',
-					}
-
+					const payload = normalizeSizeGuidePayload(data.data, data.mode)
 					if (data.mode === 'add') {
 						await db.insert(sizeGuides).values(payload).run()
 					} else {
-						await db.update(sizeGuides).set(payload).where(eq(sizeGuides.id, data.data.id)).run()
+						await db.update(sizeGuides).set(payload).where(eq(sizeGuides.id, payload.id)).run()
 					}
 					break
 				}
@@ -422,14 +533,10 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 	})
 
 export const applyAdminDiscountsToCartFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: ApplyDiscountsInput) => data)
+	.inputValidator(parseApplyDiscountsInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		try {
-			if (!data?.items || !Array.isArray(data.items)) {
-				return { error: 'Invalid cart payload' }
-			}
-
 			const summary = await computeCartDiscounts(data.items, data.userKey)
 
 			if (data.commitUsage && data.userKey && summary.appliedDiscountIds.length > 0) {

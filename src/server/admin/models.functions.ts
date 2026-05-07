@@ -3,11 +3,25 @@ import { eq } from 'drizzle-orm'
 import { OpenRouter } from '@openrouter/sdk'
 import { getDb } from '@/db'
 import { models } from '@/db/schema'
+import {
+	getAllowedImageExtensionForMimeType,
+	isValidImageBytes,
+	normalizeImageContentType,
+} from '@/lib/upload-validation'
+import {
+	asRecord,
+	enumValue,
+	optionalString,
+	requiredString,
+	stringWithDefault,
+} from './input-validators'
 import { requireAdmin } from './auth.server'
 
 export type PhotoshootShotType = 'front' | 'side' | 'back' | 'walking' | 'close-up'
+const PHOTOSHOOT_SHOT_TYPES = ['front', 'side', 'back', 'walking', 'close-up'] as const
+const MAX_EXTERNAL_IMAGE_BYTES = 10 * 1024 * 1024
 
-interface PhotoshootModelDetails {
+export interface PhotoshootModelDetails {
 	name?: string
 	description?: string
 	ageRange?: string
@@ -29,6 +43,89 @@ type GenerateModelPhotoshootInput = {
 	model: PhotoshootModelDetails
 	clothingImageUrl: string
 	shotType: PhotoshootShotType
+}
+
+type SaveModelInput = {
+	id?: string
+	name: string
+	description: string
+	ageRange: string
+	gender: string
+	ethnicity: string
+	imageUrl: string
+	promptUsed: string
+	createdAt?: string
+}
+
+type UploadExternalImageInput = {
+	url: string
+	filename?: string
+}
+
+function parseSaveModelInput(value: unknown): SaveModelInput {
+	const input = asRecord(value, 'Model')
+
+	return {
+		id: optionalString(input.id),
+		name: requiredString(input.name, 'Model name'),
+		description: stringWithDefault(input.description),
+		ageRange: stringWithDefault(input.ageRange),
+		gender: stringWithDefault(input.gender),
+		ethnicity: stringWithDefault(input.ethnicity),
+		imageUrl: requiredString(input.imageUrl, 'Model image URL'),
+		promptUsed: stringWithDefault(input.promptUsed),
+		createdAt: optionalString(input.createdAt),
+	}
+}
+
+function parseGenerateModelImageInput(value: unknown): GenerateModelImageInput {
+	const input = asRecord(value, 'Model image request')
+
+	return {
+		prompt: stringWithDefault(input.prompt),
+		style: stringWithDefault(input.style),
+		ageRange: stringWithDefault(input.ageRange),
+		gender: stringWithDefault(input.gender),
+		ethnicity: stringWithDefault(input.ethnicity),
+	}
+}
+
+function parsePhotoshootModelDetails(value: unknown): PhotoshootModelDetails {
+	const input = asRecord(value, 'Photoshoot model')
+
+	return {
+		name: optionalString(input.name),
+		description: optionalString(input.description),
+		ageRange: optionalString(input.ageRange),
+		gender: optionalString(input.gender),
+		ethnicity: optionalString(input.ethnicity),
+		promptUsed: optionalString(input.promptUsed),
+		customPrompt: optionalString(input.customPrompt),
+	}
+}
+
+function parseGenerateModelPhotoshootInput(value: unknown): GenerateModelPhotoshootInput {
+	const input = asRecord(value, 'Photoshoot request')
+
+	return {
+		model: parsePhotoshootModelDetails(input.model),
+		clothingImageUrl: requiredString(input.clothingImageUrl, 'Clothing image URL'),
+		shotType: enumValue(input.shotType, PHOTOSHOOT_SHOT_TYPES, 'Shot type'),
+	}
+}
+
+function parseUploadExternalImageInput(value: unknown): UploadExternalImageInput {
+	const input = asRecord(value, 'External image upload')
+
+	return {
+		url: requiredString(input.url, 'Image URL'),
+		filename: optionalString(input.filename),
+	}
+}
+
+function parseIdInput(value: unknown) {
+	const input = asRecord(value, 'Model request')
+	return { id: requiredString(input.id, 'Model ID') }
 }
 
 function getOpenRouter() {
@@ -130,8 +227,87 @@ function buildPhotoshootPrompt(model: PhotoshootModelDetails, shotType: Photosho
 async function uploadAiDataUrl(dataUrl: string, keyPrefix: string) {
 	const { putR2Object } = await import('@/server/storage/r2')
 	const image = parseDataUrl(dataUrl)
-	const filename = `${keyPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${image.extension}`
+	const filename = `${keyPrefix}-${crypto.randomUUID()}.${image.extension}`
 	return putR2Object(filename, image.body, image.mimeType)
+}
+
+function isPrivateIpv4(hostname: string) {
+	const parts = hostname.split('.').map((part) => Number(part))
+	if (
+		parts.length !== 4 ||
+		parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)
+	) {
+		return false
+	}
+
+	const [a, b] = parts
+	return (
+		a === 10 ||
+		a === 127 ||
+		(a === 172 && b >= 16 && b <= 31) ||
+		(a === 192 && b === 168) ||
+		(a === 169 && b === 254) ||
+		a === 0
+	)
+}
+
+function assertAllowedExternalImageUrl(rawUrl: string) {
+	let url: URL
+	try {
+		url = new URL(rawUrl)
+	} catch {
+		throw new Error('Image URL must be a valid URL')
+	}
+
+	if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+		throw new Error('Image URL must use http or https')
+	}
+
+	const hostname = url.hostname.toLowerCase()
+	if (
+		hostname === 'localhost' ||
+		hostname === '::1' ||
+		hostname.endsWith('.localhost') ||
+		isPrivateIpv4(hostname)
+	) {
+		throw new Error('Image URL host is not allowed')
+	}
+
+	return url.toString()
+}
+
+async function readBoundedResponseBytes(response: Response, maxBytes: number) {
+	const body = response.body
+	if (!body) {
+		throw new Error('Image response has no body')
+	}
+
+	const reader = body.getReader()
+	const chunks: Uint8Array[] = []
+	let received = 0
+
+	while (true) {
+		const { done, value } = await reader.read()
+		if (done) break
+		if (!value) continue
+
+		received += value.byteLength
+		if (received > maxBytes) {
+			await reader.cancel()
+			throw new Error(`Image exceeds ${Math.floor(maxBytes / (1024 * 1024))}MB limit`)
+		}
+
+		chunks.push(value)
+	}
+
+	const bytes = new Uint8Array(received)
+	let offset = 0
+	for (const chunk of chunks) {
+		bytes.set(chunk, offset)
+		offset += chunk.byteLength
+	}
+
+	return bytes
 }
 
 export async function generateModelPhotoshootImageInternal(params: GenerateModelPhotoshootInput) {
@@ -176,7 +352,7 @@ export async function generateModelPhotoshootImageInternal(params: GenerateModel
 }
 
 export const saveModelFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: any) => data)
+	.inputValidator(parseSaveModelInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		try {
@@ -220,7 +396,7 @@ export const saveModelFn = createServerFn({ method: 'POST' })
 	})
 
 export const deleteModelFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: { id: string }) => data)
+	.inputValidator(parseIdInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		try {
@@ -241,7 +417,7 @@ export const deleteModelFn = createServerFn({ method: 'POST' })
 	})
 
 export const generateModelImageFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: GenerateModelImageInput) => data)
+	.inputValidator(parseGenerateModelImageInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		try {
@@ -279,16 +455,38 @@ export const generateModelImageFn = createServerFn({ method: 'POST' })
 	})
 
 export const uploadExternalImageToR2Fn = createServerFn({ method: 'POST' })
-	.inputValidator((data: { url: string; filename: string }) => data)
+	.inputValidator(parseUploadExternalImageInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		try {
-			const response = await fetch(data.url)
+			const imageUrl = assertAllowedExternalImageUrl(data.url)
+			const response = await fetch(imageUrl)
 			if (!response.ok) throw new Error('Failed to fetch external image')
 
-			const contentType = response.headers.get('content-type') || undefined
+			const contentType = normalizeImageContentType(response.headers.get('content-type') || '')
+			const extension = getAllowedImageExtensionForMimeType(contentType)
+			if (!extension) {
+				throw new Error('External URL must point to a supported image')
+			}
+
+			const contentLength = Number(response.headers.get('content-length') || 0)
+			if (contentLength > MAX_EXTERNAL_IMAGE_BYTES) {
+				throw new Error(
+					`Image exceeds ${Math.floor(MAX_EXTERNAL_IMAGE_BYTES / (1024 * 1024))}MB limit`,
+				)
+			}
+
+			const bytes = await readBoundedResponseBytes(response, MAX_EXTERNAL_IMAGE_BYTES)
+			if (!isValidImageBytes(bytes.slice(0, 32), contentType)) {
+				throw new Error('External image content does not match its content type')
+			}
+
 			const { putR2Object } = await import('@/server/storage/r2')
-			const uploaded = await putR2Object(data.filename, await response.arrayBuffer(), contentType)
+			const uploaded = await putR2Object(
+				`external-${crypto.randomUUID()}.${extension}`,
+				bytes,
+				contentType,
+			)
 
 			return { url: uploaded.url }
 		} catch (error) {
@@ -297,7 +495,7 @@ export const uploadExternalImageToR2Fn = createServerFn({ method: 'POST' })
 	})
 
 export const generateModelPhotoshootImageFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: GenerateModelPhotoshootInput) => data)
+	.inputValidator(parseGenerateModelPhotoshootInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		try {

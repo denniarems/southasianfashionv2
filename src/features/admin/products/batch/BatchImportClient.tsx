@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import {
 	batchImportProductsFn,
+	generateBatchProductImagesFn,
 	generateProductDescriptionFn,
 	type BatchImportResult,
 	type BatchProductRow,
@@ -93,6 +94,27 @@ interface BatchUploadResponse {
 	files?: Record<string, string>
 	errors?: string[]
 	error?: string
+}
+
+async function runWithConcurrency<T, R>(
+	items: T[],
+	limit: number,
+	worker: (item: T, index: number) => Promise<R>,
+) {
+	const results: R[] = []
+	let nextIndex = 0
+
+	await Promise.all(
+		Array.from({ length: Math.min(limit, items.length) }, async () => {
+			while (nextIndex < items.length) {
+				const currentIndex = nextIndex
+				nextIndex += 1
+				results[currentIndex] = await worker(items[currentIndex], currentIndex)
+			}
+		}),
+	)
+
+	return results
 }
 
 const ACCEPTED_IMAGE_EXT = new Set(['jpg', 'jpeg', 'png', 'webp'])
@@ -212,6 +234,7 @@ export default function BatchImportClient({
 }: BatchImportClientProps) {
 	const router = useRouter()
 	const batchImportProducts = useServerFn(batchImportProductsFn)
+	const generateBatchProductImages = useServerFn(generateBatchProductImagesFn)
 	const generateProductDescription = useServerFn(generateProductDescriptionFn)
 
 	const [step, setStep] = useState<1 | 2 | 3>(1)
@@ -237,6 +260,8 @@ export default function BatchImportClient({
 	const [uploadErrors, setUploadErrors] = useState<string[]>([])
 	const [summary, setSummary] = useState<BatchImportResult | null>(null)
 	const [progressCompleted, setProgressCompleted] = useState(0)
+	const [imageProgressCompleted, setImageProgressCompleted] = useState(0)
+	const [imageProgressTotal, setImageProgressTotal] = useState(0)
 	const [progressLabel, setProgressLabel] = useState('Waiting to start...')
 	const previewUrlsRef = useRef<Set<string>>(new Set())
 
@@ -411,8 +436,7 @@ export default function BatchImportClient({
 		)
 	}
 
-	const canProceedToPreview =
-		csvRows.length > 0 && Object.keys(folderMap).length > 0
+	const canProceedToPreview = csvRows.length > 0 && Object.keys(folderMap).length > 0
 
 	const generatePreviewDescription = () => {
 		startPreviewDescriptionTransition(() => {
@@ -453,6 +477,8 @@ export default function BatchImportClient({
 				setUploadErrors([])
 				setSummary(null)
 				setProgressCompleted(0)
+				setImageProgressCompleted(0)
+				setImageProgressTotal(0)
 				setProgressLabel('Preparing files...')
 
 				const rowsToImport = previewRows
@@ -506,21 +532,67 @@ export default function BatchImportClient({
 				const uploadIssues: string[] = Array.isArray(uploadJson.errors) ? uploadJson.errors : []
 				setUploadErrors(uploadIssues)
 
-				setProgressLabel('Generating AI descriptions and photoshoots...')
-				const payloadRows: BatchProductRow[] = rowsToImport.map((row) => ({
-					index: row.index,
-					name: row.name,
-					price: row.price,
-					category: row.category,
-					collection: row.collection,
-					isNew: row.isNew,
-					isFeatured: row.isFeatured,
-					descriptionRaw: row.descText,
-					referenceImageUrls: row.images
-						.map((image) => fileUrlMap[image.fileKey] || fileUrlMap[image.file.name] || '')
-						.filter(Boolean),
-				}))
+				setProgressLabel('Generating AI descriptions...')
+				let completedDescriptions = 0
+				const descriptionIssues: string[] = []
+				const payloadRows: BatchProductRow[] = await runWithConcurrency(
+					rowsToImport,
+					2,
+					async (row) => {
+						let description = row.descText
+						let descriptionGenerated = false
 
+						if (row.descText.trim()) {
+							try {
+								const descriptionResult = await generateProductDescription({
+									data: {
+										name: row.name,
+										category: row.category,
+										price: row.price,
+										rawNotes: row.descText,
+									},
+								})
+								description = descriptionResult.description
+								descriptionGenerated = !descriptionResult.error
+								if (descriptionResult.error) {
+									descriptionIssues.push(`Row ${row.index}: ${descriptionResult.error}`)
+								}
+							} catch (error) {
+								descriptionIssues.push(
+									`Row ${row.index}: ${
+										error instanceof Error ? error.message : 'Description generation failed'
+									}`,
+								)
+							}
+						}
+
+						completedDescriptions += 1
+						setProgressLabel(
+							`Generated descriptions for ${completedDescriptions} / ${rowsToImport.length} rows...`,
+						)
+
+						return {
+							index: row.index,
+							name: row.name,
+							price: row.price,
+							category: row.category,
+							collection: row.collection,
+							isNew: row.isNew,
+							isFeatured: row.isFeatured,
+							descriptionRaw: description,
+							descriptionGenerated,
+							referenceImageUrls: row.images
+								.map((image) => fileUrlMap[image.fileKey] || fileUrlMap[image.file.name] || '')
+								.filter(Boolean),
+						}
+					},
+				)
+
+				if (descriptionIssues.length > 0) {
+					setUploadErrors((current) => [...current, ...descriptionIssues])
+				}
+
+				setProgressLabel('Creating products...')
 				const result = await batchImportProducts({
 					data: {
 						rows: payloadRows,
@@ -530,12 +602,67 @@ export default function BatchImportClient({
 
 				setSummary(result)
 				setProgressCompleted(result.created)
+
+				let nextSummary: BatchImportResult = { ...result }
+				const productsWithImages = result.products.filter(
+					(product) => product.referenceImageUrls.length > 0,
+				)
+				setImageProgressTotal(productsWithImages.length)
+
+				if (productsWithImages.length > 0) {
+					setProgressLabel('Generating photoshoot images...')
+
+					await runWithConcurrency(productsWithImages, 1, async (product, index) => {
+						setProgressLabel(
+							`Generating photoshoot images for ${product.name} (${index + 1} / ${
+								productsWithImages.length
+							})...`,
+						)
+
+						try {
+							const imageResult = await generateBatchProductImages({
+								data: {
+									rowIndex: product.rowIndex,
+									productId: product.productId,
+									modelId: selectedModelId,
+									name: product.name,
+									description: product.description,
+									referenceImageUrls: product.referenceImageUrls,
+								},
+							})
+
+							nextSummary = {
+								...nextSummary,
+								generatedImages: nextSummary.generatedImages + imageResult.generatedImages,
+								errors: [
+									...nextSummary.errors,
+									...imageResult.errors.map((error) => `Row ${imageResult.rowIndex}: ${error}`),
+								],
+							}
+						} catch (error) {
+							nextSummary = {
+								...nextSummary,
+								errors: [
+									...nextSummary.errors,
+									`Row ${product.rowIndex}: ${
+										error instanceof Error ? error.message : 'Photoshoot generation failed'
+									}`,
+								],
+							}
+						}
+
+						setImageProgressCompleted((current) => current + 1)
+						setSummary(nextSummary)
+					})
+				}
+
+				setSummary(nextSummary)
 				setProgressLabel('Import complete')
 
-				if (result.errors.length > 0) {
+				if (nextSummary.errors.length > 0) {
 					toast.warning('Batch import completed with warnings/errors. Review summary below.')
 				} else {
-					toast.success(`Imported ${result.created} products successfully`)
+					toast.success(`Imported ${nextSummary.created} products successfully`)
 				}
 			})().catch((error) => {
 				const message = error instanceof Error ? error.message : 'Batch import failed'
@@ -1027,10 +1154,15 @@ Semi-stitched, fits waist 26-32 inches.`}</pre>
 					<p className="text-xs text-stone-600">
 						{progressCompleted} / {totalRows} products created
 					</p>
+					{imageProgressTotal > 0 ? (
+						<p className="text-xs text-stone-600">
+							{imageProgressCompleted} / {imageProgressTotal} product photoshoots processed
+						</p>
+					) : null}
 
 					{uploadErrors.length > 0 && (
 						<div className="border border-amber-200 bg-amber-50 p-3">
-							<p className="text-xs font-semibold text-amber-700 mb-1">Upload warnings</p>
+							<p className="text-xs font-semibold text-amber-700 mb-1">Workflow warnings</p>
 							<ul className="text-xs text-amber-700 list-disc list-inside space-y-1">
 								{uploadErrors.map((err) => (
 									<li key={err}>{err}</li>

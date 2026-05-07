@@ -4,7 +4,18 @@ import { OpenRouter } from '@openrouter/sdk'
 import { getDb } from '@/db'
 import { categories, collections, models, productImages, products } from '@/db/schema'
 import { slugify } from '@/lib/slug'
-import { generateModelPhotoshootImageInternal, type PhotoshootShotType } from './models.functions'
+import {
+	generateModelPhotoshootImageInternal,
+	type PhotoshootModelDetails,
+	type PhotoshootShotType,
+} from './models.functions'
+import {
+	asRecord,
+	booleanValue,
+	numberValue,
+	requiredString,
+	stringWithDefault,
+} from './input-validators'
 import { requireAdmin } from './auth.server'
 
 export interface BatchProductRow {
@@ -16,6 +27,15 @@ export interface BatchProductRow {
 	isNew: boolean
 	isFeatured: boolean
 	descriptionRaw: string
+	descriptionGenerated?: boolean
+	referenceImageUrls: string[]
+}
+
+export interface BatchCreatedProduct {
+	rowIndex: number
+	productId: string
+	name: string
+	description: string
 	referenceImageUrls: string[]
 }
 
@@ -25,6 +45,7 @@ export interface BatchImportResult {
 	errors: string[]
 	generatedImages: number
 	descriptions: number
+	products: BatchCreatedProduct[]
 }
 
 type ProductDescriptionInput = {
@@ -37,6 +58,121 @@ type ProductDescriptionInput = {
 type BatchImportInput = {
 	rows: BatchProductRow[]
 	modelId: string
+}
+
+type BatchProductImagesInput = {
+	rowIndex: number
+	productId: string
+	modelId: string
+	name: string
+	description: string
+	referenceImageUrls: string[]
+}
+
+export interface BatchProductImagesResult {
+	rowIndex: number
+	productId: string
+	generatedImages: number
+	errors: string[]
+}
+
+const BATCH_SHOT_TYPES: PhotoshootShotType[] = ['front', 'side', 'walking', 'close-up']
+const IMAGE_GENERATION_CONCURRENCY = 2
+const MAX_BATCH_ROWS = 100
+const MAX_REFERENCE_IMAGES_PER_PRODUCT = 4
+
+function parseProductDescriptionInput(value: unknown): ProductDescriptionInput {
+	const input = asRecord(value, 'Product description request')
+
+	return {
+		name: requiredString(input.name, 'Product name'),
+		category: requiredString(input.category, 'Category'),
+		price: numberValue(input.price, 'Price', { min: 0 }),
+		rawNotes: requiredString(input.rawNotes, 'Raw notes'),
+	}
+}
+
+function parseReferenceImageUrls(value: unknown) {
+	if (!Array.isArray(value)) return []
+
+	return value
+		.filter((item): item is string => typeof item === 'string')
+		.map((item) => item.trim())
+		.filter(Boolean)
+}
+
+function parseBatchProductRow(value: unknown): BatchProductRow {
+	const input = asRecord(value, 'Batch product row')
+
+	return {
+		index: numberValue(input.index, 'Row index', { min: 1 }),
+		name: requiredString(input.name, 'Product name'),
+		price: numberValue(input.price, 'Price', { min: 0.01 }),
+		category: requiredString(input.category, 'Category'),
+		collection: stringWithDefault(input.collection),
+		isNew: booleanValue(input.isNew, true),
+		isFeatured: booleanValue(input.isFeatured),
+		descriptionRaw: requiredString(input.descriptionRaw, 'Product description'),
+		descriptionGenerated: booleanValue(input.descriptionGenerated),
+		referenceImageUrls: parseReferenceImageUrls(input.referenceImageUrls),
+	}
+}
+
+function parseBatchImportInput(value: unknown): BatchImportInput {
+	const input = asRecord(value, 'Batch import')
+	const rows = Array.isArray(input.rows) ? input.rows.map(parseBatchProductRow) : []
+
+	if (rows.length === 0) {
+		throw new Error('At least one batch row is required')
+	}
+
+	if (rows.length > MAX_BATCH_ROWS) {
+		throw new Error(`Batch imports are limited to ${MAX_BATCH_ROWS} rows at a time`)
+	}
+
+	return {
+		rows,
+		modelId: requiredString(input.modelId, 'Model ID'),
+	}
+}
+
+function parseBatchProductImagesInput(value: unknown): BatchProductImagesInput {
+	const input = asRecord(value, 'Batch product image request')
+	const referenceImageUrls = parseReferenceImageUrls(input.referenceImageUrls)
+
+	if (referenceImageUrls.length === 0) {
+		throw new Error('At least one reference image is required')
+	}
+
+	return {
+		rowIndex: numberValue(input.rowIndex, 'Row index', { min: 1 }),
+		productId: requiredString(input.productId, 'Product ID'),
+		modelId: requiredString(input.modelId, 'Model ID'),
+		name: requiredString(input.name, 'Product name'),
+		description: stringWithDefault(input.description),
+		referenceImageUrls,
+	}
+}
+
+async function runWithConcurrency<T, R>(
+	items: T[],
+	limit: number,
+	worker: (item: T) => Promise<R>,
+) {
+	const results: R[] = []
+	let nextIndex = 0
+
+	await Promise.all(
+		Array.from({ length: Math.min(limit, items.length) }, async () => {
+			while (nextIndex < items.length) {
+				const index = nextIndex
+				nextIndex += 1
+				results[index] = await worker(items[index])
+			}
+		}),
+	)
+
+	return results
 }
 
 function getOpenRouter() {
@@ -163,7 +299,7 @@ async function findCollectionId(
 }
 
 export const generateProductDescriptionFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: ProductDescriptionInput) => data)
+	.inputValidator(parseProductDescriptionInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		try {
@@ -177,7 +313,7 @@ export const generateProductDescriptionFn = createServerFn({ method: 'POST' })
 	})
 
 export const batchImportProductsFn = createServerFn({ method: 'POST' })
-	.inputValidator((data: BatchImportInput) => data)
+	.inputValidator(parseBatchImportInput)
 	.handler(async ({ data }): Promise<BatchImportResult> => {
 		await requireAdmin()
 		if (!data?.modelId || !Array.isArray(data.rows) || data.rows.length === 0) {
@@ -187,6 +323,7 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 				errors: ['No rows provided or modelId missing'],
 				generatedImages: 0,
 				descriptions: 0,
+				products: [],
 			}
 		}
 
@@ -197,6 +334,7 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 			errors: [],
 			generatedImages: 0,
 			descriptions: 0,
+			products: [],
 		}
 
 		const [model] = await db.select().from(models).where(eq(models.id, data.modelId)).limit(1)
@@ -227,20 +365,8 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 
 				const collectionId = await findCollectionId(db, row.collection || '', collectionCache)
 
-				let description = row.descriptionRaw
-				if (row.descriptionRaw.trim()) {
-					try {
-						description = await generateProductDescriptionInternal({
-							name: row.name,
-							category: row.category,
-							price: row.price,
-							rawNotes: row.descriptionRaw,
-						})
-						result.descriptions++
-					} catch {
-						description = row.descriptionRaw
-					}
-				}
+				const description = row.descriptionRaw.trim()
+				if (row.descriptionGenerated) result.descriptions++
 
 				const productId = crypto.randomUUID()
 				const slug = await generateUniqueProductSlug(db, row.name.trim())
@@ -263,63 +389,13 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 					})
 					.run()
 
-				if (row.referenceImageUrls.length > 0) {
-					const productContext = [row.name, description].filter(Boolean).join('. ')
-					const shotTypes: PhotoshootShotType[] = ['front', 'side', 'walking', 'close-up']
-
-					const generationTasks = row.referenceImageUrls.flatMap((clothingImageUrl) =>
-						shotTypes.map((shotType) =>
-							generateModelPhotoshootImageInternal({
-								model: {
-									name: model.name,
-									description: [
-										model.description,
-										productContext ? `Wearing: ${productContext}` : '',
-									]
-										.filter(Boolean)
-										.join('. '),
-									ageRange: model.ageRange || '',
-									gender: model.gender || '',
-									ethnicity: model.ethnicity || '',
-									promptUsed: model.promptUsed || '',
-								},
-								clothingImageUrl,
-								shotType,
-							}),
-						),
-					)
-
-					const imageResults = await Promise.all(generationTasks)
-					const generatedUrls = imageResults
-						.filter((item) => item.imageUrl)
-						.map((item) => item.imageUrl as string)
-
-					result.generatedImages += generatedUrls.length
-
-					if (generatedUrls.length > 0) {
-						await db
-							.update(products)
-							.set({ imageUrl: generatedUrls[0] })
-							.where(eq(products.id, productId))
-							.run()
-
-						if (generatedUrls.length > 1) {
-							await db
-								.insert(productImages)
-								.values(
-									generatedUrls.slice(1).map((url, index) => ({
-										id: crypto.randomUUID(),
-										productId,
-										imageUrl: url,
-										sortOrder: index,
-										createdAt: new Date().toISOString(),
-									})),
-								)
-								.run()
-						}
-					}
-				}
-
+				result.products.push({
+					rowIndex: row.index,
+					productId,
+					name: row.name.trim(),
+					description,
+					referenceImageUrls: row.referenceImageUrls,
+				})
 				result.created++
 			} catch (error) {
 				result.errors.push(
@@ -330,4 +406,122 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 		}
 
 		return result
+	})
+
+export const generateBatchProductImagesFn = createServerFn({ method: 'POST' })
+	.inputValidator(parseBatchProductImagesInput)
+	.handler(async ({ data }): Promise<BatchProductImagesResult> => {
+		await requireAdmin()
+		const db = await getDb()
+		const [[product], [model]] = await Promise.all([
+			db.select().from(products).where(eq(products.id, data.productId)).limit(1),
+			db.select().from(models).where(eq(models.id, data.modelId)).limit(1),
+		])
+
+		if (!product) {
+			return {
+				rowIndex: data.rowIndex,
+				productId: data.productId,
+				generatedImages: 0,
+				errors: ['Product not found'],
+			}
+		}
+
+		if (!model) {
+			return {
+				rowIndex: data.rowIndex,
+				productId: data.productId,
+				generatedImages: 0,
+				errors: ['Selected model not found'],
+			}
+		}
+
+		const productContext = [data.name, data.description].filter(Boolean).join('. ')
+		const modelDetails: PhotoshootModelDetails = {
+			name: model.name,
+			description: [model.description, productContext ? `Wearing: ${productContext}` : '']
+				.filter(Boolean)
+				.join('. '),
+			ageRange: model.ageRange || '',
+			gender: model.gender || '',
+			ethnicity: model.ethnicity || '',
+			promptUsed: model.promptUsed || '',
+		}
+		const errors: string[] = []
+		const referenceImageUrls = data.referenceImageUrls.slice(0, MAX_REFERENCE_IMAGES_PER_PRODUCT)
+		if (data.referenceImageUrls.length > referenceImageUrls.length) {
+			errors.push(
+				`Only the first ${MAX_REFERENCE_IMAGES_PER_PRODUCT} reference images were used for photoshoot generation`,
+			)
+		}
+
+		const tasks = referenceImageUrls.flatMap((clothingImageUrl) =>
+			BATCH_SHOT_TYPES.map((shotType) => ({ clothingImageUrl, shotType })),
+		)
+
+		const imageResults = await runWithConcurrency(
+			tasks,
+			IMAGE_GENERATION_CONCURRENCY,
+			async ({ clothingImageUrl, shotType }) => {
+				try {
+					return await generateModelPhotoshootImageInternal({
+						model: modelDetails,
+						clothingImageUrl,
+						shotType,
+					})
+				} catch (error) {
+					errors.push(
+						`${shotType} image failed: ${
+							error instanceof Error ? error.message : 'Unknown image generation error'
+						}`,
+					)
+					return null
+				}
+			},
+		)
+
+		const generatedUrls = imageResults
+			.filter((item): item is { imageUrl: string } => Boolean(item?.imageUrl))
+			.map((item) => item.imageUrl)
+
+		if (generatedUrls.length > 0) {
+			const [primaryImageUrl, ...additionalImageUrls] = product.imageUrl
+				? ['', ...generatedUrls]
+				: generatedUrls
+
+			if (primaryImageUrl) {
+				await db
+					.update(products)
+					.set({ imageUrl: primaryImageUrl })
+					.where(eq(products.id, data.productId))
+					.run()
+			}
+
+			if (additionalImageUrls.length > 0) {
+				const existingImages = await db
+					.select({ id: productImages.id })
+					.from(productImages)
+					.where(eq(productImages.productId, data.productId))
+
+				await db
+					.insert(productImages)
+					.values(
+						additionalImageUrls.map((url, index) => ({
+							id: crypto.randomUUID(),
+							productId: data.productId,
+							imageUrl: url,
+							sortOrder: existingImages.length + index,
+							createdAt: new Date().toISOString(),
+						})),
+					)
+					.run()
+			}
+		}
+
+		return {
+			rowIndex: data.rowIndex,
+			productId: data.productId,
+			generatedImages: generatedUrls.length,
+			errors,
+		}
 	})

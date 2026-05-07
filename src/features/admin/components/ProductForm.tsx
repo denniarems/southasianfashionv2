@@ -39,6 +39,27 @@ interface SavedModel {
 	promptUsed?: string | null
 }
 
+async function runWithConcurrency<T, R>(
+	items: T[],
+	limit: number,
+	worker: (item: T) => Promise<R>,
+) {
+	const results: R[] = []
+	let nextIndex = 0
+
+	await Promise.all(
+		Array.from({ length: Math.min(limit, items.length) }, async () => {
+			while (nextIndex < items.length) {
+				const currentIndex = nextIndex
+				nextIndex += 1
+				results[currentIndex] = await worker(items[currentIndex])
+			}
+		}),
+	)
+
+	return results
+}
+
 export function ProductForm({
 	mode,
 	initialData,
@@ -151,7 +172,13 @@ export function ProductForm({
 					shotTypes.push('back')
 				}
 
-				return shotTypes.map((shotType) =>
+				return shotTypes.map((shotType) => ({ clothingImageUrl, shotType }))
+			})
+
+			const results = await runWithConcurrency(
+				generationTasks,
+				2,
+				({ clothingImageUrl, shotType }) =>
 					generateModelPhotoshootImage({
 						data: {
 							model: {
@@ -167,10 +194,7 @@ export function ProductForm({
 							shotType,
 						},
 					}),
-				)
-			})
-
-			const results = await Promise.all(generationTasks)
+			)
 			const generatedUrls = results
 				.filter(
 					(result): result is { imageUrl: string } =>

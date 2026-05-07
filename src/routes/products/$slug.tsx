@@ -129,7 +129,8 @@ function ProductDetailPage() {
 		offers: {
 			'@type': 'Offer',
 			priceCurrency: 'CAD',
-			price: String(product.price),
+			price: data.pricingPreview.discountedPrice.toFixed(2),
+			...(data.pricingPreview.endDate ? { priceValidUntil: data.pricingPreview.endDate } : {}),
 			availability: 'https://schema.org/InStock',
 			url: productAbsoluteUrl,
 		},

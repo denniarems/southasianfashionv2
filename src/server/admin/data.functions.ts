@@ -11,16 +11,27 @@ import {
 	settings,
 	sizeGuides,
 } from '@/db/schema'
+import { asRecord, enumValue } from './input-validators'
 import { requireAdmin } from './auth.server'
 
-type CrudType =
-	| 'products'
-	| 'collections'
-	| 'categories'
-	| 'hero'
-	| 'size-guides'
-	| 'discounts'
-	| 'settings'
+const CRUD_TYPES = [
+	'products',
+	'collections',
+	'categories',
+	'hero',
+	'size-guides',
+	'discounts',
+	'settings',
+] as const
+
+type CrudType = (typeof CRUD_TYPES)[number]
+
+function parseCrudDataInput(value: unknown): { type: CrudType } {
+	const input = asRecord(value, 'Admin CRUD data request')
+	return {
+		type: enumValue(input.type, CRUD_TYPES, 'Admin CRUD data type'),
+	}
+}
 
 async function getAdminReferenceData() {
 	const db = await getDb()
@@ -39,40 +50,39 @@ async function getAdminReferenceData() {
 	}
 }
 
-export const getDashboardOverviewDataFn = createServerFn({ method: 'GET' })
-	.handler(async () => {
-		await requireAdmin()
-		const db = await getDb()
-		const [
-			totalProductsResult,
-			totalCollectionsResult,
-			totalCategoriesResult,
-			activeDiscountsResult,
-			recentProducts,
-			recentCollections,
-		] = await Promise.all([
-			db.select({ count: count() }).from(products),
-			db.select({ count: count() }).from(collections),
-			db.select({ count: count() }).from(categories),
-			db.select({ count: count() }).from(discounts).where(eq(discounts.isActive, true)),
-			db.select().from(products).orderBy(desc(products.createdAt)).limit(5),
-			db.select().from(collections).orderBy(desc(collections.createdAt)).limit(5),
-		])
+export const getDashboardOverviewDataFn = createServerFn({ method: 'GET' }).handler(async () => {
+	await requireAdmin()
+	const db = await getDb()
+	const [
+		totalProductsResult,
+		totalCollectionsResult,
+		totalCategoriesResult,
+		activeDiscountsResult,
+		recentProducts,
+		recentCollections,
+	] = await Promise.all([
+		db.select({ count: count() }).from(products),
+		db.select({ count: count() }).from(collections),
+		db.select({ count: count() }).from(categories),
+		db.select({ count: count() }).from(discounts).where(eq(discounts.isActive, true)),
+		db.select().from(products).orderBy(desc(products.createdAt)).limit(5),
+		db.select().from(collections).orderBy(desc(collections.createdAt)).limit(5),
+	])
 
-		return {
-			stats: {
-				totalProducts: totalProductsResult[0]?.count || 0,
-				totalCollections: totalCollectionsResult[0]?.count || 0,
-				totalCategories: totalCategoriesResult[0]?.count || 0,
-				activeDiscounts: activeDiscountsResult[0]?.count || 0,
-			},
-			recentProducts,
-			recentCollections,
-		}
-	})
+	return {
+		stats: {
+			totalProducts: totalProductsResult[0]?.count || 0,
+			totalCollections: totalCollectionsResult[0]?.count || 0,
+			totalCategories: totalCategoriesResult[0]?.count || 0,
+			activeDiscounts: activeDiscountsResult[0]?.count || 0,
+		},
+		recentProducts,
+		recentCollections,
+	}
+})
 
 export const getAdminCrudDataFn = createServerFn({ method: 'GET' })
-	.inputValidator((data: { type: CrudType }) => data)
+	.inputValidator(parseCrudDataInput)
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		const db = await getDb()
@@ -122,47 +132,44 @@ export const getAdminCrudDataFn = createServerFn({ method: 'GET' })
 		}
 	})
 
-export const getModelsAdminDataFn = createServerFn({ method: 'GET' })
-	.handler(async () => {
-		await requireAdmin()
-		const db = await getDb()
-		return {
-			models: await db.select().from(models).orderBy(desc(models.createdAt)),
-		}
-	})
+export const getModelsAdminDataFn = createServerFn({ method: 'GET' }).handler(async () => {
+	await requireAdmin()
+	const db = await getDb()
+	return {
+		models: await db.select().from(models).orderBy(desc(models.createdAt)),
+	}
+})
 
-export const getProductFormDataFn = createServerFn({ method: 'GET' })
-	.handler(async () => {
-		await requireAdmin()
-		const db = await getDb()
-		const [allCollections, allCategories, allSizeGuides, allModels] = await Promise.all([
-			db.select().from(collections).orderBy(asc(collections.name)),
-			db.select().from(categories).orderBy(asc(categories.name)),
-			db.select().from(sizeGuides).orderBy(asc(sizeGuides.name)),
-			db.select().from(models).orderBy(desc(models.updatedAt)),
-		])
+export const getProductFormDataFn = createServerFn({ method: 'GET' }).handler(async () => {
+	await requireAdmin()
+	const db = await getDb()
+	const [allCollections, allCategories, allSizeGuides, allModels] = await Promise.all([
+		db.select().from(collections).orderBy(asc(collections.name)),
+		db.select().from(categories).orderBy(asc(categories.name)),
+		db.select().from(sizeGuides).orderBy(asc(sizeGuides.name)),
+		db.select().from(models).orderBy(desc(models.updatedAt)),
+	])
 
-		return {
-			collections: allCollections,
-			categories: allCategories,
-			sizeGuides: allSizeGuides,
-			models: allModels,
-		}
-	})
+	return {
+		collections: allCollections,
+		categories: allCategories,
+		sizeGuides: allSizeGuides,
+		models: allModels,
+	}
+})
 
-export const getBatchImportDataFn = createServerFn({ method: 'GET' })
-	.handler(async () => {
-		await requireAdmin()
-		const db = await getDb()
-		const [allCollections, allCategories, allModels] = await Promise.all([
-			db.select().from(collections).orderBy(asc(collections.name)),
-			db.select().from(categories).orderBy(asc(categories.name)),
-			db.select().from(models).orderBy(desc(models.updatedAt)),
-		])
+export const getBatchImportDataFn = createServerFn({ method: 'GET' }).handler(async () => {
+	await requireAdmin()
+	const db = await getDb()
+	const [allCollections, allCategories, allModels] = await Promise.all([
+		db.select().from(collections).orderBy(asc(collections.name)),
+		db.select().from(categories).orderBy(asc(categories.name)),
+		db.select().from(models).orderBy(desc(models.updatedAt)),
+	])
 
-		return {
-			collections: allCollections,
-			categories: allCategories,
-			models: allModels,
-		}
-	})
+	return {
+		collections: allCollections,
+		categories: allCategories,
+		models: allModels,
+	}
+})

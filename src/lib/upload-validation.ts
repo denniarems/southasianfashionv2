@@ -20,16 +20,19 @@ export function getFileExtension(filename: string) {
 	return filename.split('.').pop()?.toLowerCase() || ''
 }
 
-export async function isValidImageFile(file: File, ext: string) {
-	const contentType = file.type.toLowerCase()
-	const allowedExtensions = IMAGE_EXTENSIONS_BY_TYPE[contentType]
-	if (!allowedExtensions?.includes(ext)) {
-		return false
-	}
+export function normalizeImageContentType(contentType: string) {
+	return contentType.split(';')[0]?.trim().toLowerCase() || ''
+}
 
-	const bytes = new Uint8Array(await file.slice(0, 32).arrayBuffer())
+export function getAllowedImageExtensionForMimeType(contentType: string) {
+	const normalized = normalizeImageContentType(contentType)
+	return IMAGE_EXTENSIONS_BY_TYPE[normalized]?.[0] || ''
+}
 
-	switch (contentType) {
+export function isValidImageBytes(bytes: Uint8Array, contentType: string) {
+	const normalized = normalizeImageContentType(contentType)
+
+	switch (normalized) {
 		case 'image/jpeg':
 			return bytesStartWith(bytes, [0xff, 0xd8, 0xff])
 		case 'image/png':
@@ -43,6 +46,17 @@ export async function isValidImageFile(file: File, ext: string) {
 		default:
 			return false
 	}
+}
+
+export async function isValidImageFile(file: File, ext: string) {
+	const contentType = normalizeImageContentType(file.type)
+	const allowedExtensions = IMAGE_EXTENSIONS_BY_TYPE[contentType]
+	if (!allowedExtensions?.includes(ext)) {
+		return false
+	}
+
+	const bytes = new Uint8Array(await file.slice(0, 32).arrayBuffer())
+	return isValidImageBytes(bytes, contentType)
 }
 
 export function isValidTextFile(file: File, ext: string) {
