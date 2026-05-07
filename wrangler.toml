@@ -16,8 +16,8 @@ SENDER_EMAIL = "SouthAsianFashion <admin@example.com>"
 [[d1_databases]]
 binding = "DB"
 database_name = "southasianfashion-prod"
-database_id = "<cloudflare-d1-database-id>"
-preview_database_id = "DB"
+database_id = "5978dc7c-a653-4e03-bb02-fe5fa9549c82"
+preview_database_id = "5978dc7c-a653-4e03-bb02-fe5fa9549c82"
 migrations_dir = "migrations-d1"
 
 [[r2_buckets]]

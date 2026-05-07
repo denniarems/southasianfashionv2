@@ -21,6 +21,8 @@
 	"include": [
 		"src/**/*.ts",
 		"src/**/*.tsx",
+		"types/**/*.d.ts",
+		"alchemy.run.ts",
 		"drizzle.config.ts",
 		"vite.config.ts",
 		"worker-configuration.d.ts"
