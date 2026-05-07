@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { LoadingImage } from '@/components/ui/loading-image'
 
 interface ProductImageGalleryProps {
@@ -39,15 +40,25 @@ export default function ProductImageGallery({ images, productName }: ProductImag
 	return (
 		<div className="lg:sticky lg:top-28 space-y-3">
 			<div className="relative aspect-4/5 w-full bg-stone-100 overflow-hidden rounded-sm">
-				<LoadingImage
-					key={images[selectedIndex]}
-					src={images[selectedIndex]}
-					alt={`${productName} — Image ${selectedIndex + 1}`}
-					fill
-					priority
-					sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 50vw"
-					className="object-cover"
-				/>
+				<AnimatePresence mode="wait">
+					<motion.div
+						key={images[selectedIndex]}
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.28 }}
+						className="absolute inset-0"
+					>
+						<LoadingImage
+							src={images[selectedIndex]}
+							alt={`${productName} - Image ${selectedIndex + 1}`}
+							fill
+							priority
+							sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 50vw"
+							className="object-cover"
+						/>
+					</motion.div>
+				</AnimatePresence>
 			</div>
 			<div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
 				{images.map((img, i) => (
@@ -57,13 +68,13 @@ export default function ProductImageGallery({ images, productName }: ProductImag
 						onClick={() => setSelectedIndex(i)}
 						className={`relative shrink-0 w-16 h-20 overflow-hidden transition-all duration-300 cursor-pointer ${
 							i === selectedIndex
-								? 'ring-2 ring-stone-900 opacity-100'
+								? 'ring-2 ring-stone-900 opacity-100 scale-[1.02]'
 								: 'ring-1 ring-stone-200 opacity-60 hover:opacity-100'
 						}`}
 					>
 						<LoadingImage
 							src={img}
-							alt={`${productName} — Thumbnail ${i + 1}`}
+							alt={`${productName} - Thumbnail ${i + 1}`}
 							fill
 							sizes="64px"
 							className="object-cover"

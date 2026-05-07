@@ -10,7 +10,21 @@ import RelatedProducts from '@/features/storefront/components/RelatedProducts'
 import ProductImageGallery from '@/features/storefront/components/ProductImageGallery'
 import ShareButton from '@/features/storefront/components/ShareButton'
 import PremiumPriceDisplay from '@/features/storefront/components/PremiumPriceDisplay'
+import CustomizationInquiry from '@/features/storefront/components/CustomizationInquiry'
+import ProductViewTracker from '@/features/storefront/components/ProductViewTracker'
+import RecentlyViewedProducts from '@/features/storefront/components/RecentlyViewedProducts'
+import WishlistButton from '@/features/storefront/components/WishlistButton'
 import { getProductDetailDataFn } from '@/server/storefront.functions'
+import {
+	absoluteUrl,
+	breadcrumbJsonLd,
+	productCanonical,
+	productDescription,
+	productJsonLd,
+	productTitle,
+} from '@/lib/seo'
+import { trackAnalyticsEvent } from '@/lib/analytics'
+import { occasionLabelForSlug } from '@/lib/merchandising'
 
 function parseJsonStringArray(input: string | null | undefined): string[] {
 	if (!input) return []
@@ -64,18 +78,21 @@ export const Route = createFileRoute('/products/$slug')({
 			}
 		}
 
-		const description =
-			product.description?.trim() || `Explore ${product.name} from South Asian Fashion.`
+		const description = productDescription(product)
+		const title = productTitle(product)
+		const canonical = productCanonical(product)
 
 		return {
 			meta: [
-				{ title: `${product.name} | South Asian Fashion` },
+				{ title },
 				{ name: 'description', content: description },
-				{ property: 'og:title', content: product.name },
+				{ property: 'og:title', content: title },
 				{ property: 'og:description', content: description },
-				...(product.imageUrl ? [{ property: 'og:image', content: product.imageUrl }] : []),
+				{ property: 'og:url', content: canonical },
+				{ property: 'og:image', content: absoluteUrl(product.imageUrl) },
 				{ name: 'twitter:card', content: 'summary_large_image' },
 			],
+			links: [{ rel: 'canonical', href: canonical }],
 		}
 	},
 	component: ProductDetailPage,
@@ -118,23 +135,9 @@ function ProductDetailPage() {
 	const productPath = `/products/${product.slug ?? product.id}`
 	const siteUrl = data.siteUrl.replace(/\/$/, '')
 	const productAbsoluteUrl = `${siteUrl}${productPath}`
-
-	const productJsonLd = {
-		'@context': 'https://schema.org',
-		'@type': 'Product',
-		name: product.name,
-		description: product.description || '',
-		image: data.productImages.length > 0 ? data.productImages : [],
-		sku: product.id,
-		offers: {
-			'@type': 'Offer',
-			priceCurrency: 'CAD',
-			price: data.pricingPreview.discountedPrice.toFixed(2),
-			...(data.pricingPreview.endDate ? { priceValidUntil: data.pricingPreview.endDate } : {}),
-			availability: 'https://schema.org/InStock',
-			url: productAbsoluteUrl,
-		},
-	}
+	const productOccasion = product.occasion
+		? occasionLabelForSlug(product.occasion, data.occasionLinks)
+		: ''
 
 	const collectionForBreadcrumb = product.collectionId
 		? data.allCollections.find((collection) => collection.id === product.collectionId)
@@ -153,9 +156,45 @@ function ProductDetailPage() {
 
 	return (
 		<>
+			<ProductViewTracker
+				product={{
+					id: product.id,
+					name: product.name,
+					slug: product.slug,
+					category: product.category,
+					price: product.price,
+					imageUrl: product.imageUrl,
+					availabilityStatus: product.availabilityStatus,
+					isReadyToShip: product.isReadyToShip,
+					pricing: data.pricingPreview,
+				}}
+			/>
 			<script
 				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+				dangerouslySetInnerHTML={{
+					__html: JSON.stringify(
+						productJsonLd({
+							product,
+							pricing: data.pricingPreview,
+							images: data.productImages,
+							url: productAbsoluteUrl,
+						}),
+					),
+				}}
+			/>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{
+					__html: JSON.stringify(
+						breadcrumbJsonLd([
+							{ label: 'Home', href: '/' },
+							...breadcrumbItems.map((item) => ({
+								label: item.label,
+								href: item.href,
+							})),
+						]),
+					),
+				}}
 			/>
 			<Navbar
 				settings={data.siteSettings}
@@ -197,6 +236,29 @@ function ProductDetailPage() {
 								<p className="leading-relaxed">{product.description}</p>
 							</div>
 
+							<div className="mb-8 grid grid-cols-2 gap-px overflow-hidden border border-stone-200 bg-stone-200 text-sm">
+								{[
+									['Occasion', productOccasion],
+									['Fabric', product.fabric],
+									['Color', product.color],
+									[
+										'Availability',
+										product.isReadyToShip
+											? 'Ready to ship'
+											: product.availabilityStatus?.replace(/-/g, ' '),
+									],
+								]
+									.filter((item): item is [string, string] => Boolean(item[1]))
+									.map(([label, value]) => (
+										<div key={label} className="bg-white px-4 py-3">
+											<p className="text-[10px] uppercase tracking-widest text-stone-400">
+												{label}
+											</p>
+											<p className="mt-1 capitalize text-stone-700">{value}</p>
+										</div>
+									))}
+							</div>
+
 							<div className="border-t border-b border-stone-200 py-6 md:py-8 mb-8 md:mb-12">
 								<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
 									<AddToCartButton
@@ -217,6 +279,14 @@ function ProductDetailPage() {
 										)}`}
 										target="_blank"
 										rel="noopener noreferrer"
+										onClick={() =>
+											trackAnalyticsEvent({
+												eventName: 'whatsapp_click',
+												productId: product.id,
+												productSlug: product.slug || undefined,
+												category: product.category || undefined,
+											})
+										}
 										className="w-full sm:w-auto sm:min-w-70 flex items-center justify-center gap-3 bg-stone-900 text-white px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
 									>
 										<MessageCircleIcon size={16} />
@@ -224,10 +294,21 @@ function ProductDetailPage() {
 									</a>
 
 									<ShareButton
+										productId={product.id}
+										productSlug={product.slug}
+										category={product.category}
 										productName={product.name}
 										productUrl={productAbsoluteUrl}
 										productImage={data.productImages[0] ?? ''}
 										productDescription={product.description ?? ''}
+									/>
+
+									<WishlistButton
+										productId={product.id}
+										productSlug={product.slug}
+										productName={product.name}
+										category={product.category}
+										className="h-12 w-full border-stone-300 bg-white sm:w-12"
 									/>
 								</div>
 							</div>
@@ -245,11 +326,27 @@ function ProductDetailPage() {
 							</div>
 
 							<SizeGuide whatsappNumber={whatsapp} guide={parsedSizeGuide} />
+
+							<CustomizationInquiry
+								productId={product.id}
+								productSlug={product.slug}
+								productName={product.name}
+								productUrl={productAbsoluteUrl}
+								whatsappNumber={data.siteSettings?.whatsappNumber}
+								category={product.category}
+							/>
 						</div>
 					</div>
 				</div>
 
-				<RelatedProducts products={data.relatedProducts} />
+				<RelatedProducts
+					products={data.relatedProducts}
+					whatsappNumber={data.siteSettings?.whatsappNumber}
+				/>
+				<RecentlyViewedProducts
+					excludeProductId={product.id}
+					whatsappNumber={data.siteSettings?.whatsappNumber}
+				/>
 			</main>
 
 			<Footer settings={data.siteSettings} year={data.currentYear} />

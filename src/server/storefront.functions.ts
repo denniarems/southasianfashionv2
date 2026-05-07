@@ -4,13 +4,25 @@ import { getDb } from '@/db'
 import {
 	collections,
 	heroBanners,
+	occasions,
 	productImages,
 	products,
 	settings,
 	sizeGuides,
 } from '@/db/schema'
 import { previewProductPrice, type ProductPricePreview } from '@/lib/discounts'
+import { DEFAULT_OCCASION_LINKS, type OccasionLink } from '@/lib/merchandising'
 import type { ProductRow } from './products.functions'
+
+function isMissingOccasionsTableError(error: unknown): boolean {
+	const message = error instanceof Error ? error.message : String(error)
+	return (
+		message.includes('occasions') &&
+		(message.includes('does not exist') ||
+			message.includes('no such table') ||
+			message.includes('Failed query'))
+	)
+}
 
 async function getProductCategories() {
 	const db = await getDb()
@@ -23,18 +35,83 @@ async function getProductCategories() {
 	return rows.map((row) => row.category).filter((category): category is string => Boolean(category))
 }
 
+async function getProductFacets() {
+	const db = await getDb()
+	const [occasionRows, fabricRows, colorRows] = await Promise.all([
+		db
+			.selectDistinct({ value: products.occasion })
+			.from(products)
+			.where(isNotNull(products.occasion))
+			.orderBy(asc(products.occasion)),
+		db
+			.selectDistinct({ value: products.fabric })
+			.from(products)
+			.where(isNotNull(products.fabric))
+			.orderBy(asc(products.fabric)),
+		db
+			.selectDistinct({ value: products.color })
+			.from(products)
+			.where(isNotNull(products.color))
+			.orderBy(asc(products.color)),
+	])
+
+	const clean = (rows: Array<{ value: string | null }>) =>
+		rows.map((row) => row.value).filter((value): value is string => Boolean(value?.trim()))
+
+	return {
+		occasions: clean(occasionRows),
+		fabrics: clean(fabricRows),
+		colors: clean(colorRows),
+	}
+}
+
+async function getOccasionLinks(): Promise<OccasionLink[]> {
+	const db = await getDb()
+	try {
+		const rows = await db
+			.select()
+			.from(occasions)
+			.orderBy(asc(occasions.displayOrder), asc(occasions.name))
+
+		if (rows.length === 0) {
+			return [...DEFAULT_OCCASION_LINKS]
+		}
+
+		return rows.map((occasion) => ({
+			slug: occasion.slug,
+			label: occasion.name,
+			description: occasion.description || '',
+			imageUrl: occasion.imageUrl || '',
+			displayOrder: occasion.displayOrder,
+		}))
+	} catch (error) {
+		if (isMissingOccasionsTableError(error)) {
+			return [...DEFAULT_OCCASION_LINKS]
+		}
+		throw error
+	}
+}
+
 async function getStoreShellData() {
 	const db = await getDb()
-	const [allCollections, [siteSettings], productCategories] = await Promise.all([
-		db.select().from(collections).orderBy(desc(collections.createdAt)),
-		db.select().from(settings).limit(1),
-		getProductCategories(),
-	])
+	const [allCollections, [siteSettings], productCategories, productFacets, occasionLinks] =
+		await Promise.all([
+			db
+				.select()
+				.from(collections)
+				.orderBy(asc(collections.displayOrder), desc(collections.createdAt)),
+			db.select().from(settings).limit(1),
+			getProductCategories(),
+			getProductFacets(),
+			getOccasionLinks(),
+		])
 
 	return {
 		allCollections,
 		siteSettings,
 		productCategories,
+		productFacets,
+		occasionLinks,
 		currentYear: new Date().getFullYear(),
 	}
 }
@@ -69,18 +146,28 @@ export const getHomePageDataFn = createServerFn({ method: 'GET' }).handler(async
 		newArrivalProducts,
 		[siteSettings],
 		productCategories,
+		occasionLinks,
 	] = await Promise.all([
 		db.select().from(heroBanners).where(eq(heroBanners.isActive, true)).limit(1),
-		db.select().from(collections).orderBy(desc(collections.createdAt)),
-		db.select().from(products).where(eq(products.isFeatured, true)).limit(1),
+		db
+			.select()
+			.from(collections)
+			.orderBy(asc(collections.displayOrder), desc(collections.createdAt)),
+		db
+			.select()
+			.from(products)
+			.where(eq(products.isFeatured, true))
+			.orderBy(asc(products.displayOrder), desc(products.createdAt))
+			.limit(1),
 		db
 			.select()
 			.from(products)
 			.where(eq(products.isNew, true))
-			.orderBy(desc(products.createdAt))
+			.orderBy(asc(products.displayOrder), desc(products.createdAt))
 			.limit(3),
 		db.select().from(settings).limit(1),
 		getProductCategories(),
+		getOccasionLinks(),
 	])
 
 	const [featuredProductsWithPricing, newArrivalProductsWithPricing] = await Promise.all([
@@ -95,6 +182,7 @@ export const getHomePageDataFn = createServerFn({ method: 'GET' }).handler(async
 		newArrivalProducts: newArrivalProductsWithPricing,
 		siteSettings,
 		productCategories,
+		occasionLinks,
 		currentYear: new Date().getFullYear(),
 	}
 })
@@ -134,7 +222,7 @@ export const getProductDetailDataFn = createServerFn({ method: 'GET' })
 							.select()
 							.from(products)
 							.where(and(ne(products.id, product.id), or(...relatedConditions)))
-							.orderBy(desc(products.createdAt))
+							.orderBy(asc(products.displayOrder), desc(products.createdAt))
 							.limit(4)
 					: [],
 				db
@@ -192,7 +280,7 @@ export const getCollectionDetailDataFn = createServerFn({ method: 'GET' })
 			.select()
 			.from(products)
 			.where(eq(products.collectionId, collection.id))
-			.orderBy(desc(products.createdAt))
+			.orderBy(asc(products.displayOrder), desc(products.createdAt))
 
 		return {
 			...shell,
@@ -203,25 +291,29 @@ export const getCollectionDetailDataFn = createServerFn({ method: 'GET' })
 
 export const getSitemapDataFn = createServerFn({ method: 'GET' }).handler(async () => {
 	const db = await getDb()
-	const [allProducts, allCollections] = await Promise.all([
+	const [allProducts, allCollections, occasionLinks] = await Promise.all([
 		db
 			.select({
 				slug: products.slug,
 				id: products.id,
 				createdAt: products.createdAt,
+				updatedAt: products.updatedAt,
 			})
 			.from(products),
 		db
 			.select({
 				slug: collections.slug,
 				createdAt: collections.createdAt,
+				updatedAt: collections.updatedAt,
 			})
 			.from(collections),
+		getOccasionLinks(),
 	])
 
 	return {
 		siteUrl: (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, ''),
 		products: allProducts,
 		collections: allCollections,
+		occasionLinks,
 	}
 })

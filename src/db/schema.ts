@@ -17,7 +17,22 @@ export const collections = sqliteTable('collections', {
 	description: text('description').default(''),
 	imageUrl: text('image_url').default(''),
 	slug: text('slug').notNull().unique(),
+	displayOrder: real('display_order').notNull().default(0),
+	seoTitle: text('seo_title').default(''),
+	seoDescription: text('seo_description').default(''),
 	createdAt: text('created_at').notNull(),
+	updatedAt: text('updated_at'),
+})
+
+export const occasions = sqliteTable('occasions', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	slug: text('slug').notNull().unique(),
+	description: text('description').default(''),
+	imageUrl: text('image_url').default(''),
+	displayOrder: real('display_order').notNull().default(0),
+	createdAt: text('created_at').notNull(),
+	updatedAt: text('updated_at'),
 })
 
 export const sizeGuides = sqliteTable('size_guides', {
@@ -40,13 +55,44 @@ export const products = sqliteTable('products', {
 	price: real('price').notNull().default(0),
 	currency: text('currency').notNull().default('CAD'),
 	category: text('category'),
+	occasion: text('occasion'),
+	fabric: text('fabric'),
+	color: text('color'),
+	availabilityStatus: text('availability_status').default('made-to-order'),
+	isReadyToShip: integer('is_ready_to_ship', { mode: 'boolean' }).default(false),
+	displayOrder: real('display_order').notNull().default(0),
 	imageUrl: text('image_url').default(''),
 	isNew: integer('is_new', { mode: 'boolean' }).default(true),
 	isFeatured: integer('is_featured', { mode: 'boolean' }).default(false),
 	collectionId: text('collection_id').references(() => collections.id),
 	sizeGuideId: text('size_guide_id').references(() => sizeGuides.id, { onDelete: 'set null' }),
 	createdAt: text('created_at').notNull(),
+	updatedAt: text('updated_at'),
 })
+
+export const analyticsEvents = sqliteTable(
+	'analytics_events',
+	{
+		id: text('id').primaryKey(),
+		eventName: text('event_name').notNull(),
+		route: text('route').default(''),
+		productId: text('product_id'),
+		productSlug: text('product_slug'),
+		collectionId: text('collection_id'),
+		collectionSlug: text('collection_slug'),
+		category: text('category'),
+		filterKeys: text('filter_keys').default(''),
+		deviceClass: text('device_class').default('unknown'),
+		timestampBucket: text('timestamp_bucket').notNull(),
+		value: real('value').notNull().default(1),
+		createdAt: text('created_at').notNull(),
+	},
+	(table) => ({
+		analyticsEventsCreatedAtIdx: index('analytics_events_created_at_idx').on(table.createdAt),
+		analyticsEventsNameIdx: index('analytics_events_name_idx').on(table.eventName),
+		analyticsEventsProductIdx: index('analytics_events_product_idx').on(table.productId),
+	}),
+)
 
 export const productImages = sqliteTable('product_images', {
 	id: text('id').primaryKey(),

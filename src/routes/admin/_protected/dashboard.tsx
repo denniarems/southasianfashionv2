@@ -15,6 +15,8 @@ function DashboardPage() {
 			stats={data.stats}
 			recentProducts={data.recentProducts}
 			recentCollections={data.recentCollections}
+			analyticsSummary={data.analyticsSummary}
+			merchandisingWarnings={data.merchandisingWarnings}
 		/>
 	)
 }

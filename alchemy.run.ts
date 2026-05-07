@@ -1,6 +1,12 @@
 import 'dotenv/config'
 import alchemy from 'alchemy'
-import { D1Database, R2Bucket, TanStackStart } from 'alchemy/cloudflare'
+import {
+	AnalyticsEngineDataset,
+	D1Database,
+	R2Bucket,
+	RedirectRule,
+	TanStackStart,
+} from 'alchemy/cloudflare'
 
 const appName = 'southasianfashion'
 const stage = process.env.ALCHEMY_STAGE || 'prod'
@@ -87,6 +93,10 @@ const database = await D1Database('database', {
 	adopt: true,
 })
 
+const analyticsDataset = AnalyticsEngineDataset('commerce-events', {
+	dataset: process.env.ALCHEMY_ANALYTICS_DATASET || 'southasianfashion_events',
+})
+
 const enableCustomDomains = isEnabled(process.env.ALCHEMY_ENABLE_CUSTOM_DOMAINS)
 const workerDomains = enableCustomDomains
 	? optionalCsv(process.env.ALCHEMY_WORKER_DOMAINS || `${siteDomain},www.${siteDomain}`).map(
@@ -97,6 +107,17 @@ const workerDomains = enableCustomDomains
 			}),
 		)
 	: undefined
+
+const canonicalHostRedirect =
+	zoneId && siteDomain
+		? await RedirectRule('www-to-apex', {
+				zone: zoneId,
+				requestUrl: `https://www.${siteDomain}/*`,
+				targetUrl: `https://${siteDomain}/\${1}`,
+				statusCode: 301,
+				preserveQueryString: true,
+			})
+		: undefined
 
 const r2PublicUrl = mediaDomain
 	? publicUrlFromHost(mediaDomain)
@@ -128,9 +149,11 @@ export const website = await TanStackStart('website', {
 	bindings: {
 		DB: database,
 		MEDIA_BUCKET: mediaBucket,
+		ANALYTICS: analyticsDataset,
 		NODE_ENV: 'production',
 		SITE_URL: publicUrlFromHost(siteDomain),
 		R2_PUBLIC_URL: r2PublicUrl,
+		CLOUDFLARE_WEB_ANALYTICS_TOKEN: process.env.CLOUDFLARE_WEB_ANALYTICS_TOKEN || '',
 		ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@example.com',
 		SENDER_EMAIL: process.env.SENDER_EMAIL || 'SouthAsianFashion <admin@example.com>',
 		JWT_SECRET: requiredSecret('JWT_SECRET'),
@@ -155,6 +178,7 @@ console.log({
 	database: database.name,
 	mediaBucket: mediaBucket.name,
 	mediaUrl: r2PublicUrl,
+	canonicalRedirect: canonicalHostRedirect?.targetUrl,
 })
 
 await app.finalize()

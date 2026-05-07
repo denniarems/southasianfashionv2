@@ -4,9 +4,11 @@ import { getDb } from '@/db'
 import {
 	categories,
 	collections,
+	analyticsEvents,
 	discounts,
 	discountUsages,
 	heroBanners,
+	occasions,
 	productImages,
 	products,
 	settings,
@@ -36,6 +38,7 @@ const SAVE_ITEM_TYPES = [
 	'products',
 	'collections',
 	'categories',
+	'occasions',
 	'hero',
 	'size-guides',
 	'discounts',
@@ -129,6 +132,8 @@ function requirePositivePrice(value: unknown) {
 }
 
 function normalizeProductPayload(input: UnknownRecord, mode: SaveItemInput['mode'], slug: string) {
+	const availabilityStatus = optionalString(input.availabilityStatus) || 'made-to-order'
+
 	return {
 		id: idForMode(input, mode, 'Product'),
 		name: requiredString(input.name, 'Product name'),
@@ -136,10 +141,18 @@ function normalizeProductPayload(input: UnknownRecord, mode: SaveItemInput['mode
 		price: requirePositivePrice(input.price),
 		currency: 'CAD',
 		category: optionalString(input.category) || null,
+		occasion: optionalString(input.occasion) || null,
+		fabric: optionalString(input.fabric) || null,
+		color: optionalString(input.color) || null,
+		availabilityStatus,
+		isReadyToShip:
+			booleanValue(input.isReadyToShip) || availabilityStatus.toLowerCase() === 'ready-to-ship',
+		displayOrder: numberValue(input.displayOrder, 'Display order', { fallback: 0 }),
 		imageUrl: stringWithDefault(input.imageUrl),
 		collectionId: optionalString(input.collectionId) || null,
 		sizeGuideId: optionalString(input.sizeGuideId) || null,
 		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+		updatedAt: new Date().toISOString(),
 		slug,
 		isNew: booleanValue(input.isNew, true),
 		isFeatured: booleanValue(input.isFeatured),
@@ -153,7 +166,57 @@ function normalizeCollectionPayload(input: UnknownRecord, mode: SaveItemInput['m
 		description: stringWithDefault(input.description),
 		imageUrl: stringWithDefault(input.imageUrl),
 		slug: optionalString(input.slug) || slugify(requiredString(input.name, 'Collection name')),
+		displayOrder: numberValue(input.displayOrder, 'Display order', { fallback: 0 }),
+		seoTitle: stringWithDefault(input.seoTitle),
+		seoDescription: stringWithDefault(input.seoDescription),
 		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+		updatedAt: new Date().toISOString(),
+	}
+}
+
+async function recordAdminMerchandisingEvent(
+	db: Awaited<ReturnType<typeof getDb>>,
+	data: {
+		route: string
+		productId?: string | null
+		productSlug?: string | null
+		collectionId?: string | null
+		collectionSlug?: string | null
+		category?: string | null
+	},
+) {
+	try {
+		const now = new Date()
+		now.setUTCMinutes(0, 0, 0)
+		await db
+			.insert(analyticsEvents)
+			.values({
+				id: crypto.randomUUID(),
+				eventName: 'admin_merchandising_action',
+				route: data.route,
+				productId: data.productId || null,
+				productSlug: data.productSlug || null,
+				collectionId: data.collectionId || null,
+				collectionSlug: data.collectionSlug || null,
+				category: data.category || null,
+				filterKeys: '',
+				deviceClass: 'admin',
+				timestampBucket: now.toISOString(),
+				value: 1,
+				createdAt: new Date().toISOString(),
+			})
+			.run()
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error)
+		if (!message.includes('analytics_events')) {
+			console.warn({
+				level: 'warn',
+				source: 'analytics',
+				message: 'admin_analytics_write_failed',
+				route: data.route,
+				error: message,
+			})
+		}
 	}
 }
 
@@ -164,6 +227,21 @@ function normalizeCategoryPayload(input: UnknownRecord, mode: SaveItemInput['mod
 		slug: optionalString(input.slug) || slugify(requiredString(input.name, 'Category name')),
 		description: stringWithDefault(input.description),
 		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+	}
+}
+
+function normalizeOccasionPayload(input: UnknownRecord, mode: SaveItemInput['mode']) {
+	const name = requiredString(input.name, 'Occasion name')
+
+	return {
+		id: idForMode(input, mode, 'Occasion'),
+		name,
+		slug: optionalString(input.slug) || slugify(name),
+		description: stringWithDefault(input.description),
+		imageUrl: stringWithDefault(input.imageUrl),
+		displayOrder: numberValue(input.displayOrder, 'Display order', { fallback: 0 }),
+		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
+		updatedAt: new Date().toISOString(),
 	}
 }
 
@@ -350,6 +428,17 @@ export const deleteItemFn = createServerFn({ method: 'POST' })
 				case 'categories':
 					await db.delete(categories).where(eq(categories.id, data.id)).run()
 					break
+				case 'occasions': {
+					const existing = await db
+						.select({ imageUrl: occasions.imageUrl })
+						.from(occasions)
+						.where(eq(occasions.id, data.id))
+						.limit(1)
+
+					await deleteR2ObjectByUrl(existing[0]?.imageUrl, 'occasion deletion')
+					await db.delete(occasions).where(eq(occasions.id, data.id)).run()
+					break
+				}
 				case 'discounts':
 					await db.delete(discounts).where(eq(discounts.id, data.id)).run()
 					break
@@ -420,6 +509,8 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 		const db = await getDb()
 
 		try {
+			let merchandisingEvent: Parameters<typeof recordAdminMerchandisingEvent>[1] | undefined
+
 			switch (data.type) {
 				case 'products': {
 					const productId = idForMode(data.data, data.mode, 'Product')
@@ -439,6 +530,12 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 						await db.insert(products).values(productData).run()
 					} else {
 						await db.update(products).set(productData).where(eq(products.id, productId)).run()
+					}
+					merchandisingEvent = {
+						route: `/admin/products/${data.mode}`,
+						productId,
+						productSlug: productData.slug,
+						category: productData.category,
 					}
 
 					try {
@@ -484,6 +581,11 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 					} else {
 						await db.update(collections).set(payload).where(eq(collections.id, payload.id)).run()
 					}
+					merchandisingEvent = {
+						route: `/admin/collections/${data.mode}`,
+						collectionId: payload.id,
+						collectionSlug: payload.slug,
+					}
 					break
 				}
 				case 'hero': {
@@ -492,6 +594,9 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 						await db.insert(heroBanners).values(payload).run()
 					} else {
 						await db.update(heroBanners).set(payload).where(eq(heroBanners.id, payload.id)).run()
+					}
+					merchandisingEvent = {
+						route: `/admin/hero/${data.mode}`,
 					}
 					break
 				}
@@ -504,12 +609,27 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 					}
 					break
 				}
+				case 'occasions': {
+					const payload = normalizeOccasionPayload(data.data, data.mode)
+					if (data.mode === 'add') {
+						await db.insert(occasions).values(payload).run()
+					} else {
+						await db.update(occasions).set(payload).where(eq(occasions.id, payload.id)).run()
+					}
+					merchandisingEvent = {
+						route: `/admin/occasions/${data.mode}`,
+					}
+					break
+				}
 				case 'discounts': {
 					const payload = normalizeDiscountPayload(data.data, data.mode)
 					if (data.mode === 'add') {
 						await db.insert(discounts).values(payload).run()
 					} else {
 						await db.update(discounts).set(payload).where(eq(discounts.id, payload.id)).run()
+					}
+					merchandisingEvent = {
+						route: `/admin/discounts/${data.mode}`,
 					}
 					break
 				}
@@ -524,6 +644,10 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 				}
 				default:
 					throw new Error('Invalid type')
+			}
+
+			if (merchandisingEvent) {
+				await recordAdminMerchandisingEvent(db, merchandisingEvent)
 			}
 
 			return { success: true }

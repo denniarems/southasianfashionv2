@@ -1,12 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
 import Link from '@/components/router-link'
-import { AddToCartButton } from '@/components/cart/AddToCartButton'
-import { LoadingImage } from '@/components/ui/loading-image'
 import Navbar from '@/features/storefront/components/Navbar'
 import Footer from '@/features/storefront/components/Footer'
 import Breadcrumb from '@/features/storefront/components/Breadcrumb'
-import PremiumPriceDisplay from '@/features/storefront/components/PremiumPriceDisplay'
+import ProductCard from '@/features/storefront/components/ProductCard'
 import { getCollectionDetailDataFn } from '@/server/storefront.functions'
+import {
+	absoluteUrl,
+	breadcrumbJsonLd,
+	collectionCanonical,
+	collectionDescription,
+	collectionTitle,
+	itemListJsonLd,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/collections/$slug')({
 	loader: ({ params }) => getCollectionDetailDataFn({ data: { slug: params.slug } }),
@@ -22,19 +28,21 @@ export const Route = createFileRoute('/collections/$slug')({
 			}
 		}
 
-		const description =
-			collection.description?.trim() ||
-			`Explore the ${collection.name} collection from South Asian Fashion.`
+		const description = collectionDescription(collection)
+		const title = collectionTitle(collection)
+		const canonical = collectionCanonical(collection)
 
 		return {
 			meta: [
-				{ title: `${collection.name} | South Asian Fashion` },
+				{ title },
 				{ name: 'description', content: description },
-				{ property: 'og:title', content: collection.name },
+				{ property: 'og:title', content: title },
 				{ property: 'og:description', content: description },
-				...(collection.imageUrl ? [{ property: 'og:image', content: collection.imageUrl }] : []),
+				{ property: 'og:url', content: canonical },
+				{ property: 'og:image', content: absoluteUrl(collection.imageUrl) },
 				{ name: 'twitter:card', content: 'summary_large_image' },
 			],
+			links: [{ rel: 'canonical', href: canonical }],
 		}
 	},
 	component: CollectionDetailPage,
@@ -64,6 +72,26 @@ function CollectionDetailPage() {
 
 	return (
 		<>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{
+					__html: JSON.stringify(
+						breadcrumbJsonLd([
+							{ label: 'Home', href: '/' },
+							{ label: 'Collections', href: '/collections' },
+							{ label: collection.name },
+						]),
+					),
+				}}
+			/>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{
+					__html: JSON.stringify(
+						itemListJsonLd(data.collectionProducts, `/collections/${collection.slug}`),
+					),
+				}}
+			/>
 			<Navbar
 				settings={data.siteSettings}
 				collections={data.allCollections}
@@ -88,66 +116,11 @@ function CollectionDetailPage() {
 
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 						{data.collectionProducts.map((product) => (
-							<div key={product.id} className="group h-full flex flex-col">
-								<Link
-									href={`/products/${product.slug ?? product.id}`}
-									className="relative overflow-hidden aspect-3/4 mb-4 block"
-								>
-									{product.imageUrl ? (
-										<LoadingImage
-											src={product.imageUrl}
-											alt={product.name}
-											fill
-											sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-											className="object-cover transition-transform duration-700 group-hover:scale-105"
-										/>
-									) : (
-										<div className="w-full h-full bg-stone-200" />
-									)}
-									<div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500 pointer-events-none" />
-									{product.pricing?.hasDiscount && product.pricing.badgeText ? (
-										<div className="absolute top-3 left-3 z-20">
-											<span className="inline-flex rounded-full border border-[#7A1E2C]/30 bg-[#FDF3D4]/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6B1320] shadow-sm backdrop-blur-[1px] discount-badge-pulse">
-												{product.pricing.badgeText}
-											</span>
-										</div>
-									) : null}
-								</Link>
-								<div className="flex flex-1 flex-col">
-									<p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">
-										{product.category}
-									</p>
-									<Link href={`/products/${product.slug ?? product.id}`} className="block">
-										<h3 className="font-heading text-lg text-stone-900 mb-1 hover:text-yellow-700 transition-colors min-h-14 leading-tight line-clamp-2">
-											{product.name}
-										</h3>
-									</Link>
-									<PremiumPriceDisplay
-										compact
-										currency="CAD"
-										originalPrice={product.pricing?.originalPrice ?? product.price}
-										discountedPrice={product.pricing?.discountedPrice ?? product.price}
-										savingsAmount={product.pricing?.savingsAmount ?? 0}
-										savingsPercent={product.pricing?.savingsPercent ?? 0}
-										discountText={product.pricing?.discountText}
-										badgeText={undefined}
-										endDate={product.pricing?.endDate}
-									/>
-									<div className="mt-auto pt-4">
-										<AddToCartButton
-											product={{
-												id: product.id,
-												name: product.name,
-												slug: product.slug,
-												price: product.pricing?.discountedPrice ?? product.price,
-												currency: 'CAD',
-												imageUrl: product.imageUrl,
-											}}
-											className="w-full flex items-center justify-center gap-3 bg-stone-900 text-white px-6 py-3 text-[11px] uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
-										/>
-									</div>
-								</div>
-							</div>
+							<ProductCard
+								key={product.id}
+								product={product}
+								whatsappNumber={data.siteSettings?.whatsappNumber}
+							/>
 						))}
 					</div>
 

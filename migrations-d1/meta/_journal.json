@@ -8,6 +8,20 @@
 			"when": 1778094243179,
 			"tag": "0000_tiny_talisman",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "6",
+			"when": 1778179200000,
+			"tag": "0001_storefront_discovery_analytics",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1778179200001,
+			"tag": "0002_occasions_admin",
+			"breakpoints": true
 		}
 	]
 }

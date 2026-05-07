@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 main = "@tanstack/react-start/server-entry"
 
 [observability]
-enabled = false
+enabled = true
 head_sampling_rate = 1
 
 [observability.logs]
@@ -23,6 +23,7 @@ head_sampling_rate = 1
 [vars]
 SITE_URL = "https://southasianfashion.ca"
 R2_PUBLIC_URL = "https://media.southasianfashion.ca"
+CLOUDFLARE_WEB_ANALYTICS_TOKEN = ""
 ADMIN_EMAIL = "denniarems@gmail.com,binumv1998@gmail.com,binumv19982023@gmail.com,babusimon30@gmail.com"
 SENDER_EMAIL = "no-replay@southasianfashion.ca"
 
@@ -37,3 +38,7 @@ migrations_dir = "migrations-d1"
 binding = "MEDIA_BUCKET"
 bucket_name = "southasianfashion-media"
 preview_bucket_name = "southasianfashion-media-preview"
+
+[[analytics_engine_datasets]]
+binding = "ANALYTICS"
+dataset = "southasianfashion_events"

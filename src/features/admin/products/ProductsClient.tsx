@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import { useAppRouter as useRouter } from '@/components/router-hooks'
 import { motion } from 'framer-motion'
-import { Plus, Pencil, Trash2, Upload } from 'lucide-react'
+import { Plus, Pencil, Trash2, Upload, ImageOff, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { fetchProductImagesForAdmin, useDeleteItemMutation } from '../components/admin-mutations'
@@ -17,6 +17,7 @@ export default function ProductsClient({
 	initialProducts,
 	initialCollections,
 	initialCategories,
+	initialOccasions,
 	initialSizeGuides,
 }: any) {
 	const [dlg, setDlg] = useState({ open: false, type: 'products', mode: 'add', data: null as any })
@@ -32,6 +33,7 @@ export default function ProductsClient({
 		label: '',
 	})
 	const [isMutating, startMutatingTransition] = useTransition()
+	const [selectedIds, setSelectedIds] = useState<string[]>([])
 	const deleteItem = useDeleteItemMutation()
 	const sizeGuideNameById = Object.fromEntries(
 		(initialSizeGuides || []).map((guide: any) => [guide.id, guide.name]),
@@ -63,6 +65,24 @@ export default function ProductsClient({
 
 	// Using a generic items reference for the render mapping below
 	const activeItems = items
+	const selectedCount = selectedIds.length
+
+	const toggleSelection = (productId: string) => {
+		setSelectedIds((prev) =>
+			prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId],
+		)
+	}
+
+	const mediaWarningsFor = (product: any) => {
+		const galleryCount = productImagesMap[product.id]?.length || 0
+		const imageCount = (product.imageUrl ? 1 : 0) + galleryCount
+		return {
+			missingPrimary: !product.imageUrl,
+			lowImageCount: imageCount < 2,
+			weakName: String(product.name || '').trim().length < 12,
+			imageCount,
+		}
+	}
 
 	return (
 		<div className="p-6 md:p-10 max-w-7xl mx-auto">
@@ -71,9 +91,24 @@ export default function ProductsClient({
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.2 }}
 			>
-				<div className="flex justify-between items-center mb-6">
-					<h2 className="font-heading text-xl text-stone-900">Products ({activeItems.length})</h2>
+				<div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-6">
+					<div>
+						<h2 className="font-heading text-xl text-stone-900">Products ({activeItems.length})</h2>
+						<p className="mt-1 text-xs uppercase tracking-widest text-stone-400">
+							{selectedCount > 0 ? `${selectedCount} selected` : 'Dense merchandising view'}
+						</p>
+					</div>
 					<div className="flex items-center gap-2">
+						{selectedCount > 0 ? (
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setSelectedIds([])}
+								className="rounded-none text-xs uppercase tracking-widest"
+							>
+								Clear Selection
+							</Button>
+						) : null}
 						<Button
 							type="button"
 							data-testid="batch-import-btn"
@@ -93,78 +128,129 @@ export default function ProductsClient({
 						</Button>
 					</div>
 				</div>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{activeItems.map((p: any) => (
-						<div
-							key={p.id}
-							className="bg-white border border-stone-200 p-4"
-							data-testid={`admin-product-${p.id}`}
-						>
-							<div className="flex gap-4">
-								{p.imageUrl ? (
-									<LoadingImage
-										src={p.imageUrl}
-										alt={p.name}
-										width={80}
-										height={80}
-										sizes="80px"
-										className="w-20 h-20 object-cover shrink-0"
-									/>
-								) : (
-									<div className="w-20 h-20 bg-stone-100 shrink-0" />
-								)}
-								<div className="flex-1 min-w-0">
-									<h3 className="font-heading text-sm text-stone-900 truncate">{p.name}</h3>
-									<p className="text-xs text-stone-400 mt-1">
-										{p.category} &middot; {formatCad(p.price)}
-									</p>
-									<p className="text-[11px] text-stone-500 mt-1">
-										Size Guide:{' '}
-										{p.sizeGuideId ? sizeGuideNameById[p.sizeGuideId] || 'Unknown' : 'None'}
-									</p>
-									<div className="flex gap-1 mt-2">
-										{p.isNew && (
+
+				<div className="overflow-hidden border border-stone-200 bg-white">
+					<div className="hidden grid-cols-[44px_76px_1.7fr_0.8fr_0.7fr_1fr_130px] items-center gap-4 border-b border-stone-200 bg-stone-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-stone-500 lg:grid">
+						<span />
+						<span>Image</span>
+						<span>Product</span>
+						<span>Price</span>
+						<span>Order</span>
+						<span>Status</span>
+						<span className="text-right">Actions</span>
+					</div>
+					<div className="divide-y divide-stone-100">
+						{activeItems.map((p: any) => {
+							const warnings = mediaWarningsFor(p)
+							return (
+								<div
+									key={p.id}
+									className="grid grid-cols-1 gap-4 px-4 py-4 transition-colors hover:bg-stone-50 lg:grid-cols-[44px_76px_1.7fr_0.8fr_0.7fr_1fr_130px] lg:items-center"
+									data-testid={`admin-product-${p.id}`}
+								>
+									<label className="flex items-center gap-2">
+										<input
+											type="checkbox"
+											checked={selectedIds.includes(p.id)}
+											onChange={() => toggleSelection(p.id)}
+											className="h-4 w-4 accent-stone-900"
+											aria-label={`Select ${p.name}`}
+										/>
+									</label>
+									{p.imageUrl ? (
+										<LoadingImage
+											src={p.imageUrl}
+											alt={p.name}
+											width={64}
+											height={80}
+											sizes="64px"
+											className="h-20 w-16 object-cover shrink-0"
+										/>
+									) : (
+										<div className="flex h-20 w-16 items-center justify-center bg-stone-100 text-stone-400">
+											<ImageOff size={18} />
+										</div>
+									)}
+									<div className="min-w-0">
+										<h3 className="font-heading text-base text-stone-900 truncate">{p.name}</h3>
+										<p className="text-xs text-stone-400 mt-1">
+											{p.category || 'Uncategorized'} &middot; {p.occasion || 'No occasion'}
+										</p>
+										<p className="text-[11px] text-stone-500 mt-1">
+											Size Guide:{' '}
+											{p.sizeGuideId ? sizeGuideNameById[p.sizeGuideId] || 'Unknown' : 'None'}
+										</p>
+										<div className="mt-2 flex flex-wrap gap-1">
+											{warnings.missingPrimary ? (
+												<span className="border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] uppercase tracking-widest text-red-700">
+													No primary image
+												</span>
+											) : null}
+											{warnings.lowImageCount ? (
+												<span className="border border-yellow-200 bg-yellow-50 px-2 py-0.5 text-[10px] uppercase tracking-widest text-yellow-700">
+													Low media
+												</span>
+											) : null}
+											{warnings.weakName ? (
+												<span className="border border-stone-200 bg-stone-50 px-2 py-0.5 text-[10px] uppercase tracking-widest text-stone-600">
+													Weak name
+												</span>
+											) : null}
+										</div>
+									</div>
+									<div className="text-sm font-medium text-stone-700">{formatCad(p.price)}</div>
+									<div className="text-sm text-stone-600">{p.displayOrder ?? 0}</div>
+									<div className="flex flex-wrap gap-1">
+										{p.isNew ? (
 											<span className="text-[10px] bg-yellow-700/10 text-yellow-700 px-2 py-0.5">
 												NEW
 											</span>
-										)}
-										{p.isFeatured && (
+										) : null}
+										{p.isFeatured ? (
 											<span className="text-[10px] bg-stone-900/10 text-stone-700 px-2 py-0.5">
 												FEATURED
 											</span>
-										)}
+										) : null}
+										{p.isReadyToShip ? (
+											<span className="inline-flex items-center gap-1 text-[10px] bg-emerald-700/10 text-emerald-700 px-2 py-0.5">
+												<Layers size={10} />
+												RTS
+											</span>
+										) : null}
+									</div>
+									<div className="flex gap-2 lg:justify-end">
+										<Button
+											data-testid={`edit-product-${p.id}`}
+											variant="outline"
+											size="sm"
+											onClick={() =>
+												setDlg({
+													open: true,
+													type: 'products',
+													mode: 'edit',
+													data: { ...p, additionalImages: productImagesMap[p.id] || [] },
+												})
+											}
+											className="rounded-none text-xs"
+										>
+											<Pencil size={12} className="mr-1" /> Edit
+										</Button>
+										<Button
+											data-testid={`delete-product-${p.id}`}
+											variant="outline"
+											size="sm"
+											onClick={() =>
+												openDeleteConfirmation('products', p.id, p.name || 'this product')
+											}
+											className="rounded-none text-xs text-red-600 hover:bg-red-50"
+										>
+											<Trash2 size={12} />
+										</Button>
 									</div>
 								</div>
-							</div>
-							<div className="flex gap-2 mt-4 pt-3 border-t border-stone-100">
-								<Button
-									data-testid={`edit-product-${p.id}`}
-									variant="outline"
-									size="sm"
-									onClick={() =>
-										setDlg({
-											open: true,
-											type: 'products',
-											mode: 'edit',
-											data: { ...p, additionalImages: productImagesMap[p.id] || [] },
-										})
-									}
-									className="rounded-none text-xs flex-1"
-								>
-									<Pencil size={12} className="mr-1" /> Edit
-								</Button>
-								<Button
-									data-testid={`delete-product-${p.id}`}
-									variant="outline"
-									size="sm"
-									onClick={() => openDeleteConfirmation('products', p.id, p.name || 'this product')}
-									className="rounded-none text-xs text-red-600 hover:bg-red-50"
-								>
-									<Trash2 size={12} />
-								</Button>
-							</div>
-						</div>
-					))}
+							)
+						})}
+					</div>
 				</div>
 			</motion.div>
 
@@ -174,6 +260,7 @@ export default function ProductsClient({
 				products={initialProducts}
 				collections={initialCollections}
 				categories={initialCategories}
+				occasions={initialOccasions}
 				sizeGuides={initialSizeGuides}
 			/>
 

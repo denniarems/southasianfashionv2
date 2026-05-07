@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import ShoppingCartIcon from 'lucide-react/dist/esm/icons/shopping-cart'
 import { useCart } from '@/components/cart/CartContext'
 import type { CartProduct } from '@/components/cart/cart-types'
+import { trackAnalyticsEvent } from '@/lib/analytics'
 
 export function AddToCartButton({
 	product,
@@ -23,6 +24,12 @@ export function AddToCartButton({
 			type="button"
 			onClick={() => {
 				addItem(product, quantity)
+				trackAnalyticsEvent({
+					eventName: 'add_to_cart',
+					productId: product.id,
+					productSlug: product.slug || undefined,
+					value: quantity,
+				})
 				toast.success(`${product.name} added to cart`)
 			}}
 			aria-label={

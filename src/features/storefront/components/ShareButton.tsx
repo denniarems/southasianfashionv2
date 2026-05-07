@@ -8,8 +8,12 @@ import CopyIcon from 'lucide-react/dist/esm/icons/copy'
 import SmartphoneIcon from 'lucide-react/dist/esm/icons/smartphone'
 import CheckIcon from 'lucide-react/dist/esm/icons/check'
 import { toast } from 'sonner'
+import { trackAnalyticsEvent } from '@/lib/analytics'
 
 type ShareButtonProps = {
+	productId: string
+	productSlug?: string | null
+	category?: string | null
 	productName: string
 	productUrl: string
 	productImage: string
@@ -24,6 +28,9 @@ function buildDescriptionSnippet(description: string) {
 }
 
 export default function ShareButton({
+	productId,
+	productSlug,
+	category,
 	productName,
 	productUrl,
 	productImage,
@@ -38,7 +45,7 @@ export default function ShareButton({
 
 	const shareText = useMemo(
 		() =>
-			[`✨ ${productName}`, shareSnippet, `Image: ${productImage}`, `Link: ${productUrl}`].join(
+			[productName, shareSnippet, `Image: ${productImage}`, `Link: ${productUrl}`].join(
 				'\n\n',
 			),
 		[productImage, productName, productUrl, shareSnippet],
@@ -58,6 +65,12 @@ export default function ShareButton({
 	const handleNativeShare = async () => {
 		if (!canNativeShare) return
 		try {
+			trackAnalyticsEvent({
+				eventName: 'share_click',
+				productId,
+				productSlug: productSlug || undefined,
+				category: category || undefined,
+			})
 			await navigator.share({
 				title: productName,
 				text: `${shareSnippet}\n\nImage: ${productImage}`,
@@ -71,6 +84,12 @@ export default function ShareButton({
 	const handleCopyLink = async () => {
 		try {
 			await navigator.clipboard.writeText(productUrl)
+			trackAnalyticsEvent({
+				eventName: 'share_click',
+				productId,
+				productSlug: productSlug || undefined,
+				category: category || undefined,
+			})
 			setCopied(true)
 			toast.success('Link copied to clipboard')
 			setTimeout(() => setCopied(false), 1600)
@@ -105,6 +124,14 @@ export default function ShareButton({
 						href={whatsappHref}
 						target="_blank"
 						rel="noopener noreferrer"
+						onClick={() =>
+							trackAnalyticsEvent({
+								eventName: 'share_click',
+								productId,
+								productSlug: productSlug || undefined,
+								category: category || undefined,
+							})
+						}
 						className="flex w-full items-center gap-3 px-2 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
 					>
 						<MessageCircleIcon size={16} />

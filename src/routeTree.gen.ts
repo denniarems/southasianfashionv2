@@ -18,12 +18,14 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProductsSlugRouteImport } from './routes/products/$slug'
 import { Route as CollectionsSlugRouteImport } from './routes/collections/$slug'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
+import { Route as ApiAnalyticsRouteImport } from './routes/api/analytics'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
 import { Route as ApiUploadBatchRouteImport } from './routes/api/upload/batch'
 import { Route as AdminProtectedSizeGuidesRouteImport } from './routes/admin/_protected/size-guides'
 import { Route as AdminProtectedSettingsRouteImport } from './routes/admin/_protected/settings'
 import { Route as AdminProtectedProductsRouteImport } from './routes/admin/_protected/products'
+import { Route as AdminProtectedOccasionsRouteImport } from './routes/admin/_protected/occasions'
 import { Route as AdminProtectedModelsRouteImport } from './routes/admin/_protected/models'
 import { Route as AdminProtectedHeroesRouteImport } from './routes/admin/_protected/heroes'
 import { Route as AdminProtectedHeroRouteImport } from './routes/admin/_protected/hero'
@@ -79,6 +81,11 @@ const ApiUploadRoute = ApiUploadRouteImport.update({
   path: '/api/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAnalyticsRoute = ApiAnalyticsRouteImport.update({
+  id: '/api/analytics',
+  path: '/api/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -108,6 +115,11 @@ const AdminProtectedSettingsRoute = AdminProtectedSettingsRouteImport.update({
 const AdminProtectedProductsRoute = AdminProtectedProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
+const AdminProtectedOccasionsRoute = AdminProtectedOccasionsRouteImport.update({
+  id: '/occasions',
+  path: '/occasions',
   getParentRoute: () => AdminProtectedRouteRoute,
 } as any)
 const AdminProtectedModelsRoute = AdminProtectedModelsRouteImport.update({
@@ -166,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AdminProtectedRouteRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/api/analytics': typeof ApiAnalyticsRoute
   '/api/upload': typeof ApiUploadRouteWithChildren
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
@@ -179,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/admin/hero': typeof AdminProtectedHeroRoute
   '/admin/heroes': typeof AdminProtectedHeroesRoute
   '/admin/models': typeof AdminProtectedModelsRoute
+  '/admin/occasions': typeof AdminProtectedOccasionsRoute
   '/admin/products': typeof AdminProtectedProductsRouteWithChildren
   '/admin/settings': typeof AdminProtectedSettingsRoute
   '/admin/size-guides': typeof AdminProtectedSizeGuidesRoute
@@ -192,6 +206,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/analytics': typeof ApiAnalyticsRoute
   '/api/upload': typeof ApiUploadRouteWithChildren
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
@@ -204,6 +219,7 @@ export interface FileRoutesByTo {
   '/admin/hero': typeof AdminProtectedHeroRoute
   '/admin/heroes': typeof AdminProtectedHeroesRoute
   '/admin/models': typeof AdminProtectedModelsRoute
+  '/admin/occasions': typeof AdminProtectedOccasionsRoute
   '/admin/products': typeof AdminProtectedProductsRouteWithChildren
   '/admin/settings': typeof AdminProtectedSettingsRoute
   '/admin/size-guides': typeof AdminProtectedSizeGuidesRoute
@@ -218,6 +234,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/_protected': typeof AdminProtectedRouteRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/api/analytics': typeof ApiAnalyticsRoute
   '/api/upload': typeof ApiUploadRouteWithChildren
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
@@ -231,6 +248,7 @@ export interface FileRoutesById {
   '/admin/_protected/hero': typeof AdminProtectedHeroRoute
   '/admin/_protected/heroes': typeof AdminProtectedHeroesRoute
   '/admin/_protected/models': typeof AdminProtectedModelsRoute
+  '/admin/_protected/occasions': typeof AdminProtectedOccasionsRoute
   '/admin/_protected/products': typeof AdminProtectedProductsRouteWithChildren
   '/admin/_protected/settings': typeof AdminProtectedSettingsRoute
   '/admin/_protected/size-guides': typeof AdminProtectedSizeGuidesRoute
@@ -246,6 +264,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/admin/login'
+    | '/api/analytics'
     | '/api/upload'
     | '/collections/$slug'
     | '/products/$slug'
@@ -259,6 +278,7 @@ export interface FileRouteTypes {
     | '/admin/hero'
     | '/admin/heroes'
     | '/admin/models'
+    | '/admin/occasions'
     | '/admin/products'
     | '/admin/settings'
     | '/admin/size-guides'
@@ -272,6 +292,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/admin/login'
+    | '/api/analytics'
     | '/api/upload'
     | '/collections/$slug'
     | '/products/$slug'
@@ -284,6 +305,7 @@ export interface FileRouteTypes {
     | '/admin/hero'
     | '/admin/heroes'
     | '/admin/models'
+    | '/admin/occasions'
     | '/admin/products'
     | '/admin/settings'
     | '/admin/size-guides'
@@ -297,6 +319,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/_protected'
     | '/admin/login'
+    | '/api/analytics'
     | '/api/upload'
     | '/collections/$slug'
     | '/products/$slug'
@@ -310,6 +333,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/hero'
     | '/admin/_protected/heroes'
     | '/admin/_protected/models'
+    | '/admin/_protected/occasions'
     | '/admin/_protected/products'
     | '/admin/_protected/settings'
     | '/admin/_protected/size-guides'
@@ -324,6 +348,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AdminProtectedRouteRoute: typeof AdminProtectedRouteRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
+  ApiAnalyticsRoute: typeof ApiAnalyticsRoute
   ApiUploadRoute: typeof ApiUploadRouteWithChildren
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
@@ -397,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/analytics': {
+      id: '/api/analytics'
+      path: '/api/analytics'
+      fullPath: '/api/analytics'
+      preLoaderRoute: typeof ApiAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -437,6 +469,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/admin/products'
       preLoaderRoute: typeof AdminProtectedProductsRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/occasions': {
+      id: '/admin/_protected/occasions'
+      path: '/occasions'
+      fullPath: '/admin/occasions'
+      preLoaderRoute: typeof AdminProtectedOccasionsRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
     '/admin/_protected/models': {
@@ -529,6 +568,7 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedHeroRoute: typeof AdminProtectedHeroRoute
   AdminProtectedHeroesRoute: typeof AdminProtectedHeroesRoute
   AdminProtectedModelsRoute: typeof AdminProtectedModelsRoute
+  AdminProtectedOccasionsRoute: typeof AdminProtectedOccasionsRoute
   AdminProtectedProductsRoute: typeof AdminProtectedProductsRouteWithChildren
   AdminProtectedSettingsRoute: typeof AdminProtectedSettingsRoute
   AdminProtectedSizeGuidesRoute: typeof AdminProtectedSizeGuidesRoute
@@ -542,6 +582,7 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedHeroRoute: AdminProtectedHeroRoute,
   AdminProtectedHeroesRoute: AdminProtectedHeroesRoute,
   AdminProtectedModelsRoute: AdminProtectedModelsRoute,
+  AdminProtectedOccasionsRoute: AdminProtectedOccasionsRoute,
   AdminProtectedProductsRoute: AdminProtectedProductsRouteWithChildren,
   AdminProtectedSettingsRoute: AdminProtectedSettingsRoute,
   AdminProtectedSizeGuidesRoute: AdminProtectedSizeGuidesRoute,
@@ -568,6 +609,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AdminProtectedRouteRoute: AdminProtectedRouteRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
+  ApiAnalyticsRoute: ApiAnalyticsRoute,
   ApiUploadRoute: ApiUploadRouteWithChildren,
   CollectionsSlugRoute: CollectionsSlugRoute,
   ProductsSlugRoute: ProductsSlugRoute,

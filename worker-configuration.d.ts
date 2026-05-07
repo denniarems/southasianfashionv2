@@ -5,8 +5,10 @@ declare namespace Cloudflare {
 	interface Env {
 		MEDIA_BUCKET: R2Bucket
 		DB: D1Database
+		ANALYTICS: AnalyticsEngineDataset
 		SITE_URL: 'https://southasianfashion.example'
 		R2_PUBLIC_URL: 'https://media.example.com'
+		CLOUDFLARE_WEB_ANALYTICS_TOKEN: string
 		ADMIN_EMAIL: 'admin@example.com'
 		SENDER_EMAIL: 'SouthAsianFashion <admin@example.com>'
 		OPENROUTER_API_KEY: string
@@ -24,6 +26,7 @@ declare namespace NodeJS {
 			Cloudflare.Env,
 			| 'SITE_URL'
 			| 'R2_PUBLIC_URL'
+			| 'CLOUDFLARE_WEB_ANALYTICS_TOKEN'
 			| 'ADMIN_EMAIL'
 			| 'SENDER_EMAIL'
 			| 'OPENROUTER_API_KEY'

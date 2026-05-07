@@ -11,7 +11,10 @@ export async function putR2Object(key: string, body: R2ObjectBody, contentType?:
 	const env = await getWorkerEnv()
 
 	await env.MEDIA_BUCKET.put(key, body, {
-		httpMetadata: contentType ? { contentType } : undefined,
+		httpMetadata: {
+			...(contentType ? { contentType } : {}),
+			cacheControl: 'public, max-age=31536000, immutable',
+		},
 	})
 
 	return {

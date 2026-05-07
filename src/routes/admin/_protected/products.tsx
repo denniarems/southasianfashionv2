@@ -22,6 +22,7 @@ function ProductsPage() {
 			initialProducts={data.initialProducts}
 			initialCollections={data.initialCollections}
 			initialCategories={data.initialCategories}
+			initialOccasions={data.initialOccasions}
 			initialSizeGuides={data.initialSizeGuides}
 		/>
 	)

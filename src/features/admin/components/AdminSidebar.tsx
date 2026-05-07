@@ -19,6 +19,7 @@ export function AdminSidebar() {
 		{ href: '/admin/products', label: 'Products' },
 		{ href: '/admin/collections', label: 'Collections' },
 		{ href: '/admin/categories', label: 'Categories' },
+		{ href: '/admin/occasions', label: 'Occasions' },
 		{ href: '/admin/heroes', label: 'Hero Banners' },
 		{ href: '/admin/size-guides', label: 'Size Guides' },
 		{ href: '/admin/discounts', label: 'Discounts' },

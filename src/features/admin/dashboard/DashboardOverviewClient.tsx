@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Package, Layers, Grid, Tags, ArrowRight } from 'lucide-react'
+import { Package, Layers, Grid, Tags, ArrowRight, BarChart3, AlertTriangle } from 'lucide-react'
 import Link from '@/components/router-link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCad } from '@/lib/currency'
@@ -13,14 +13,30 @@ interface Stats {
 	activeDiscounts: number
 }
 
+type AnalyticsSummary = {
+	available: boolean
+	counts: Record<string, { sevenDay: number; thirtyDay: number }>
+	topProducts: Array<{ productId: string | null; productSlug: string | null; views: number }>
+}
+
+type MerchandisingWarnings = {
+	missingPrimaryImage: number
+	lowImageCount: number
+	weakProductNames: number
+}
+
 export default function DashboardOverviewClient({
 	stats,
 	recentProducts,
 	recentCollections,
+	analyticsSummary,
+	merchandisingWarnings,
 }: {
 	stats: Stats
 	recentProducts: any[]
 	recentCollections: any[]
+	analyticsSummary: AnalyticsSummary
+	merchandisingWarnings: MerchandisingWarnings
 }) {
 	const statCards = [
 		{ title: 'Total Products', value: stats.totalProducts, icon: Package, href: '/admin/products' },
@@ -72,6 +88,97 @@ export default function DashboardOverviewClient({
 						</motion.div>
 					)
 				})}
+			</div>
+
+			<div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
+				<Card className="rounded-none border-stone-200 bg-white/70">
+					<CardHeader className="flex flex-row items-center justify-between pb-3">
+						<div>
+							<CardTitle className="text-sm uppercase tracking-widest text-stone-900">
+								Commerce Analytics
+							</CardTitle>
+							<p className="mt-1 text-xs text-stone-500">7-day and 30-day storefront events</p>
+						</div>
+						<BarChart3 className="h-4 w-4 text-stone-400" />
+					</CardHeader>
+					<CardContent>
+						{analyticsSummary.available ? (
+							<div className="space-y-5">
+								<div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+									{[
+										['Views', analyticsSummary.counts.product_view],
+										['Cart', analyticsSummary.counts.add_to_cart],
+										['WhatsApp', analyticsSummary.counts.whatsapp_click],
+										['Shares', analyticsSummary.counts.share_click],
+										['Wishlist', analyticsSummary.counts.wishlist_toggle],
+									].map(([label, counts]) => {
+										const values = counts as { sevenDay: number; thirtyDay: number }
+										return (
+											<div key={label as string} className="border border-stone-200 bg-stone-50 p-3">
+												<p className="text-[10px] uppercase tracking-widest text-stone-500">
+													{label as string}
+												</p>
+												<p className="mt-2 font-heading text-2xl text-stone-900">
+													{values.sevenDay}
+												</p>
+												<p className="text-[11px] text-stone-500">{values.thirtyDay} in 30 days</p>
+											</div>
+										)
+									})}
+								</div>
+								<div>
+									<p className="mb-2 text-[11px] uppercase tracking-widest text-stone-500">
+										Top products by views
+									</p>
+									{analyticsSummary.topProducts.length > 0 ? (
+										<div className="divide-y divide-stone-100 border border-stone-200">
+											{analyticsSummary.topProducts.map((product) => (
+												<div
+													key={product.productId || product.productSlug}
+													className="flex items-center justify-between px-3 py-2 text-sm"
+												>
+													<span className="text-stone-700">
+														{product.productSlug || product.productId}
+													</span>
+													<span className="font-medium text-stone-900">{product.views}</span>
+												</div>
+											))}
+										</div>
+									) : (
+										<p className="border border-stone-200 px-3 py-4 text-sm text-stone-500">
+											No product view events yet.
+										</p>
+									)}
+								</div>
+							</div>
+						) : (
+							<p className="border border-stone-200 bg-stone-50 px-4 py-6 text-sm text-stone-500">
+								Analytics events are unavailable in this environment.
+							</p>
+						)}
+					</CardContent>
+				</Card>
+
+				<Card className="rounded-none border-stone-200 bg-white/70">
+					<CardHeader className="flex flex-row items-center justify-between pb-3">
+						<CardTitle className="text-sm uppercase tracking-widest text-stone-900">
+							Media Warnings
+						</CardTitle>
+						<AlertTriangle className="h-4 w-4 text-yellow-700" />
+					</CardHeader>
+					<CardContent className="space-y-3">
+						{[
+							['Missing primary image', merchandisingWarnings.missingPrimaryImage],
+							['Low image count', merchandisingWarnings.lowImageCount],
+							['Weak product names', merchandisingWarnings.weakProductNames],
+						].map(([label, value]) => (
+							<div key={label as string} className="flex items-center justify-between border border-stone-200 bg-stone-50 px-3 py-3">
+								<span className="text-sm text-stone-600">{label as string}</span>
+								<span className="font-heading text-xl text-stone-900">{value as number}</span>
+							</div>
+						))}
+					</CardContent>
+				</Card>
 			</div>
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

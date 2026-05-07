@@ -18,6 +18,7 @@ export const Route = createFileRoute('/robots.txt')({
 					{
 						headers: {
 							'content-type': 'text/plain; charset=utf-8',
+							'cache-control': 'public, max-age=3600, s-maxage=3600',
 						},
 					},
 				)

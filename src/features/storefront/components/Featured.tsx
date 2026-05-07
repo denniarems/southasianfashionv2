@@ -7,6 +7,7 @@ import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { LoadingImage } from '@/components/ui/loading-image'
 import PremiumPriceDisplay from '@/features/storefront/components/PremiumPriceDisplay'
 import type { ProductPricePreview } from '@/lib/discounts'
+import { trackAnalyticsEvent } from '@/lib/analytics'
 
 interface Product {
 	id: string
@@ -112,6 +113,13 @@ export default function Featured({
 								target="_blank"
 								rel="noopener noreferrer"
 								data-testid="featured-whatsapp-btn"
+								onClick={() =>
+									trackAnalyticsEvent({
+										eventName: 'whatsapp_click',
+										productId: item.id,
+										productSlug: item.slug,
+									})
+								}
 								className="inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
 							>
 								<MessageCircleIcon size={16} />

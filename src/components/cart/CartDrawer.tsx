@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import MinusIcon from 'lucide-react/dist/esm/icons/minus'
@@ -10,6 +10,7 @@ import XIcon from 'lucide-react/dist/esm/icons/x'
 import { useCart } from '@/components/cart/CartContext'
 import { LoadingImage } from '@/components/ui/loading-image'
 import { formatCad } from '@/lib/currency'
+import { trackAnalyticsEvent } from '@/lib/analytics'
 
 function formatMoney(amount: number) {
 	return formatCad(Math.round(amount))
@@ -43,6 +44,34 @@ function buildWhatsAppMessage({
 	].join('\n')
 }
 
+function useAnimatedNumber(value: number) {
+	const [displayValue, setDisplayValue] = useState(value)
+	const previousValueRef = useRef(value)
+
+	useEffect(() => {
+		const start = previousValueRef.current
+		const distance = value - start
+		const startedAt = performance.now()
+		let frame = 0
+
+		const tick = (now: number) => {
+			const progress = Math.min((now - startedAt) / 380, 1)
+			const eased = 1 - Math.pow(1 - progress, 3)
+			setDisplayValue(start + distance * eased)
+			if (progress < 1) {
+				frame = requestAnimationFrame(tick)
+			} else {
+				previousValueRef.current = value
+			}
+		}
+
+		frame = requestAnimationFrame(tick)
+		return () => cancelAnimationFrame(frame)
+	}, [value])
+
+	return displayValue
+}
+
 export function CartDrawer({
 	open,
 	onOpenChange,
@@ -53,6 +82,7 @@ export function CartDrawer({
 	whatsappNumber?: string | null
 }) {
 	const { items, subtotal, clearCart, removeItem, updateQuantity, itemCount } = useCart()
+	const animatedSubtotal = useAnimatedNumber(subtotal)
 
 	const sanitizedWhatsApp = useMemo(
 		() => whatsappNumber?.replace(/[^0-9]/g, '') || '',
@@ -113,7 +143,16 @@ export function CartDrawer({
 							<div>
 								<p className="font-heading text-xl text-stone-900">Your Cart</p>
 								<p className="text-xs uppercase tracking-widest text-stone-400 mt-1">
-									{itemCount} item{itemCount === 1 ? '' : 's'}
+									<motion.span
+										key={itemCount}
+										initial={{ y: -4, opacity: 0 }}
+										animate={{ y: 0, opacity: 1 }}
+										transition={{ duration: 0.18 }}
+										className="inline-block"
+									>
+										{itemCount}
+									</motion.span>{' '}
+									item{itemCount === 1 ? '' : 's'}
 								</p>
 							</div>
 							<button
@@ -196,7 +235,9 @@ export function CartDrawer({
 						<div className="border-t border-stone-200 px-5 py-4 space-y-3">
 							<div className="flex items-center justify-between">
 								<span className="text-stone-500 text-sm">Subtotal</span>
-								<span className="font-heading text-xl text-stone-900">{formatMoney(subtotal)}</span>
+								<span className="font-heading text-xl text-stone-900">
+									{formatMoney(animatedSubtotal)}
+								</span>
 							</div>
 
 							<button
@@ -215,7 +256,13 @@ export function CartDrawer({
 								onClick={(event) => {
 									if (!whatsappHref) {
 										event.preventDefault()
+										return
 									}
+									trackAnalyticsEvent({
+										eventName: 'whatsapp_click',
+										route: '/cart',
+										value: items.length,
+									})
 								}}
 								className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-widest font-semibold transition-colors ${
 									whatsappHref

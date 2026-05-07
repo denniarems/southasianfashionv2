@@ -21,50 +21,59 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 	return (
 		<section
 			data-testid="hero-section"
-			className="relative min-h-screen flex items-end overflow-hidden bg-stone-50"
+			className="relative min-h-[92vh] flex items-end overflow-hidden bg-stone-950"
 		>
 			<div className="absolute inset-0">
 				{hero.imageUrl && (
-					<LoadingImage
-						src={hero.imageUrl}
-						alt=""
-						fill
-						priority
-						sizes="100vw"
-						className="object-cover object-[center_30%]"
-					/>
+					<motion.div
+						initial={{ scale: 1 }}
+						animate={{ scale: 1.06 }}
+						transition={{ duration: 14, ease: 'easeOut' }}
+						className="absolute inset-0 motion-reduce:transform-none"
+					>
+						<LoadingImage
+							src={hero.imageUrl}
+							alt=""
+							fill
+							priority
+							sizes="100vw"
+							className="object-cover object-[center_30%]"
+						/>
+					</motion.div>
 				)}
-				<div className="absolute inset-0 bg-linear-to-t from-stone-950/55 via-stone-900/15 to-transparent" />
+				<div className="absolute inset-0 bg-linear-to-t from-stone-950/78 via-stone-900/28 to-stone-950/8" />
 			</div>
 
 			<div className="relative z-10 max-w-450 mx-auto px-6 md:px-12 lg:px-24 w-full pb-20 md:pb-24">
-				<div className="max-w-2xl bg-white/85 backdrop-blur-md border border-white/70 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.55)] p-8 md:p-10">
+				<div className="max-w-3xl text-white">
 					<motion.p
-						initial={{ opacity: 0, y: 20 }}
+						initial={{ opacity: 0, y: 16 }}
 						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.8, delay: 0.2 }}
-						className="font-accent italic text-stone-600 text-base md:text-lg mb-4"
+						transition={{ duration: 0.7, delay: 0.2 }}
+						className="font-accent italic text-white/78 text-lg md:text-xl mb-4"
 					>
 						{subtitle}
 					</motion.p>
-					<motion.h1
-						initial={{ opacity: 0, y: 30 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.8, delay: 0.5 }}
-						className="font-heading text-4xl sm:text-5xl lg:text-6xl text-stone-900 leading-tight tracking-tight"
-					>
-						{title}
-					</motion.h1>
+					<div className="overflow-hidden pb-1">
+						<motion.h1
+							initial={{ y: '105%', opacity: 0.6 }}
+							animate={{ y: 0, opacity: 1 }}
+							transition={{ duration: 0.9, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
+							className="font-heading text-5xl sm:text-6xl lg:text-7xl text-white leading-[0.95] tracking-tight drop-shadow-sm"
+						>
+							{title}
+						</motion.h1>
+					</div>
 					<motion.div
-						initial={{ opacity: 0, y: 20 }}
+						initial={{ opacity: 0, y: 16 }}
 						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.8, delay: 0.9 }}
+						transition={{ duration: 0.7, delay: 0.95 }}
 						className="mt-10"
 					>
 						<a
 							href={hero.ctaLink || '#new-arrivals'}
 							data-testid="hero-cta-btn"
-							className="inline-block bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-[#B8860B] transition-colors duration-300"
+							className="inline-flex min-h-12 items-center border border-white/70 bg-white text-stone-950 px-10 py-4 text-xs uppercase tracking-widest font-semibold transition-colors duration-300 hover:border-[#B8860B] hover:bg-[#B8860B] hover:text-white"
 						>
 							{ctaText}
 						</a>

@@ -17,6 +17,7 @@ function AddProductPage() {
 				mode="add"
 				collections={data.collections}
 				categories={data.categories}
+				occasions={data.occasions}
 				sizeGuides={data.sizeGuides}
 				models={data.models}
 			/>

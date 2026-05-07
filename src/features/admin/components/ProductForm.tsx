@@ -18,12 +18,14 @@ import {
 } from '@/server/admin/models.functions'
 import { useSaveItemMutation } from './admin-mutations'
 import { Field, FormSection } from './shared'
+import { AVAILABILITY_OPTIONS, OCCASION_LINKS } from '@/lib/merchandising'
 
 interface ProductFormProps {
 	mode: 'add' | 'edit'
 	initialData?: any
 	collections: any[]
 	categories: any[]
+	occasions?: any[]
 	sizeGuides: any[]
 	models?: SavedModel[]
 	onCancel?: () => void
@@ -65,6 +67,7 @@ export function ProductForm({
 	initialData,
 	collections,
 	categories,
+	occasions = [],
 	sizeGuides,
 	models = [],
 	onCancel,
@@ -79,6 +82,13 @@ export function ProductForm({
 	const [selectedModelId, setSelectedModelId] = useState('')
 	const [customPhotoshootPrompt, setCustomPhotoshootPrompt] = useState('')
 	const [backViewImageUrl, setBackViewImageUrl] = useState('')
+	const occasionOptions =
+		occasions.length > 0
+			? occasions.map((occasion: any) => ({
+					slug: occasion.slug,
+					label: occasion.name,
+				}))
+			: OCCASION_LINKS
 
 	const uploadedClothingImages = useMemo(() => {
 		const urls = [form.imageUrl, ...(form.additionalImages || [])].filter(
@@ -307,38 +317,107 @@ export function ProductForm({
 				title="Catalog Linking"
 				description="Control where this product appears across the storefront."
 			>
-				<Field label="Collection">
-					<select
-						data-testid="dlg-collection"
-						value={form.collectionId || ''}
-						onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
-						className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
-					>
-						<option value="">No collection</option>
-						{collections.map((col: any) => (
-							<option key={col.id} value={col.id}>
-								{col.name}
-							</option>
-						))}
-					</select>
-				</Field>
-				<Field label="Size Guide Template">
-					<select
-						data-testid="dlg-size-guide"
-						value={form.sizeGuideId || ''}
-						onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
-						className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
-					>
-						<option value="">No size guide</option>
-						{sizeGuides
-							.filter((guide: any) => guide.isActive)
-							.map((guide: any) => (
-								<option key={guide.id} value={guide.id}>
-									{guide.name}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<Field label="Collection">
+						<select
+							data-testid="dlg-collection"
+							value={form.collectionId || ''}
+							onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
+							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+						>
+							<option value="">No collection</option>
+							{collections.map((col: any) => (
+								<option key={col.id} value={col.id}>
+									{col.name}
 								</option>
 							))}
-					</select>
-				</Field>
+						</select>
+					</Field>
+					<Field label="Size Guide Template">
+						<select
+							data-testid="dlg-size-guide"
+							value={form.sizeGuideId || ''}
+							onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
+							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+						>
+							<option value="">No size guide</option>
+							{sizeGuides
+								.filter((guide: any) => guide.isActive)
+								.map((guide: any) => (
+									<option key={guide.id} value={guide.id}>
+										{guide.name}
+									</option>
+								))}
+						</select>
+					</Field>
+				</div>
+			</FormSection>
+
+			<FormSection title="Discovery & Merchandising">
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+					<Field label="Occasion">
+						<select
+							value={form.occasion || ''}
+							onChange={(e) => setForm({ ...form, occasion: e.target.value })}
+							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+						>
+							<option value="">No occasion</option>
+							{occasionOptions.map((occasion: any) => (
+								<option key={occasion.slug} value={occasion.label}>
+									{occasion.label}
+								</option>
+							))}
+						</select>
+					</Field>
+					<Field label="Fabric">
+						<Input
+							value={form.fabric || ''}
+							onChange={(e) => setForm({ ...form, fabric: e.target.value })}
+							className="rounded-none"
+							placeholder="Silk, georgette, velvet"
+						/>
+					</Field>
+					<Field label="Color">
+						<Input
+							value={form.color || ''}
+							onChange={(e) => setForm({ ...form, color: e.target.value })}
+							className="rounded-none"
+							placeholder="Ivory, red, emerald"
+						/>
+					</Field>
+				</div>
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+					<Field label="Availability">
+						<select
+							value={form.availabilityStatus || 'made-to-order'}
+							onChange={(e) => setForm({ ...form, availabilityStatus: e.target.value })}
+							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+						>
+							{AVAILABILITY_OPTIONS.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.label}
+								</option>
+							))}
+						</select>
+					</Field>
+					<Field label="Display Order">
+						<Input
+							type="number"
+							value={form.displayOrder ?? 0}
+							onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) || 0 })}
+							className="rounded-none"
+						/>
+					</Field>
+					<div className="flex items-end pb-2">
+						<div className="flex items-center gap-2">
+							<Switch
+								checked={form.isReadyToShip || false}
+								onCheckedChange={(v) => setForm({ ...form, isReadyToShip: v })}
+							/>
+							<Label className="text-xs">Ready to Ship</Label>
+						</div>
+					</div>
+				</div>
 			</FormSection>
 
 			<FormSection

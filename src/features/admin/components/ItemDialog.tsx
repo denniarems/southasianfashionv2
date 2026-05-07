@@ -26,14 +26,31 @@ import {
 	normalizeDiscountFormData,
 } from './shared'
 import { formatCad } from '@/lib/currency'
+import { AVAILABILITY_OPTIONS, OCCASION_LINKS } from '@/lib/merchandising'
 
-export function ItemDialog({ dlg, setDlg, products, collections, categories, sizeGuides }: any) {
+export function ItemDialog({
+	dlg,
+	setDlg,
+	products,
+	collections,
+	categories,
+	occasions = [],
+	sizeGuides,
+}: any) {
 	const { open, type, mode, data } = dlg
 	const [form, setForm] = useState<any>(data || {})
 	const [errors, setErrors] = useState<Record<string, string>>({})
 	const [discountProductSearch, setDiscountProductSearch] = useState('')
 	const [isSaving, startSavingTransition] = useTransition()
 	const saveItem = useSaveItemMutation()
+	const occasionOptions =
+		occasions.length > 0
+			? occasions.map((occasion: any) => ({
+					slug: occasion.slug,
+					label: occasion.name,
+					description: occasion.description || '',
+				}))
+			: OCCASION_LINKS
 
 	useEffect(() => {
 		if (!open) return
@@ -69,6 +86,10 @@ export function ItemDialog({ dlg, setDlg, products, collections, categories, siz
 		if (type === 'categories') {
 			if (!form.name?.trim()) nextErrors.name = 'Category name is required.'
 			if (!form.slug?.trim()) nextErrors.slug = 'Category slug is required.'
+		}
+
+		if (type === 'occasions') {
+			if (!form.name?.trim()) nextErrors.name = 'Occasion name is required.'
 		}
 
 		if (type === 'size-guides') {
@@ -241,38 +262,105 @@ export function ItemDialog({ dlg, setDlg, products, collections, categories, siz
 						title="Catalog Linking"
 						description="Control where this product appears across the storefront."
 					>
-						<Field label="Collection">
-							<select
-								data-testid="dlg-collection"
-								value={form.collectionId || ''}
-								onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
-								className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
-							>
-								<option value="">No collection</option>
-								{collections.map((col: any) => (
-									<option key={col.id} value={col.id}>
-										{col.name}
-									</option>
-								))}
-							</select>
-						</Field>
-						<Field label="Size Guide Template">
-							<select
-								data-testid="dlg-size-guide"
-								value={form.sizeGuideId || ''}
-								onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
-								className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
-							>
-								<option value="">No size guide</option>
-								{sizeGuides
-									.filter((guide: any) => guide.isActive)
-									.map((guide: any) => (
-										<option key={guide.id} value={guide.id}>
-											{guide.name}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<Field label="Collection">
+								<select
+									data-testid="dlg-collection"
+									value={form.collectionId || ''}
+									onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
+									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+								>
+									<option value="">No collection</option>
+									{collections.map((col: any) => (
+										<option key={col.id} value={col.id}>
+											{col.name}
 										</option>
 									))}
-							</select>
-						</Field>
+								</select>
+							</Field>
+							<Field label="Size Guide Template">
+								<select
+									data-testid="dlg-size-guide"
+									value={form.sizeGuideId || ''}
+									onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
+									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+								>
+									<option value="">No size guide</option>
+									{sizeGuides
+										.filter((guide: any) => guide.isActive)
+										.map((guide: any) => (
+											<option key={guide.id} value={guide.id}>
+												{guide.name}
+											</option>
+										))}
+								</select>
+							</Field>
+						</div>
+					</FormSection>
+
+					<FormSection title="Discovery & Merchandising">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+							<Field label="Occasion">
+								<select
+									value={form.occasion || ''}
+									onChange={(e) => setForm({ ...form, occasion: e.target.value })}
+									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+								>
+									<option value="">No occasion</option>
+									{occasionOptions.map((occasion: any) => (
+										<option key={occasion.slug} value={occasion.label}>
+											{occasion.label}
+										</option>
+									))}
+								</select>
+							</Field>
+							<Field label="Fabric">
+								<Input
+									value={form.fabric || ''}
+									onChange={(e) => setForm({ ...form, fabric: e.target.value })}
+									className="rounded-none"
+								/>
+							</Field>
+							<Field label="Color">
+								<Input
+									value={form.color || ''}
+									onChange={(e) => setForm({ ...form, color: e.target.value })}
+									className="rounded-none"
+								/>
+							</Field>
+						</div>
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+							<Field label="Availability">
+								<select
+									value={form.availabilityStatus || 'made-to-order'}
+									onChange={(e) => setForm({ ...form, availabilityStatus: e.target.value })}
+									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
+								>
+									{AVAILABILITY_OPTIONS.map((option) => (
+										<option key={option.value} value={option.value}>
+											{option.label}
+										</option>
+									))}
+								</select>
+							</Field>
+							<Field label="Display Order">
+								<Input
+									type="number"
+									value={form.displayOrder ?? 0}
+									onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) || 0 })}
+									className="rounded-none"
+								/>
+							</Field>
+							<div className="flex items-end pb-2">
+								<div className="flex items-center gap-2">
+									<Switch
+										checked={form.isReadyToShip || false}
+										onCheckedChange={(v) => setForm({ ...form, isReadyToShip: v })}
+									/>
+									<Label className="text-xs">Ready to Ship</Label>
+								</div>
+							</div>
+						</div>
 					</FormSection>
 
 					<FormSection
@@ -342,15 +430,40 @@ export function ItemDialog({ dlg, setDlg, products, collections, categories, siz
 							value={form.imageUrl}
 							onChange={(url) => setForm({ ...form, imageUrl: url })}
 						/>
-						<Field label="Slug">
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<Field label="Slug">
+								<Input
+									data-testid="dlg-slug"
+									value={form.slug || ''}
+									onChange={(e) => setForm({ ...form, slug: e.target.value })}
+									aria-invalid={Boolean(errors.slug)}
+									className="rounded-none"
+								/>
+								{errors.slug ? <p className="text-xs text-red-600">{errors.slug}</p> : null}
+							</Field>
+							<Field label="Display Order">
+								<Input
+									type="number"
+									value={form.displayOrder ?? 0}
+									onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) || 0 })}
+									className="rounded-none"
+								/>
+							</Field>
+						</div>
+						<Field label="SEO Title">
 							<Input
-								data-testid="dlg-slug"
-								value={form.slug || ''}
-								onChange={(e) => setForm({ ...form, slug: e.target.value })}
-								aria-invalid={Boolean(errors.slug)}
+								value={form.seoTitle || ''}
+								onChange={(e) => setForm({ ...form, seoTitle: e.target.value })}
 								className="rounded-none"
 							/>
-							{errors.slug ? <p className="text-xs text-red-600">{errors.slug}</p> : null}
+						</Field>
+						<Field label="SEO Description">
+							<Textarea
+								value={form.seoDescription || ''}
+								onChange={(e) => setForm({ ...form, seoDescription: e.target.value })}
+								className="rounded-none"
+								rows={3}
+							/>
 						</Field>
 					</FormSection>
 				</div>
@@ -448,6 +561,61 @@ export function ItemDialog({ dlg, setDlg, products, collections, categories, siz
 								onChange={(e) => setForm({ ...form, description: e.target.value })}
 								className="rounded-none"
 								rows={2}
+							/>
+						</Field>
+					</FormSection>
+				</div>
+			)
+		}
+		if (type === 'occasions') {
+			return (
+				<div className="space-y-6">
+					<FormSection
+						title="Occasion Basics"
+						description="Controls the homepage occasion grid and product occasion filters."
+					>
+						<Field label="Name">
+							<Input
+								data-testid="dlg-occasion-name"
+								value={form.name || ''}
+								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								aria-invalid={Boolean(errors.name)}
+								className="rounded-none"
+							/>
+							{errors.name ? <p className="text-xs text-red-600">{errors.name}</p> : null}
+						</Field>
+						<Field label="Slug">
+							<Input
+								data-testid="dlg-occasion-slug"
+								value={form.slug || ''}
+								onChange={(e) => setForm({ ...form, slug: e.target.value })}
+								className="rounded-none"
+								placeholder="e.g. wedding-guest"
+							/>
+						</Field>
+						<Field label="Description">
+							<Textarea
+								data-testid="dlg-occasion-desc"
+								value={form.description || ''}
+								onChange={(e) => setForm({ ...form, description: e.target.value })}
+								className="rounded-none"
+								rows={3}
+							/>
+						</Field>
+					</FormSection>
+
+					<FormSection title="Image & Sort Order">
+						<ImageUpload
+							label="Occasion Image"
+							value={form.imageUrl || ''}
+							onChange={(url) => setForm({ ...form, imageUrl: url })}
+						/>
+						<Field label="Display Order">
+							<Input
+								type="number"
+								value={form.displayOrder ?? 0}
+								onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) || 0 })}
+								className="rounded-none"
 							/>
 						</Field>
 					</FormSection>
@@ -981,11 +1149,13 @@ export function ItemDialog({ dlg, setDlg, products, collections, categories, siz
 				? 'Product'
 				: type === 'categories'
 					? 'Category'
-					: type === 'discounts'
-						? 'Discount'
-						: type === 'size-guides'
-							? 'Size Guide'
-							: 'Collection'
+					: type === 'occasions'
+						? 'Occasion'
+						: type === 'discounts'
+							? 'Discount'
+							: type === 'size-guides'
+								? 'Size Guide'
+								: 'Collection'
 
 	return (
 		<Dialog open={open} onOpenChange={(v) => setDlg({ ...dlg, open: v })}>

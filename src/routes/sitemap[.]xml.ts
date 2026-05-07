@@ -18,16 +18,31 @@ export const Route = createFileRoute('/sitemap.xml')({
 	server: {
 		handlers: {
 			GET: async () => {
-				const data = await getSitemapDataFn()
+				let data: Awaited<ReturnType<typeof getSitemapDataFn>>
+				try {
+					data = await getSitemapDataFn()
+				} catch (error) {
+					console.error({
+						level: 'error',
+						source: 'seo',
+						message: 'sitemap_generation_failed',
+						error: error instanceof Error ? error.message : String(error),
+					})
+					throw error
+				}
+
 				const now = new Date()
 				const entries = [
 					urlEntry(`${data.siteUrl}/`, now, 'daily', 1),
 					urlEntry(`${data.siteUrl}/products`, now, 'daily', 0.9),
+					...data.occasionLinks.map((occasion) =>
+						urlEntry(`${data.siteUrl}/products?occasion=${occasion.slug}`, now, 'weekly', 0.75),
+					),
 					urlEntry(`${data.siteUrl}/collections`, now, 'weekly', 0.8),
 					...data.products.map((product) =>
 						urlEntry(
 							`${data.siteUrl}/products/${product.slug || product.id}`,
-							new Date(product.createdAt),
+							new Date(product.updatedAt || product.createdAt),
 							'weekly',
 							0.7,
 						),
@@ -35,7 +50,7 @@ export const Route = createFileRoute('/sitemap.xml')({
 					...data.collections.map((collection) =>
 						urlEntry(
 							`${data.siteUrl}/collections/${collection.slug}`,
-							new Date(collection.createdAt),
+							new Date(collection.updatedAt || collection.createdAt),
 							'weekly',
 							0.7,
 						),
@@ -47,6 +62,7 @@ export const Route = createFileRoute('/sitemap.xml')({
 					{
 						headers: {
 							'content-type': 'application/xml; charset=utf-8',
+							'cache-control': 'public, max-age=3600, s-maxage=3600',
 						},
 					},
 				)

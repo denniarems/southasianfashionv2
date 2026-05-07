@@ -5,19 +5,31 @@ import { LoadingImage } from '@/components/ui/loading-image'
 import Navbar from '@/features/storefront/components/Navbar'
 import Footer from '@/features/storefront/components/Footer'
 import { getCollectionsPageDataFn } from '@/server/storefront.functions'
+import { absoluteUrl, routeCanonical } from '@/lib/seo'
 
 export const Route = createFileRoute('/collections/')({
 	loader: () => getCollectionsPageDataFn(),
-	head: () => ({
-		meta: [
-			{ title: 'Collections | South Asian Fashion' },
-			{
-				name: 'description',
-				content:
-					'Explore curated South Asian Fashion collections and discover pieces by story and style.',
-			},
-		],
-	}),
+	head: () => {
+		const description =
+			'Explore curated South Asian Fashion collections by story, occasion, and style.'
+		const canonical = routeCanonical('/collections')
+
+		return {
+			meta: [
+				{ title: 'Collections | South Asian Fashion' },
+				{
+					name: 'description',
+					content: description,
+				},
+				{ property: 'og:title', content: 'Collections | South Asian Fashion' },
+				{ property: 'og:description', content: description },
+				{ property: 'og:url', content: canonical },
+				{ property: 'og:image', content: absoluteUrl('/logo.png') },
+				{ name: 'twitter:card', content: 'summary_large_image' },
+			],
+			links: [{ rel: 'canonical', href: canonical }],
+		}
+	},
 	component: CollectionsPage,
 })
 
