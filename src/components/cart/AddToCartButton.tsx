@@ -40,7 +40,7 @@ export function AddToCartButton({
 			}
 			className={
 				className ||
-				'inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300'
+				'inline-flex items-center justify-center gap-2 bg-stone-900 px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors duration-300 hover:bg-yellow-700 sm:gap-3 sm:px-8 sm:text-xs sm:tracking-widest'
 			}
 		>
 			<ClipboardListIcon size={16} />

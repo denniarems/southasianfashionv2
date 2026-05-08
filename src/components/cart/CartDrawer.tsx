@@ -262,7 +262,7 @@ export function CartDrawer({
 										value: items.length,
 									})
 								}}
-								className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-xs uppercase tracking-widest font-semibold transition-colors ${
+								className={`inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.13em] transition-colors sm:text-xs sm:tracking-widest ${
 									whatsappHref
 										? 'bg-stone-900 text-white hover:bg-yellow-700'
 										: 'bg-stone-200 text-stone-500 cursor-not-allowed'
@@ -276,7 +276,7 @@ export function CartDrawer({
 								type="button"
 								onClick={clearCart}
 								disabled={items.length === 0}
-								className="w-full border border-stone-300 text-stone-600 px-4 py-3 text-xs uppercase tracking-widest font-semibold hover:bg-stone-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full border border-stone-300 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-stone-600 transition-colors hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs sm:tracking-widest"
 							>
 								Clear Brief
 							</button>

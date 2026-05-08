@@ -279,7 +279,7 @@ function ProductDetailPage() {
 												currency: 'CAD',
 												imageUrl: product.imageUrl,
 											}}
-											className="flex h-14 w-full items-center justify-center gap-3 bg-stone-900 px-6 text-xs font-semibold uppercase tracking-widest text-white transition-colors duration-300 hover:bg-yellow-700"
+											className="flex h-14 w-full items-center justify-center gap-2 bg-stone-900 px-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors duration-300 hover:bg-yellow-700 sm:gap-3 sm:px-6 sm:text-xs sm:tracking-widest"
 										/>
 
 										<a
@@ -296,7 +296,7 @@ function ProductDetailPage() {
 													category: product.category || undefined,
 												})
 											}
-											className="flex h-14 w-full items-center justify-center gap-3 bg-stone-900 px-6 text-xs font-semibold uppercase tracking-widest text-white transition-colors duration-300 hover:bg-yellow-700"
+											className="flex h-14 w-full items-center justify-center gap-2 bg-stone-900 px-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors duration-300 hover:bg-yellow-700 sm:gap-3 sm:px-6 sm:text-xs sm:tracking-widest"
 										>
 											<MessageCircleIcon size={16} />
 											Start a Private Fitting

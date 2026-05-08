@@ -112,7 +112,7 @@ export default function ProductCard({
 									currency: 'CAD',
 									imageUrl: product.imageUrl || null,
 								}}
-								className="flex w-full items-center justify-center gap-2 bg-white/95 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-stone-900 backdrop-blur-sm transition-colors hover:bg-yellow-700 hover:text-white"
+								className="flex w-full items-center justify-center gap-2 bg-white/95 px-3 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-900 backdrop-blur-sm transition-colors hover:bg-yellow-700 hover:text-white sm:tracking-[0.14em]"
 							/>
 							<a
 								href={whatsappHref}
@@ -130,7 +130,7 @@ export default function ProductCard({
 										category: product.category || undefined,
 									})
 								}}
-								className="flex w-full items-center justify-center gap-2 bg-white/95 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-stone-900 backdrop-blur-sm transition-colors hover:bg-yellow-700 hover:text-white"
+								className="flex w-full items-center justify-center gap-2 bg-white/95 px-3 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-900 backdrop-blur-sm transition-colors hover:bg-yellow-700 hover:text-white sm:tracking-[0.14em]"
 							>
 								<MessageCircleIcon size={14} />
 								Private Fitting

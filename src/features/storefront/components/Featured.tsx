@@ -38,12 +38,12 @@ export default function Featured({
 	const itemHref = `/products/${item.slug ?? item.id}`
 
 	return (
-		<section id="featured" data-testid="featured-section" className="py-24 md:py-32">
-			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
+		<section id="featured" data-testid="featured-section" className="overflow-hidden py-20 sm:py-24 md:py-32">
+			<div className="max-w-450 mx-auto px-4 sm:px-6 md:px-12 lg:px-24">
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
 					<motion.div
-						initial={{ opacity: 0, x: -40 }}
-						whileInView={{ opacity: 1, x: 0 }}
+						initial={{ opacity: 0, y: 28 }}
+						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true }}
 						transition={{ duration: 0.8 }}
 						className="relative overflow-hidden aspect-3/4"
@@ -72,8 +72,8 @@ export default function Featured({
 					</motion.div>
 
 					<motion.div
-						initial={{ opacity: 0, x: 40 }}
-						whileInView={{ opacity: 1, x: 0 }}
+						initial={{ opacity: 0, y: 28 }}
+						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true }}
 						transition={{ duration: 0.8, delay: 0.2 }}
 					>
@@ -106,7 +106,7 @@ export default function Featured({
 									currency: 'CAD',
 									imageUrl: item.imageUrl,
 								}}
-								className="inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+								className="inline-flex w-full items-center justify-center gap-2 bg-stone-900 px-5 py-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors duration-300 hover:bg-yellow-700 sm:w-auto sm:gap-3 sm:px-10 sm:text-xs sm:tracking-widest"
 							/>
 
 							<a
@@ -121,7 +121,7 @@ export default function Featured({
 										productSlug: item.slug,
 									})
 								}
-								className="inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
+								className="inline-flex w-full items-center justify-center gap-2 bg-stone-900 px-5 py-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors duration-300 hover:bg-yellow-700 sm:w-auto sm:gap-3 sm:px-10 sm:text-xs sm:tracking-widest"
 							>
 								<MessageCircleIcon size={16} />
 								Start a Private Fitting

@@ -279,7 +279,7 @@ export default function CustomizationInquiry({
 				<button
 					type="submit"
 					disabled={submitting}
-					className="inline-flex w-full items-center justify-center gap-3 bg-stone-900 px-8 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-yellow-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+					className="inline-flex w-full items-center justify-center gap-2 bg-stone-900 px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors hover:bg-yellow-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:gap-3 sm:px-8 sm:text-xs sm:tracking-widest"
 				>
 					<SendIcon size={16} />
 					{submitting ? 'Sending...' : 'Send Private Fitting Request'}
@@ -300,7 +300,7 @@ export default function CustomizationInquiry({
 							category: category || undefined,
 						})
 					}}
-					className="inline-flex w-full items-center justify-center gap-3 border border-stone-300 bg-white px-8 py-4 text-xs font-semibold uppercase tracking-widest text-stone-900 transition-colors hover:border-stone-900 hover:bg-stone-100 sm:w-auto"
+					className="inline-flex w-full items-center justify-center gap-2 border border-stone-300 bg-white px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-stone-900 transition-colors hover:border-stone-900 hover:bg-stone-100 sm:w-auto sm:gap-3 sm:px-8 sm:text-xs sm:tracking-widest"
 				>
 					<MessageCircleIcon size={16} />
 					Message Atelier

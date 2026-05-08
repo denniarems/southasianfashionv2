@@ -80,11 +80,11 @@ export default function Navbar({
 					isDark ? 'bg-white/90 backdrop-blur-xl border-b border-stone-200/50' : 'bg-transparent'
 				}`}
 			>
-				<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
-					<div className="flex items-center justify-between h-20">
+				<div className="max-w-450 mx-auto px-4 sm:px-6 md:px-12 lg:px-24">
+					<div className="flex h-16 items-center justify-between gap-3 sm:h-20">
 						<Link
 							href="/"
-							className="inline-flex items-center gap-3"
+							className="inline-flex min-w-0 items-center gap-2 sm:gap-3"
 							data-testid="nav-logo"
 							aria-label={brandName}
 						>
@@ -95,10 +95,10 @@ export default function Navbar({
 								height={40}
 								sizes="168px"
 								priority
-								className="h-8 w-auto md:h-9"
+								className="h-7 w-auto shrink-0 sm:h-8 md:h-9"
 							/>
 							<span
-								className={`font-heading font-bold text-sm md:text-base tracking-wider transition-colors duration-500 ${isDark ? 'text-stone-900' : 'text-white'}`}
+								className={`truncate font-heading text-sm font-bold tracking-wide transition-colors duration-500 sm:text-base sm:tracking-wider ${isDark ? 'text-stone-900' : 'text-white'}`}
 							>
 								{brandName}
 							</span>
@@ -252,7 +252,7 @@ export default function Navbar({
 							</button>
 						</div>
 
-						<div className="md:hidden flex items-center gap-2">
+						<div className="flex shrink-0 items-center gap-2 md:hidden">
 							<button
 								type="button"
 								onClick={() => setCartOpen(true)}
