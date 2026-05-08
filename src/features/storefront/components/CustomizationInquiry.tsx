@@ -223,19 +223,6 @@ export default function CustomizationInquiry({
 				</label>
 				<label className="block">
 					<span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-stone-500">
-						<CalendarIcon size={14} />
-						Timezone
-					</span>
-					<input
-						type="text"
-						value={form.requestedTimezone}
-						onChange={(event) => updateField('requestedTimezone', event.target.value)}
-						required
-						className="h-11 w-full border border-stone-200 bg-white px-3 text-sm text-stone-900 outline-none transition-colors focus:border-stone-500"
-					/>
-				</label>
-				<label className="block">
-					<span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-stone-500">
 						<RulerIcon size={14} />
 						Preferred Size
 					</span>

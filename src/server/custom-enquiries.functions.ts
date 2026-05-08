@@ -194,7 +194,7 @@ function addMinutesToLocalDateTime(localDateTime: string, minutesToAdd: number) 
 
 function formatLocalDateTimeForEmail(enquiry: Pick<CustomEnquiryRow, 'requestedStartLocal' | 'requestedTimezone'>) {
 	const [date, time] = enquiry.requestedStartLocal.split('T')
-	return `${date} at ${time} (${enquiry.requestedTimezone})`
+	return `${date} at ${time}`
 }
 
 function senderFromAddress() {

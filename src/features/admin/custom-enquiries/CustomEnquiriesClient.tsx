@@ -34,7 +34,7 @@ const statusFilters: StatusFilter[] = ['all', 'pending', 'approved', 'rejected']
 
 function formatAppointment(enquiry: CustomEnquiryAdminRow) {
 	const [date, time] = enquiry.requestedStartLocal.split('T')
-	return `${date} ${time} (${enquiry.requestedTimezone})`
+	return `${date} ${time}`
 }
 
 function formatDate(value: string | null) {
