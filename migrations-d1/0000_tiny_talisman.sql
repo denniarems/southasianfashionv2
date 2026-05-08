@@ -50,7 +50,7 @@ CREATE TABLE `discounts` (
 	`bundle_product_ids` text DEFAULT '[]' NOT NULL,
 	`tier_rules_json` text DEFAULT '[]' NOT NULL,
 	`usage_count` integer DEFAULT 0 NOT NULL,
-	`wording` text DEFAULT 'Instant Price Drop' NOT NULL,
+	`wording` text DEFAULT 'Private Client Courtesy' NOT NULL,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
 	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE cascade
@@ -65,7 +65,7 @@ CREATE TABLE `hero_banners` (
 	`title` text NOT NULL,
 	`subtitle` text DEFAULT '',
 	`image_url` text DEFAULT '',
-	`cta_text` text DEFAULT 'Explore Collection',
+	`cta_text` text DEFAULT 'Explore the Edit',
 	`cta_link` text DEFAULT '#new-arrivals',
 	`is_active` integer DEFAULT true,
 	`created_at` text NOT NULL

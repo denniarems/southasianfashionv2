@@ -12,7 +12,9 @@ interface Settings {
 export default function WhatsAppButton({ settings }: { settings?: Settings }) {
 	const [open, setOpen] = useState(false)
 	const whatsapp = settings?.whatsappNumber?.replace(/[^0-9]/g, '') || ''
-	const message = settings?.whatsappMessage || "Hello! I'm interested in your collection."
+	const message =
+		settings?.whatsappMessage ||
+		'Hello, I would like to start a private fitting with the atelier.'
 
 	return (
 		<div className="fixed bottom-8 right-8 z-50" data-testid="whatsapp-widget">
@@ -25,9 +27,9 @@ export default function WhatsAppButton({ settings }: { settings?: Settings }) {
 						transition={{ duration: 0.3 }}
 						className="absolute bottom-16 right-0 bg-white border border-stone-200 p-6 w-72 mb-4 shadow-lg"
 					>
-						<p className="font-heading text-lg text-stone-900 mb-2">Get in Touch</p>
+						<p className="font-heading text-lg text-stone-900 mb-2">Start a Private Fitting</p>
 						<p className="text-stone-500 text-sm mb-4 leading-relaxed">
-							Chat with us on WhatsApp for personalized styling assistance.
+							Send your occasion, timeline, and fit notes directly to the atelier.
 						</p>
 						<a
 							href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`}
@@ -36,7 +38,7 @@ export default function WhatsAppButton({ settings }: { settings?: Settings }) {
 							data-testid="whatsapp-chat-link"
 							className="block text-center bg-stone-900 text-white py-3 text-xs uppercase tracking-widest hover:bg-yellow-700 transition-colors duration-300"
 						>
-							Start Conversation
+							Message the Atelier
 						</a>
 					</motion.div>
 				)}

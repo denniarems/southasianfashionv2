@@ -101,7 +101,7 @@ function assertNotPastAppointment(dateTime: string) {
 }
 
 function parsePublicCustomEnquiryInput(value: unknown): PublicCustomEnquiryInput {
-	const input = asRecord(value, 'Custom enquiry')
+	const input = asRecord(value, 'Private fitting request')
 	const requestedStartLocal = normalizeLocalDateTime(input.requestedStartLocal)
 	assertNotPastAppointment(requestedStartLocal)
 
@@ -123,9 +123,9 @@ function parsePublicCustomEnquiryInput(value: unknown): PublicCustomEnquiryInput
 }
 
 function parseAdminEnquiryActionInput(value: unknown): AdminEnquiryActionInput {
-	const input = asRecord(value, 'Custom enquiry action')
+	const input = asRecord(value, 'Private fitting request action')
 	return {
-		id: requiredString(input.id, 'Enquiry ID'),
+		id: requiredString(input.id, 'Request ID'),
 		adminNote: stringWithDefault(input.adminNote),
 	}
 }
@@ -277,7 +277,7 @@ function buildCalendarInvite(enquiry: CustomEnquiryRow, adminNote?: string) {
 		addMinutesToLocalDateTime(enquiry.requestedStartLocal, APPOINTMENT_DURATION_MINUTES),
 	)
 	const description = [
-		`Custom enquiry for ${enquiry.productName}`,
+		`Private fitting request for ${enquiry.productName}`,
 		`Product: ${enquiry.productUrl}`,
 		enquiry.preferredSize ? `Preferred size: ${enquiry.preferredSize}` : '',
 		enquiry.measurements ? `Measurements: ${enquiry.measurements}` : '',
@@ -289,7 +289,7 @@ function buildCalendarInvite(enquiry: CustomEnquiryRow, adminNote?: string) {
 	const lines = [
 		'BEGIN:VCALENDAR',
 		'VERSION:2.0',
-		'PRODID:-//SouthAsianFashion//Custom Enquiry//EN',
+		'PRODID:-//SouthAsianFashion//Private Fitting//EN',
 		'CALSCALE:GREGORIAN',
 		'METHOD:REQUEST',
 		'BEGIN:VEVENT',
@@ -297,7 +297,7 @@ function buildCalendarInvite(enquiry: CustomEnquiryRow, adminNote?: string) {
 		`DTSTAMP:${formatIcsUtc(new Date())}`,
 		`DTSTART;TZID=${escapeIcs(enquiry.requestedTimezone)}:${start}`,
 		`DTEND;TZID=${escapeIcs(enquiry.requestedTimezone)}:${end}`,
-		`SUMMARY:${escapeIcs(`SouthAsianFashion custom consultation - ${enquiry.productName}`)}`,
+		`SUMMARY:${escapeIcs(`SouthAsianFashion private fitting - ${enquiry.productName}`)}`,
 		`DESCRIPTION:${escapeIcs(description.join('\n'))}`,
 		`URL:${escapeIcs(enquiry.productUrl)}`,
 		`ORGANIZER;CN=SouthAsianFashion:mailto:${senderEmailAddress()}`,
@@ -320,10 +320,10 @@ async function sendNewEnquiryAdminNotification(enquiry: CustomEnquiryRow) {
 	return sendEmail({
 		from: senderFromAddress(),
 		to: adminEmails,
-		subject: `New custom enquiry - ${enquiry.productName}`,
+		subject: `New private fitting request - ${enquiry.productName}`,
 		html: emailShell(
-			'New custom enquiry',
-			'A customer submitted a custom appointment request from the storefront.',
+			'New private fitting request',
+			'A customer submitted a private fitting request from the storefront.',
 			`
 				${enquiryDetailsHtml(enquiry)}
 				<p style="margin-top:24px; font-family:Arial, sans-serif; font-size:14px;">
@@ -340,15 +340,15 @@ async function sendApprovedCustomerInvite(enquiry: CustomEnquiryRow, adminNote?:
 	return sendEmail({
 		from: senderFromAddress(),
 		to: enquiry.customerEmail,
-		subject: 'Your SouthAsianFashion custom consultation is confirmed',
+		subject: 'Your SouthAsianFashion private fitting is confirmed',
 		html: emailShell(
-			'Your consultation is confirmed',
-			`Your custom appointment is scheduled for ${formatLocalDateTimeForEmail(enquiry)}. A calendar invite is attached to this email.`,
+			'Your private fitting is confirmed',
+			`Your private fitting is scheduled for ${formatLocalDateTimeForEmail(enquiry)}. A calendar invite is attached to this email.`,
 			enquiryDetailsHtml(enquiry, adminNote),
 		),
 		attachments: [
 			{
-				filename: 'southasianfashion-custom-consultation.ics',
+				filename: 'southasianfashion-private-fitting.ics',
 				content: invite,
 				contentType: 'text/calendar; method=REQUEST; charset=UTF-8',
 			},
@@ -363,10 +363,10 @@ async function sendApprovalAdminNotification(enquiry: CustomEnquiryRow, adminNot
 	return sendEmail({
 		from: senderFromAddress(),
 		to: adminEmails,
-		subject: `Custom enquiry approved - ${enquiry.productName}`,
+		subject: `Private fitting request approved - ${enquiry.productName}`,
 		html: emailShell(
-			'Custom enquiry approved',
-			'The customer has been sent a calendar invite for the approved custom consultation.',
+			'Private fitting request approved',
+			'The customer has been sent a calendar invite for the approved private fitting.',
 			enquiryDetailsHtml(enquiry, adminNote),
 		),
 	})
@@ -435,9 +435,9 @@ export const submitCustomEnquiryFn = createServerFn({ method: 'POST' })
 			return { success: true, id }
 		} catch (error) {
 			if (isMissingCustomEnquiriesTable(error)) {
-				return { error: 'Custom enquiries table is not migrated yet' }
+				return { error: 'Private fitting requests are not available yet' }
 			}
-			return { error: error instanceof Error ? error.message : 'Failed to submit custom enquiry' }
+			return { error: error instanceof Error ? error.message : 'Failed to submit private fitting request' }
 		}
 	})
 
@@ -467,12 +467,12 @@ export const approveCustomEnquiryFn = createServerFn({ method: 'POST' })
 		const db = await getDb()
 		const enquiry = await getEnquiryById(data.id)
 
-		if (!enquiry) return { error: 'Custom enquiry not found' }
+		if (!enquiry) return { error: 'Private fitting request not found' }
 		if (enquiry.status === 'approved' && enquiry.invitationSentAt) {
-			return { error: 'Custom enquiry is already approved' }
+			return { error: 'Private fitting request is already approved' }
 		}
 		if (enquiry.status === 'rejected') {
-			return { error: 'Rejected enquiries cannot be approved' }
+			return { error: 'Rejected requests cannot be approved' }
 		}
 
 		try {
@@ -503,7 +503,7 @@ export const approveCustomEnquiryFn = createServerFn({ method: 'POST' })
 
 			return { success: true }
 		} catch (error) {
-			return { error: error instanceof Error ? error.message : 'Failed to approve enquiry' }
+			return { error: error instanceof Error ? error.message : 'Failed to approve private fitting request' }
 		}
 	})
 
@@ -514,12 +514,12 @@ export const rejectCustomEnquiryFn = createServerFn({ method: 'POST' })
 		const db = await getDb()
 		const enquiry = await getEnquiryById(data.id)
 
-		if (!enquiry) return { error: 'Custom enquiry not found' }
+		if (!enquiry) return { error: 'Private fitting request not found' }
 		if (enquiry.status === 'approved') {
-			return { error: 'Approved enquiries cannot be rejected after an invite is sent' }
+			return { error: 'Approved requests cannot be rejected after an invite is sent' }
 		}
 		if (enquiry.status === 'rejected') {
-			return { error: 'Custom enquiry is already rejected' }
+			return { error: 'Private fitting request is already rejected' }
 		}
 
 		const now = new Date().toISOString()
@@ -540,17 +540,17 @@ export const rejectCustomEnquiryFn = createServerFn({ method: 'POST' })
 
 export const resendCustomEnquiryInviteFn = createServerFn({ method: 'POST' })
 	.inputValidator((value: unknown) => {
-		const input = asRecord(value, 'Resend custom enquiry invite')
-		return { id: requiredString(input.id, 'Enquiry ID') }
+		const input = asRecord(value, 'Resend private fitting invite')
+		return { id: requiredString(input.id, 'Request ID') }
 	})
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		const db = await getDb()
 		const enquiry = await getEnquiryById(data.id)
 
-		if (!enquiry) return { error: 'Custom enquiry not found' }
+		if (!enquiry) return { error: 'Private fitting request not found' }
 		if (enquiry.status !== 'approved') {
-			return { error: 'Only approved enquiries can be resent' }
+			return { error: 'Only approved requests can be resent' }
 		}
 
 		try {

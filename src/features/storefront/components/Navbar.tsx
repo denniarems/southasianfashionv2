@@ -5,8 +5,8 @@ import Link from '@/components/router-link'
 import Image from '@/components/ui/image'
 import { usePathname } from '@/components/router-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
+import ClipboardListIcon from 'lucide-react/dist/esm/icons/clipboard-list'
 import MenuIcon from 'lucide-react/dist/esm/icons/menu'
-import ShoppingCartIcon from 'lucide-react/dist/esm/icons/shopping-cart'
 import XIcon from 'lucide-react/dist/esm/icons/x'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { useCart } from '@/components/cart/CartContext'
@@ -240,10 +240,10 @@ export default function Navbar({
 							<button
 								type="button"
 								onClick={() => setCartOpen(true)}
-								aria-label="Open shopping cart"
+								aria-label="Open atelier brief"
 								className={`relative inline-flex h-10 w-10 items-center justify-center border transition-colors duration-300 ${cartButtonClass}`}
 							>
-								<ShoppingCartIcon size={18} />
+								<ClipboardListIcon size={18} />
 								{itemCount > 0 && (
 									<span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-yellow-700 text-white text-[10px] font-semibold flex items-center justify-center">
 										{itemCount}
@@ -256,10 +256,10 @@ export default function Navbar({
 							<button
 								type="button"
 								onClick={() => setCartOpen(true)}
-								aria-label="Open shopping cart"
+								aria-label="Open atelier brief"
 								className={`relative inline-flex h-9 w-9 items-center justify-center border transition-colors duration-300 ${cartButtonClass}`}
 							>
-								<ShoppingCartIcon size={16} />
+								<ClipboardListIcon size={16} />
 								{itemCount > 0 && (
 									<span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-yellow-700 text-white text-[10px] font-semibold flex items-center justify-center">
 										{itemCount}

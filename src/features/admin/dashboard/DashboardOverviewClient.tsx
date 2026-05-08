@@ -107,8 +107,8 @@ export default function DashboardOverviewClient({
 								<div className="grid grid-cols-2 md:grid-cols-5 gap-3">
 									{[
 										['Views', analyticsSummary.counts.product_view],
-										['Cart', analyticsSummary.counts.add_to_cart],
-										['WhatsApp', analyticsSummary.counts.whatsapp_click],
+										['Atelier Brief', analyticsSummary.counts.add_to_cart],
+										['Private Fittings', analyticsSummary.counts.whatsapp_click],
 										['Shares', analyticsSummary.counts.share_click],
 										['Wishlist', analyticsSummary.counts.wishlist_toggle],
 									].map(([label, counts]) => {

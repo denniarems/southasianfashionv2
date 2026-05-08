@@ -35,6 +35,7 @@ export default function Featured({
 	const item = products?.[0]
 
 	if (!item) return null
+	const itemHref = `/products/${item.slug ?? item.id}`
 
 	return (
 		<section id="featured" data-testid="featured-section" className="py-24 md:py-32">
@@ -63,7 +64,7 @@ export default function Featured({
 						)}
 						{item.pricing?.hasDiscount && item.pricing.badgeText ? (
 							<div className="absolute top-4 left-4 z-20">
-								<span className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A1E2C] discount-badge-pulse">
+								<span className="inline-flex rounded-full border border-stone-300 bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-700 discount-badge-pulse">
 									{item.pricing.badgeText}
 								</span>
 							</div>
@@ -109,7 +110,7 @@ export default function Featured({
 							/>
 
 							<a
-								href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! I'm interested in the ${item.name}. Could you share more details?`)}`}
+								href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello, I would like to start a private fitting for ${item.name}.\nProduct: ${itemHref}`)}`}
 								target="_blank"
 								rel="noopener noreferrer"
 								data-testid="featured-whatsapp-btn"
@@ -123,7 +124,7 @@ export default function Featured({
 								className="inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-10 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300"
 							>
 								<MessageCircleIcon size={16} />
-								Inquire Now
+								Start a Private Fitting
 							</a>
 						</div>
 					</motion.div>

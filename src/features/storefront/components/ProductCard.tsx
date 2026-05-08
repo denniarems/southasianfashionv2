@@ -45,7 +45,7 @@ export default function ProductCard({
 			: ''
 	const whatsappHref = whatsapp
 		? `https://wa.me/${whatsapp}?text=${encodeURIComponent(
-				`Hello! I'm interested in ${product.name}. Could you share more details?`,
+				`Hello, I would like to start a private fitting for ${product.name}.\nProduct: ${href}`,
 			)}`
 		: '#'
 
@@ -94,7 +94,7 @@ export default function ProductCard({
 
 				{product.pricing?.hasDiscount && product.pricing.badgeText ? (
 					<div className="absolute top-3 left-3 z-20">
-						<span className="discount-badge-shimmer inline-flex border border-[#7A1E2C]/30 bg-[#FDF3D4]/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6B1320] shadow-sm backdrop-blur-[1px]">
+						<span className="discount-badge-shimmer inline-flex border border-stone-300 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-700 shadow-sm backdrop-blur-[1px]">
 							{product.pricing.badgeText}
 						</span>
 					</div>
@@ -133,7 +133,7 @@ export default function ProductCard({
 								className="flex w-full items-center justify-center gap-2 bg-white/95 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-stone-900 backdrop-blur-sm transition-colors hover:bg-yellow-700 hover:text-white"
 							>
 								<MessageCircleIcon size={14} />
-								WhatsApp
+								Private Fitting
 							</a>
 						</div>
 					</div>

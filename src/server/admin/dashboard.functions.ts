@@ -324,7 +324,7 @@ function normalizeDiscountPayload(input: UnknownRecord, mode: SaveItemInput['mod
 		productId: null,
 		bundleProductIds: stringArrayValue(input.bundleProductIds),
 		tierRulesJson: discountType === 'tiered' ? normalizeTierRulesJson(input.tierRulesJson) : '[]',
-		wording: stringWithDefault(input.wording, 'Instant Price Drop'),
+		wording: stringWithDefault(input.wording, 'Private Client Courtesy'),
 		updatedAt: new Date().toISOString(),
 		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
 	}

@@ -60,10 +60,10 @@ export function DiscountLivePreview({ form }: { form: any }) {
 			</div>
 			<div className="mt-2 flex items-center gap-2">
 				<span className="text-[10px] uppercase tracking-[0.12em] bg-[#7A1E2C]/10 text-[#7A1E2C] px-2 py-0.5 border border-[#7A1E2C]/20">
-					{form.wording || 'Instant Price Drop'}
+					{form.wording || 'Private Client Courtesy'}
 				</span>
 				<span className="text-xs text-[#B8860B] font-medium">
-					Save {formatCad(Math.round(savings))}
+					Client courtesy {formatCad(Math.round(savings))}
 				</span>
 			</div>
 		</div>
@@ -79,26 +79,26 @@ export const DISCOUNT_STRATEGIES: Array<{
 	{
 		id: 'flat',
 		label: 'Flat Amount',
-		description: 'Best for premium pieces where concrete savings convert faster.',
-		defaultWording: 'Instant Price Drop',
+		description: 'Best for premium pieces where a quiet client courtesy should be visible.',
+		defaultWording: 'Private Client Courtesy',
 	},
 	{
 		id: 'percentage',
 		label: 'Percentage',
-		description: 'Great for seasonal campaigns and store-wide buzz.',
-		defaultWording: 'Exclusive Offer',
+		description: 'Best for private client windows and atelier-led edits.',
+		defaultWording: 'Atelier Courtesy Applied',
 	},
 	{
 		id: 'tiered',
-		label: 'Tiered Cart',
-		description: 'Boost AOV with progressive savings by cart threshold.',
-		defaultWording: 'Archive Tier Savings',
+		label: 'Tiered Brief',
+		description: 'Reward fuller atelier briefs with progressive client courtesy.',
+		defaultWording: 'Atelier Brief Courtesy',
 	},
 	{
 		id: 'bundle',
 		label: 'Bundle Set',
-		description: 'Move slow inventory by pairing complementary products.',
-		defaultWording: 'Complete The Look Savings',
+		description: 'Pair complementary pieces into a curated private fitting direction.',
+		defaultWording: 'Complete The Look Courtesy',
 	},
 ]
 
@@ -156,7 +156,7 @@ export function getDefaultDiscountForm() {
 		applicableCategories: [] as string[],
 		bundleProductIds: [] as string[],
 		tierRulesJson: TIER_TEMPLATE,
-		wording: 'Instant Price Drop',
+		wording: 'Private Client Courtesy',
 		isActive: true,
 		stackable: false,
 	}

@@ -43,10 +43,10 @@ INSERT INTO product_images (id, product_id, image_url, sort_order, created_at) V
 	('img-royal-sherwani-1', 'prod-royal-sherwani', 'https://images.unsplash.com/photo-1760080838961-4208536db385?q=80&w=1200', 0, '2026-01-01T00:00:00.000Z');
 
 INSERT INTO hero_banners (id, title, subtitle, image_url, cta_text, cta_link, is_active, created_at) VALUES
-	('hero-main', 'Curated Luxury. Culturally Rooted.', 'Discover South Asia''s finest fashion, where centuries of craftsmanship meet contemporary elegance.', 'https://images.unsplash.com/photo-1610189338175-0782dfdb0c04?q=80&w=2000', 'Explore Collection', '#new-arrivals', 1, '2026-01-01T00:00:00.000Z');
+	('hero-main', 'Private Atelier Edit', 'Made-to-measure South Asian pieces prepared for ceremony, celebration, and private fitting conversations.', 'https://images.unsplash.com/photo-1610189338175-0782dfdb0c04?q=80&w=2000', 'Explore the Edit', '#new-arrivals', 1, '2026-01-01T00:00:00.000Z');
 
 INSERT INTO settings (id, whatsapp_number, whatsapp_message, brand_name, brand_tagline, contact_email, instagram_url, facebook_url) VALUES
 	(1, '+1234567890', 'Hello! I''m interested in SouthAsianFashion. Could you help me with', 'SouthAsianFashion', 'Curated Luxury. Culturally Rooted.', 'hello@southasianfashion.com', 'https://instagram.com/southasianfashion', 'https://facebook.com/southasianfashion');
 
 INSERT INTO discounts (id, name, description, discount_type, discount_value, original_price, start_date, end_date, min_cart_value, applicable_product_ids, applicable_categories, stackable, max_uses, priority, is_active, product_id, bundle_product_ids, tier_rules_json, usage_count, wording, created_at, updated_at) VALUES
-	('discount-festive-flat', 'Festive Welcome', 'Introductory CAD 50 off featured occasionwear.', 'flat', 50, NULL, 1767225600000, NULL, 300, '[]', '["Sarees","Lehengas","Menswear"]', 0, NULL, 10, 1, NULL, '[]', '[]', 0, 'Festive Price Drop', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+	('discount-festive-flat', 'Festive Welcome', 'Introductory CAD 50 atelier courtesy for featured occasionwear.', 'flat', 50, NULL, 1767225600000, NULL, 300, '[]', '["Sarees","Lehengas","Menswear"]', 0, NULL, 10, 1, NULL, '[]', '[]', 0, 'Private Client Courtesy', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');

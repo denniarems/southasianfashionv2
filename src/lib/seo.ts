@@ -62,7 +62,7 @@ export function productTitle(product: ProductLike) {
 }
 
 export function productDescription(product: ProductLike) {
-	const fallback = `Shop ${product.name} from ${SITE_NAME} in Ottawa. Customization and WhatsApp inquiries available.`
+	const fallback = `Explore ${product.name} from ${SITE_NAME} in Ottawa. Private fitting requests and atelier review available.`
 	const source = product.description?.trim() || fallback
 	return source.length > 158 ? `${source.slice(0, 155).trim()}...` : source
 }

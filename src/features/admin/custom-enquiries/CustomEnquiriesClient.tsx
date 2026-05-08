@@ -129,7 +129,7 @@ export default function CustomEnquiriesClient({
 				toast.error(result.error)
 				return
 			}
-			await finishAction('Enquiry approved and invite sent', result.warning)
+			await finishAction('Request approved and invite sent', result.warning)
 		} finally {
 			setActionKey('')
 		}
@@ -146,7 +146,7 @@ export default function CustomEnquiriesClient({
 				toast.error(result.error)
 				return
 			}
-			await finishAction('Enquiry rejected')
+			await finishAction('Request rejected')
 		} finally {
 			setActionKey('')
 		}
@@ -177,11 +177,11 @@ export default function CustomEnquiriesClient({
 						Client Appointments
 					</p>
 					<h1 className="mt-2 font-heading text-2xl tracking-wide text-stone-900">
-						Custom Enquiries
+						Private Fitting Requests
 					</h1>
 					<p className="mt-1 max-w-2xl text-sm text-stone-500">
-						Review submitted custom requests, approve calendar invites, and keep customer
-						appointment details in one place.
+						Review private fitting requests, approve calendar invites, and keep customer
+						atelier notes in one place.
 					</p>
 				</div>
 				<div className="grid grid-cols-2 gap-2 sm:flex">
@@ -204,7 +204,7 @@ export default function CustomEnquiriesClient({
 
 			{migrationMissing ? (
 				<div className="border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
-					The custom enquiries migration has not been applied in this environment yet.
+					The private fitting request migration has not been applied in this environment yet.
 				</div>
 			) : null}
 
@@ -280,7 +280,7 @@ export default function CustomEnquiriesClient({
 					</div>
 				) : (
 					<div className="px-4 py-12 text-center text-sm text-stone-500">
-						No custom enquiries match this filter.
+						No private fitting requests match this filter.
 					</div>
 				)}
 			</div>
@@ -290,7 +290,7 @@ export default function CustomEnquiriesClient({
 					{selected ? (
 						<>
 							<DialogHeader>
-								<DialogTitle>Custom enquiry from {selected.customerName}</DialogTitle>
+								<DialogTitle>Private fitting request from {selected.customerName}</DialogTitle>
 								<DialogDescription>
 									{selected.productName} - {formatAppointment(selected)}
 								</DialogDescription>
@@ -299,7 +299,7 @@ export default function CustomEnquiriesClient({
 							<div className="grid gap-5 lg:grid-cols-[1fr_280px]">
 								<div className="border border-stone-200 px-4">
 									<DetailRow label="Customer email" value={selected.customerEmail} />
-									<DetailRow label="Phone / WhatsApp" value={selected.customerPhone} />
+									<DetailRow label="Phone / Direct Message" value={selected.customerPhone} />
 									<DetailRow label="Appointment" value={formatAppointment(selected)} />
 									<DetailRow label="Preferred size" value={selected.preferredSize} />
 									<DetailRow label="Measurements" value={selected.measurements} />

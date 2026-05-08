@@ -1,7 +1,7 @@
 import { and, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm'
 import { getDb } from '@/db'
 import { discounts, discountUsages, products } from '@/db/schema'
-import { formatCad, STORE_CURRENCY } from '@/lib/currency'
+import { STORE_CURRENCY } from '@/lib/currency'
 
 export interface CartDiscountInput {
 	productId: string
@@ -54,6 +54,20 @@ type DiscountRow = typeof discounts.$inferSelect
 
 type ProductLookup = Pick<ProductRow, 'id' | 'name' | 'category' | 'price' | 'currency'>
 
+function premiumDiscountWording(discount: DiscountRow): string {
+	const wording = discount.wording?.trim()
+	if (
+		wording &&
+		!/(price\s*drop|\boff\b|\bsave\b|savings|offer)/i.test(wording)
+	) {
+		return wording
+	}
+
+	return discount.discountType === 'percentage'
+		? 'Atelier Courtesy Applied'
+		: 'Private Client Courtesy'
+}
+
 function parseTierRules(input: string | null | undefined): TierRule[] {
 	if (!input) return []
 
@@ -89,16 +103,7 @@ function parseTierRules(input: string | null | undefined): TierRule[] {
 }
 
 function toDiscountText(discount: DiscountRow): string {
-	if (discount.discountType === 'percentage') {
-		return `${discount.discountValue}% Price Drop`
-	}
-
-	const amount = Math.round(discount.discountValue)
-	if (discount.wording?.trim()) {
-		return `${discount.wording.trim()} ${formatCad(amount)}`
-	}
-
-	return `Instant ${formatCad(amount)} Price Drop`
+	return premiumDiscountWording(discount)
 }
 
 function resolveStacking(discountRows: DiscountRow[]): DiscountRow[] {
@@ -222,11 +227,7 @@ export async function previewProductPrice(product: ProductLookup): Promise<Produ
 
 	const top = relevant[0]
 	const discountText = top ? toDiscountText(top) : ''
-	const badgeText = top
-		? top.discountType === 'percentage'
-			? `${Math.round(top.discountValue)}% OFF`
-			: `${formatCad(Math.round(top.discountValue))} OFF`
-		: ''
+	const badgeText = top ? premiumDiscountWording(top) : ''
 
 	return {
 		hasDiscount: savingsAmount > 0,

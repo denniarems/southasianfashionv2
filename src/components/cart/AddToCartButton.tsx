@@ -1,7 +1,7 @@
 'use client'
 
 import { toast } from 'sonner'
-import ShoppingCartIcon from 'lucide-react/dist/esm/icons/shopping-cart'
+import ClipboardListIcon from 'lucide-react/dist/esm/icons/clipboard-list'
 import { useCart } from '@/components/cart/CartContext'
 import type { CartProduct } from '@/components/cart/cart-types'
 import { trackAnalyticsEvent } from '@/lib/analytics'
@@ -17,7 +17,8 @@ export function AddToCartButton({
 }) {
 	const { addItem, items } = useCart()
 	const currentQuantity = items.find((item) => item.id === product.id)?.quantity ?? 0
-	const buttonLabel = currentQuantity > 0 ? `Add to Cart (${currentQuantity})` : 'Add to Cart'
+	const buttonLabel =
+		currentQuantity > 0 ? `Add to Atelier Brief (${currentQuantity})` : 'Add to Atelier Brief'
 
 	return (
 		<button
@@ -30,17 +31,19 @@ export function AddToCartButton({
 					productSlug: product.slug || undefined,
 					value: quantity,
 				})
-				toast.success(`${product.name} added to cart`)
+				toast.success(`${product.name} added to atelier brief`)
 			}}
 			aria-label={
-				currentQuantity > 0 ? `Add to cart. Currently ${currentQuantity} in cart.` : 'Add to cart'
+				currentQuantity > 0
+					? `Add to atelier brief. Currently ${currentQuantity} in brief.`
+					: 'Add to atelier brief'
 			}
 			className={
 				className ||
 				'inline-flex items-center justify-center gap-3 bg-stone-900 text-white px-8 py-4 text-xs uppercase tracking-widest font-semibold hover:bg-yellow-700 transition-colors duration-300'
 			}
 		>
-			<ShoppingCartIcon size={16} />
+			<ClipboardListIcon size={16} />
 			{buttonLabel}
 		</button>
 	)

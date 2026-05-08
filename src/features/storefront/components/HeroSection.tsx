@@ -14,9 +14,11 @@ interface HeroData {
 export default function HeroSection({ hero }: { hero?: HeroData }) {
 	if (!hero) return null
 
-	const title = hero.title?.trim() || 'End of Season Archive Sale'
-	const subtitle = hero.subtitle?.trim() || 'Up to 40% OFF Selected Pieces'
-	const ctaText = hero.ctaText?.trim() || 'Explore Collection'
+	const title = hero.title?.trim() || 'Private Atelier Edit'
+	const subtitle =
+		hero.subtitle?.trim() ||
+		'Made-to-measure South Asian pieces prepared for ceremony, celebration, and private fitting conversations.'
+	const ctaText = hero.ctaText?.trim() || 'Explore the Edit'
 
 	return (
 		<section

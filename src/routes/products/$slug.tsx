@@ -135,6 +135,7 @@ function ProductDetailPage() {
 	const productPath = `/products/${product.slug ?? product.id}`
 	const siteUrl = data.siteUrl.replace(/\/$/, '')
 	const productAbsoluteUrl = `${siteUrl}${productPath}`
+	const privateFittingMessage = `Hello, I would like to start a private fitting for ${product.name}.\nProduct: ${productAbsoluteUrl}`
 	const productOccasion = product.occasion
 		? occasionLabelForSlug(product.occasion, data.occasionLinks)
 		: ''
@@ -283,7 +284,7 @@ function ProductDetailPage() {
 
 										<a
 											href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(
-												`Hello! I'm interested in the ${product.name}. Could you share more details?`,
+												privateFittingMessage,
 											)}`}
 											target="_blank"
 											rel="noopener noreferrer"
@@ -298,7 +299,7 @@ function ProductDetailPage() {
 											className="flex h-14 w-full items-center justify-center gap-3 bg-stone-900 px-6 text-xs font-semibold uppercase tracking-widest text-white transition-colors duration-300 hover:bg-yellow-700"
 										>
 											<MessageCircleIcon size={16} />
-											Inquire via WhatsApp
+											Start a Private Fitting
 										</a>
 									</div>
 
@@ -334,7 +335,8 @@ function ProductDetailPage() {
 									<span className="w-1.5 h-1.5 bg-stone-300 rounded-full" /> Ships worldwide
 								</p>
 								<p className="text-sm text-stone-500 flex items-center gap-2">
-									<span className="w-1.5 h-1.5 bg-stone-300 rounded-full" /> Customization available
+									<span className="w-1.5 h-1.5 bg-stone-300 rounded-full" /> Private fitting
+									available
 								</p>
 							</div>
 

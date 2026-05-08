@@ -33,10 +33,10 @@ function useCountdownLabel(endDate?: string | null): string | null {
 
 	if (hours >= 24) {
 		const days = Math.floor(hours / 24)
-		return `Offer ends in ${days} day${days === 1 ? '' : 's'}`
+		return `Courtesy window closes in ${days} day${days === 1 ? '' : 's'}`
 	}
 
-	return `Offer ends in ${hours}h ${minutes}m`
+	return `Courtesy window closes in ${hours}h ${minutes}m`
 }
 
 export default function PremiumPriceDisplay({
@@ -68,7 +68,7 @@ export default function PremiumPriceDisplay({
 					initial={{ opacity: 0, scale: 0.92 }}
 					animate={{ opacity: 1, scale: 1 }}
 					transition={{ duration: 0.25 }}
-					className="inline-flex rounded-full border border-[#B8860B]/40 bg-[#B8860B]/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7A1E2C] discount-badge-pulse"
+					className="inline-flex rounded-full border border-stone-300 bg-stone-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-700 discount-badge-pulse"
 				>
 					{badgeText}
 				</motion.span>
@@ -103,14 +103,16 @@ export default function PremiumPriceDisplay({
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.3, delay: 0.05 }}
-				className="text-xs uppercase tracking-[0.14em] text-[#7A1E2C]"
+				className="text-xs uppercase tracking-[0.14em] text-stone-500"
 			>
-				You Save {formatCurrency(currency, savingsAmount)}
-				{savingsPercent > 0 ? ` (${Math.round(savingsPercent)}%)` : ''}
+				Client courtesy reflected in price
+				{savingsAmount > 0 && savingsPercent > 0
+					? ` - ${formatCurrency(currency, savingsAmount)} (${Math.round(savingsPercent)}%)`
+					: ''}
 			</motion.p>
 
 			{!compact && discountText ? <p className="text-xs text-stone-500">{discountText}</p> : null}
-			{!compact && countdown ? <p className="text-[11px] text-[#7A1E2C]">{countdown}</p> : null}
+			{!compact && countdown ? <p className="text-[11px] text-stone-500">{countdown}</p> : null}
 		</div>
 	)
 }

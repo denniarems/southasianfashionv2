@@ -30,13 +30,13 @@ function buildWhatsAppMessage({
 }) {
 	const lines = items.map((item, index) => {
 		const lineTotal = item.price * item.quantity
-		return `${index + 1}) ${item.name} — Qty: ${item.quantity} — ${formatMoney(item.price)} each — Line: ${formatMoney(lineTotal)}`
+		return `${index + 1}) ${item.name} - Qty: ${item.quantity} - ${formatMoney(item.price)} each - Line: ${formatMoney(lineTotal)}`
 	})
 
-	const totalLine = `Total: ${formatMoney(total)}`
+	const totalLine = `Estimated atelier brief total: ${formatMoney(total)}`
 
 	return [
-		'Hello! I would like to inquire about these cart items:',
+		'Hello, I would like to start a private fitting with these atelier brief pieces:',
 		'',
 		...lines,
 		'',
@@ -123,7 +123,7 @@ export function CartDrawer({
 				<>
 					<motion.button
 						type="button"
-						aria-label="Close cart"
+						aria-label="Close atelier brief"
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0 }}
@@ -141,7 +141,7 @@ export function CartDrawer({
 					>
 						<div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
 							<div>
-								<p className="font-heading text-xl text-stone-900">Your Cart</p>
+								<p className="font-heading text-xl text-stone-900">Atelier Brief</p>
 								<p className="text-xs uppercase tracking-widest text-stone-400 mt-1">
 									<motion.span
 										key={itemCount}
@@ -152,14 +152,14 @@ export function CartDrawer({
 									>
 										{itemCount}
 									</motion.span>{' '}
-									item{itemCount === 1 ? '' : 's'}
+									piece{itemCount === 1 ? '' : 's'} selected
 								</p>
 							</div>
 							<button
 								type="button"
 								onClick={() => onOpenChange(false)}
 								className="rounded-full p-2 text-stone-500 hover:bg-stone-100 hover:text-stone-900 transition-colors"
-								aria-label="Close cart drawer"
+								aria-label="Close atelier brief drawer"
 							>
 								<XIcon size={18} />
 							</button>
@@ -168,9 +168,11 @@ export function CartDrawer({
 						<div className="flex-1 overflow-y-auto px-5 py-4">
 							{items.length === 0 ? (
 								<div className="h-full flex flex-col items-center justify-center text-center">
-									<p className="font-heading text-2xl text-stone-900 mb-2">Cart is empty</p>
+									<p className="font-heading text-2xl text-stone-900 mb-2">
+										Your atelier brief is empty
+									</p>
 									<p className="text-stone-500 text-sm">
-										Add some pieces to start your order inquiry.
+										Add pieces to prepare a private fitting conversation with the atelier.
 									</p>
 								</div>
 							) : (
@@ -234,20 +236,16 @@ export function CartDrawer({
 
 						<div className="border-t border-stone-200 px-5 py-4 space-y-3">
 							<div className="flex items-center justify-between">
-								<span className="text-stone-500 text-sm">Subtotal</span>
+								<span className="text-stone-500 text-sm">Brief estimate</span>
 								<span className="font-heading text-xl text-stone-900">
 									{formatMoney(animatedSubtotal)}
 								</span>
 							</div>
 
-							<button
-								type="button"
-								disabled
-								title="Checkout is coming soon"
-								className="w-full bg-stone-300 text-stone-600 px-4 py-3 text-xs uppercase tracking-widest font-semibold cursor-not-allowed"
-							>
-								Checkout (Coming Soon)
-							</button>
+							<p className="border border-stone-200 bg-stone-50 px-4 py-3 text-xs leading-relaxed text-stone-500">
+								Final measurements, delivery timing, and finishing details are confirmed after
+								your private fitting.
+							</p>
 
 							<a
 								href={whatsappHref || '#'}
@@ -271,7 +269,7 @@ export function CartDrawer({
 								}`}
 							>
 								<MessageCircleIcon size={14} />
-								Inquire Now via WhatsApp
+								Start a Private Fitting
 							</a>
 
 							<button
@@ -280,7 +278,7 @@ export function CartDrawer({
 								disabled={items.length === 0}
 								className="w-full border border-stone-300 text-stone-600 px-4 py-3 text-xs uppercase tracking-widest font-semibold hover:bg-stone-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>
-								Clear Cart
+								Clear Brief
 							</button>
 						</div>
 					</motion.aside>

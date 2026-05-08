@@ -88,7 +88,7 @@ export default function CustomizationInquiry({
 
 	const message = useMemo(() => {
 		const lines = [
-			`Hello! I submitted a custom enquiry for ${productName}.`,
+			`Hello, I submitted a private fitting request for ${productName}.`,
 			`Product: ${productUrl}`,
 			form.requestedStartLocal ? `Appointment time: ${form.requestedStartLocal}` : '',
 			form.preferredSize ? `Preferred size: ${form.preferredSize}` : '',
@@ -135,12 +135,12 @@ export default function CustomizationInquiry({
 
 			setSubmitted(true)
 			if (result.warning) {
-				toast.warning(`Enquiry saved. ${result.warning}`)
+				toast.warning(`Private fitting request saved. ${result.warning}`)
 			} else {
-				toast.success('Custom enquiry sent for admin review')
+				toast.success('Private fitting request sent for atelier review')
 			}
 		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to submit enquiry')
+			toast.error(error instanceof Error ? error.message : 'Failed to submit private fitting request')
 		} finally {
 			setSubmitting(false)
 		}
@@ -149,9 +149,9 @@ export default function CustomizationInquiry({
 	return (
 		<form onSubmit={submitForm} className="mt-8 border border-stone-200 bg-stone-50 p-5 md:p-6">
 			<div className="mb-5">
-				<p className="font-heading text-xl text-stone-900">Customization Inquiry</p>
+				<p className="font-heading text-xl text-stone-900">Private Fitting Request</p>
 				<p className="mt-1 text-sm leading-relaxed text-stone-500">
-					Share your appointment time, fit notes, and finishing details.
+					Share your appointment time, fit notes, and maker-review details.
 				</p>
 			</div>
 
@@ -159,8 +159,8 @@ export default function CustomizationInquiry({
 				<div className="mb-5 flex items-start gap-3 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
 					<CheckCircleIcon className="mt-0.5 h-4 w-4 flex-shrink-0" />
 					<p>
-						Your enquiry is saved. An admin will review it and send the calendar invite after
-						approval.
+						Your private fitting request is saved. The atelier will review it and confirm the
+						appointment.
 					</p>
 				</div>
 			) : null}
@@ -197,7 +197,7 @@ export default function CustomizationInquiry({
 				<label className="block">
 					<span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-stone-500">
 						<PhoneIcon size={14} />
-						Phone / WhatsApp
+						Phone / Direct Message
 					</span>
 					<input
 						type="tel"
@@ -282,7 +282,7 @@ export default function CustomizationInquiry({
 					className="inline-flex w-full items-center justify-center gap-3 bg-stone-900 px-8 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-yellow-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
 				>
 					<SendIcon size={16} />
-					{submitting ? 'Sending...' : 'Send Custom Inquiry'}
+					{submitting ? 'Sending...' : 'Send Private Fitting Request'}
 				</button>
 				<a
 					href={whatsappHref}
@@ -303,7 +303,7 @@ export default function CustomizationInquiry({
 					className="inline-flex w-full items-center justify-center gap-3 border border-stone-300 bg-white px-8 py-4 text-xs font-semibold uppercase tracking-widest text-stone-900 transition-colors hover:border-stone-900 hover:bg-stone-100 sm:w-auto"
 				>
 					<MessageCircleIcon size={16} />
-					WhatsApp
+					Message Atelier
 				</a>
 			</div>
 		</form>
