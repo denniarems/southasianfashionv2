@@ -16,6 +16,7 @@ export function AdminSidebar() {
 
 	const navItems = [
 		{ href: '/admin/dashboard', label: 'Dashboard' },
+		{ href: '/admin/custom-enquiries', label: 'Custom Enquiries' },
 		{ href: '/admin/products', label: 'Products' },
 		{ href: '/admin/collections', label: 'Collections' },
 		{ href: '/admin/categories', label: 'Categories' },

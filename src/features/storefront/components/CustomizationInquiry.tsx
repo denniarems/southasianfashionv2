@@ -1,17 +1,37 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
-import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useServerFn } from '@tanstack/react-start'
 import CalendarIcon from 'lucide-react/dist/esm/icons/calendar'
+import CheckCircleIcon from 'lucide-react/dist/esm/icons/check-circle'
+import MailIcon from 'lucide-react/dist/esm/icons/mail'
+import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
+import PhoneIcon from 'lucide-react/dist/esm/icons/phone'
 import RulerIcon from 'lucide-react/dist/esm/icons/ruler'
+import SendIcon from 'lucide-react/dist/esm/icons/send'
+import UserIcon from 'lucide-react/dist/esm/icons/user'
+import { toast } from 'sonner'
 import { trackAnalyticsEvent } from '@/lib/analytics'
+import { submitCustomEnquiryFn } from '@/server/custom-enquiries.functions'
 
 type CustomizationForm = {
-	eventDate: string
+	customerName: string
+	customerEmail: string
+	customerPhone: string
+	requestedStartLocal: string
+	requestedTimezone: string
 	measurements: string
 	preferredSize: string
 	blouseNotes: string
 	generalNotes: string
+}
+
+const DEFAULT_TIMEZONE = 'America/Toronto'
+
+function currentLocalDateTimeValue() {
+	const now = new Date()
+	now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+	return now.toISOString().slice(0, 16)
 }
 
 export default function CustomizationInquiry({
@@ -29,15 +49,31 @@ export default function CustomizationInquiry({
 	whatsappNumber?: string | null
 	category?: string | null
 }) {
+	const submitCustomEnquiry = useServerFn(submitCustomEnquiryFn)
 	const [form, setForm] = useState<CustomizationForm>({
-		eventDate: '',
+		customerName: '',
+		customerEmail: '',
+		customerPhone: '',
+		requestedStartLocal: '',
+		requestedTimezone: DEFAULT_TIMEZONE,
 		measurements: '',
 		preferredSize: '',
 		blouseNotes: '',
 		generalNotes: '',
 	})
+	const [minimumStart, setMinimumStart] = useState('')
+	const [submitting, setSubmitting] = useState(false)
+	const [submitted, setSubmitted] = useState(false)
 	const trackedStart = useRef(false)
 	const whatsapp = whatsappNumber?.replace(/[^0-9]/g, '') || ''
+
+	useEffect(() => {
+		setMinimumStart(currentLocalDateTimeValue())
+		const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+		if (timezone) {
+			setForm((prev) => ({ ...prev, requestedTimezone: timezone }))
+		}
+	}, [])
 
 	const markStarted = () => {
 		if (trackedStart.current) return
@@ -52,9 +88,9 @@ export default function CustomizationInquiry({
 
 	const message = useMemo(() => {
 		const lines = [
-			`Hello! I would like to customize ${productName}.`,
+			`Hello! I submitted a custom enquiry for ${productName}.`,
 			`Product: ${productUrl}`,
-			form.eventDate ? `Event date: ${form.eventDate}` : '',
+			form.requestedStartLocal ? `Appointment time: ${form.requestedStartLocal}` : '',
 			form.preferredSize ? `Preferred size: ${form.preferredSize}` : '',
 			form.measurements ? `Measurements: ${form.measurements}` : '',
 			form.blouseNotes ? `Blouse/sleeve/neckline notes: ${form.blouseNotes}` : '',
@@ -67,28 +103,134 @@ export default function CustomizationInquiry({
 
 	const updateField = (field: keyof CustomizationForm, value: string) => {
 		markStarted()
+		setSubmitted(false)
 		setForm((prev) => ({ ...prev, [field]: value }))
 	}
 
+	const submitForm = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault()
+		markStarted()
+
+		if (!form.customerName.trim() || !form.customerEmail.trim() || !form.requestedStartLocal) {
+			toast.error('Name, email, and appointment time are required')
+			return
+		}
+
+		setSubmitting(true)
+		try {
+			const result = await submitCustomEnquiry({
+				data: {
+					...form,
+					productId,
+					productSlug: productSlug || '',
+					productName,
+					productUrl,
+				},
+			})
+
+			if (result.error) {
+				toast.error(result.error)
+				return
+			}
+
+			setSubmitted(true)
+			if (result.warning) {
+				toast.warning(`Enquiry saved. ${result.warning}`)
+			} else {
+				toast.success('Custom enquiry sent for admin review')
+			}
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'Failed to submit enquiry')
+		} finally {
+			setSubmitting(false)
+		}
+	}
+
 	return (
-		<div className="mt-8 border border-stone-200 bg-stone-50 p-5 md:p-6">
+		<form onSubmit={submitForm} className="mt-8 border border-stone-200 bg-stone-50 p-5 md:p-6">
 			<div className="mb-5">
 				<p className="font-heading text-xl text-stone-900">Customization Inquiry</p>
 				<p className="mt-1 text-sm leading-relaxed text-stone-500">
-					Event, fit, and finishing details for a tailored conversation.
+					Share your appointment time, fit notes, and finishing details.
 				</p>
 			</div>
+
+			{submitted ? (
+				<div className="mb-5 flex items-start gap-3 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+					<CheckCircleIcon className="mt-0.5 h-4 w-4 flex-shrink-0" />
+					<p>
+						Your enquiry is saved. An admin will review it and send the calendar invite after
+						approval.
+					</p>
+				</div>
+			) : null}
 
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				<label className="block">
 					<span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-stone-500">
-						<CalendarIcon size={14} />
-						Event Date
+						<UserIcon size={14} />
+						Name
 					</span>
 					<input
-						type="date"
-						value={form.eventDate}
-						onChange={(event) => updateField('eventDate', event.target.value)}
+						type="text"
+						value={form.customerName}
+						onChange={(event) => updateField('customerName', event.target.value)}
+						placeholder="Your full name"
+						required
+						className="h-11 w-full border border-stone-200 bg-white px-3 text-sm text-stone-900 outline-none transition-colors focus:border-stone-500"
+					/>
+				</label>
+				<label className="block">
+					<span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-stone-500">
+						<MailIcon size={14} />
+						Email
+					</span>
+					<input
+						type="email"
+						value={form.customerEmail}
+						onChange={(event) => updateField('customerEmail', event.target.value)}
+						placeholder="you@example.com"
+						required
+						className="h-11 w-full border border-stone-200 bg-white px-3 text-sm text-stone-900 outline-none transition-colors focus:border-stone-500"
+					/>
+				</label>
+				<label className="block">
+					<span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-stone-500">
+						<PhoneIcon size={14} />
+						Phone / WhatsApp
+					</span>
+					<input
+						type="tel"
+						value={form.customerPhone}
+						onChange={(event) => updateField('customerPhone', event.target.value)}
+						placeholder="+1 555 000 0000"
+						className="h-11 w-full border border-stone-200 bg-white px-3 text-sm text-stone-900 outline-none transition-colors focus:border-stone-500"
+					/>
+				</label>
+				<label className="block">
+					<span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-stone-500">
+						<CalendarIcon size={14} />
+						Appointment Time
+					</span>
+					<input
+						type="datetime-local"
+						value={form.requestedStartLocal}
+						min={minimumStart}
+						onChange={(event) => updateField('requestedStartLocal', event.target.value)}
+						required
+						className="h-11 w-full border border-stone-200 bg-white px-3 text-sm text-stone-900 outline-none transition-colors focus:border-stone-500"
+					/>
+				</label>
+				<label className="block">
+					<span className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-stone-500">
+						<CalendarIcon size={14} />
+						Timezone
+					</span>
+					<input
+						type="text"
+						value={form.requestedTimezone}
+						onChange={(event) => updateField('requestedTimezone', event.target.value)}
+						required
 						className="h-11 w-full border border-stone-200 bg-white px-3 text-sm text-stone-900 outline-none transition-colors focus:border-stone-500"
 					/>
 				</label>
@@ -146,27 +288,37 @@ export default function CustomizationInquiry({
 				</label>
 			</div>
 
-			<a
-				href={whatsappHref}
-				target="_blank"
-				rel="noopener noreferrer"
-				onClick={(event) => {
-					if (!whatsapp) {
-						event.preventDefault()
-						return
-					}
-					trackAnalyticsEvent({
-						eventName: 'whatsapp_click',
-						productId,
-						productSlug: productSlug || undefined,
-						category: category || undefined,
-					})
-				}}
-				className="mt-5 inline-flex w-full items-center justify-center gap-3 bg-stone-900 px-8 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-yellow-700 sm:w-auto"
-			>
-				<MessageCircleIcon size={16} />
-				Send Custom Inquiry
-			</a>
-		</div>
+			<div className="mt-5 flex flex-col gap-3 sm:flex-row">
+				<button
+					type="submit"
+					disabled={submitting}
+					className="inline-flex w-full items-center justify-center gap-3 bg-stone-900 px-8 py-4 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-yellow-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+				>
+					<SendIcon size={16} />
+					{submitting ? 'Sending...' : 'Send Custom Inquiry'}
+				</button>
+				<a
+					href={whatsappHref}
+					target="_blank"
+					rel="noopener noreferrer"
+					onClick={(event) => {
+						if (!whatsapp) {
+							event.preventDefault()
+							return
+						}
+						trackAnalyticsEvent({
+							eventName: 'whatsapp_click',
+							productId,
+							productSlug: productSlug || undefined,
+							category: category || undefined,
+						})
+					}}
+					className="inline-flex w-full items-center justify-center gap-3 border border-stone-300 bg-white px-8 py-4 text-xs font-semibold uppercase tracking-widest text-stone-900 transition-colors hover:border-stone-900 hover:bg-stone-100 sm:w-auto"
+				>
+					<MessageCircleIcon size={16} />
+					WhatsApp
+				</a>
+			</div>
+		</form>
 	)
 }

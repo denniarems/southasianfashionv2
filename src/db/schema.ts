@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 const discountTypes = ['flat', 'percentage', 'tiered', 'bundle'] as const
+const customEnquiryStatuses = ['pending', 'approved', 'rejected'] as const
 
 export const categories = sqliteTable('categories', {
 	id: text('id').primaryKey(),
@@ -103,6 +104,43 @@ export const productImages = sqliteTable('product_images', {
 	sortOrder: real('sort_order').notNull().default(0),
 	createdAt: text('created_at').notNull(),
 })
+
+export const customEnquiries = sqliteTable(
+	'custom_enquiries',
+	{
+		id: text('id').primaryKey(),
+		status: text('status', { enum: customEnquiryStatuses }).notNull().default('pending'),
+		customerName: text('customer_name').notNull(),
+		customerEmail: text('customer_email').notNull(),
+		customerPhone: text('customer_phone').default(''),
+		productId: text('product_id').references(() => products.id, { onDelete: 'set null' }),
+		productSlug: text('product_slug').default(''),
+		productName: text('product_name').notNull(),
+		productUrl: text('product_url').notNull(),
+		requestedStartLocal: text('requested_start_local').notNull(),
+		requestedTimezone: text('requested_timezone').notNull().default('America/Toronto'),
+		preferredSize: text('preferred_size').default(''),
+		measurements: text('measurements').default(''),
+		blouseNotes: text('blouse_notes').default(''),
+		generalNotes: text('general_notes').default(''),
+		adminNote: text('admin_note').default(''),
+		approvedAt: text('approved_at'),
+		approvedByEmail: text('approved_by_email'),
+		rejectedAt: text('rejected_at'),
+		rejectedByEmail: text('rejected_by_email'),
+		invitationSentAt: text('invitation_sent_at'),
+		invitationMessageId: text('invitation_message_id'),
+		adminNotificationSentAt: text('admin_notification_sent_at'),
+		createdAt: text('created_at').notNull(),
+		updatedAt: text('updated_at').notNull(),
+	},
+	(table) => ({
+		customEnquiriesStatusIdx: index('custom_enquiries_status_idx').on(table.status),
+		customEnquiriesCreatedAtIdx: index('custom_enquiries_created_at_idx').on(table.createdAt),
+		customEnquiriesProductIdx: index('custom_enquiries_product_idx').on(table.productId),
+		customEnquiriesEmailIdx: index('custom_enquiries_email_idx').on(table.customerEmail),
+	}),
+)
 
 export const heroBanners = sqliteTable('hero_banners', {
 	id: text('id').primaryKey(),

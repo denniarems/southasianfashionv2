@@ -31,6 +31,7 @@ import { Route as AdminProtectedHeroesRouteImport } from './routes/admin/_protec
 import { Route as AdminProtectedHeroRouteImport } from './routes/admin/_protected/hero'
 import { Route as AdminProtectedDiscountsRouteImport } from './routes/admin/_protected/discounts'
 import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
+import { Route as AdminProtectedCustomEnquiriesRouteImport } from './routes/admin/_protected/custom-enquiries'
 import { Route as AdminProtectedCollectionsRouteImport } from './routes/admin/_protected/collections'
 import { Route as AdminProtectedCategoriesRouteImport } from './routes/admin/_protected/categories'
 import { Route as AdminProtectedProductsBatchRouteImport } from './routes/admin/_protected/products/batch'
@@ -147,6 +148,12 @@ const AdminProtectedDashboardRoute = AdminProtectedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AdminProtectedRouteRoute,
 } as any)
+const AdminProtectedCustomEnquiriesRoute =
+  AdminProtectedCustomEnquiriesRouteImport.update({
+    id: '/custom-enquiries',
+    path: '/custom-enquiries',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
 const AdminProtectedCollectionsRoute =
   AdminProtectedCollectionsRouteImport.update({
     id: '/collections',
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/products/': typeof ProductsIndexRoute
   '/admin/categories': typeof AdminProtectedCategoriesRoute
   '/admin/collections': typeof AdminProtectedCollectionsRoute
+  '/admin/custom-enquiries': typeof AdminProtectedCustomEnquiriesRoute
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/discounts': typeof AdminProtectedDiscountsRoute
   '/admin/hero': typeof AdminProtectedHeroRoute
@@ -214,6 +222,7 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsIndexRoute
   '/admin/categories': typeof AdminProtectedCategoriesRoute
   '/admin/collections': typeof AdminProtectedCollectionsRoute
+  '/admin/custom-enquiries': typeof AdminProtectedCustomEnquiriesRoute
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/discounts': typeof AdminProtectedDiscountsRoute
   '/admin/hero': typeof AdminProtectedHeroRoute
@@ -243,6 +252,7 @@ export interface FileRoutesById {
   '/products/': typeof ProductsIndexRoute
   '/admin/_protected/categories': typeof AdminProtectedCategoriesRoute
   '/admin/_protected/collections': typeof AdminProtectedCollectionsRoute
+  '/admin/_protected/custom-enquiries': typeof AdminProtectedCustomEnquiriesRoute
   '/admin/_protected/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/_protected/discounts': typeof AdminProtectedDiscountsRoute
   '/admin/_protected/hero': typeof AdminProtectedHeroRoute
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/admin/categories'
     | '/admin/collections'
+    | '/admin/custom-enquiries'
     | '/admin/dashboard'
     | '/admin/discounts'
     | '/admin/hero'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/admin/categories'
     | '/admin/collections'
+    | '/admin/custom-enquiries'
     | '/admin/dashboard'
     | '/admin/discounts'
     | '/admin/hero'
@@ -328,6 +340,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/admin/_protected/categories'
     | '/admin/_protected/collections'
+    | '/admin/_protected/custom-enquiries'
     | '/admin/_protected/dashboard'
     | '/admin/_protected/discounts'
     | '/admin/_protected/hero'
@@ -513,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedDashboardRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/custom-enquiries': {
+      id: '/admin/_protected/custom-enquiries'
+      path: '/custom-enquiries'
+      fullPath: '/admin/custom-enquiries'
+      preLoaderRoute: typeof AdminProtectedCustomEnquiriesRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
     '/admin/_protected/collections': {
       id: '/admin/_protected/collections'
       path: '/collections'
@@ -563,6 +583,7 @@ const AdminProtectedProductsRouteWithChildren =
 interface AdminProtectedRouteRouteChildren {
   AdminProtectedCategoriesRoute: typeof AdminProtectedCategoriesRoute
   AdminProtectedCollectionsRoute: typeof AdminProtectedCollectionsRoute
+  AdminProtectedCustomEnquiriesRoute: typeof AdminProtectedCustomEnquiriesRoute
   AdminProtectedDashboardRoute: typeof AdminProtectedDashboardRoute
   AdminProtectedDiscountsRoute: typeof AdminProtectedDiscountsRoute
   AdminProtectedHeroRoute: typeof AdminProtectedHeroRoute
@@ -577,6 +598,7 @@ interface AdminProtectedRouteRouteChildren {
 const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedCategoriesRoute: AdminProtectedCategoriesRoute,
   AdminProtectedCollectionsRoute: AdminProtectedCollectionsRoute,
+  AdminProtectedCustomEnquiriesRoute: AdminProtectedCustomEnquiriesRoute,
   AdminProtectedDashboardRoute: AdminProtectedDashboardRoute,
   AdminProtectedDiscountsRoute: AdminProtectedDiscountsRoute,
   AdminProtectedHeroRoute: AdminProtectedHeroRoute,
