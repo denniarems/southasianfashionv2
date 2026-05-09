@@ -10,12 +10,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { LoadingImage } from '@/components/ui/loading-image'
 import ImageUpload from '@/features/admin/components/ImageUpload'
 import MultiImageUpload from '@/features/admin/components/MultiImageUpload'
 import {
 	generateModelPhotoshootImageFn,
 	type PhotoshootShotType,
 } from '@/server/admin/models.functions'
+import { deleteUploadedProductReferenceImagesFn } from '@/server/admin/dashboard.functions'
 import { useSaveItemMutation } from './admin-mutations'
 import { Field, FormSection } from './shared'
 import { AVAILABILITY_OPTIONS, OCCASION_LINKS } from '@/lib/merchandising'
@@ -38,6 +40,7 @@ interface SavedModel {
 	ageRange?: string | null
 	gender?: string | null
 	ethnicity?: string | null
+	imageUrl?: string | null
 	promptUsed?: string | null
 }
 
@@ -73,12 +76,15 @@ export function ProductForm({
 	onCancel,
 }: ProductFormProps) {
 	const router = useRouter()
+	const isAddMode = mode === 'add'
 	const [form, setForm] = useState<any>(initialData || {})
 	const [errors, setErrors] = useState<Record<string, string>>({})
 	const [isSaving, startSavingTransition] = useTransition()
 	const [isGeneratingPhotoshoot, setIsGeneratingPhotoshoot] = useState(false)
+	const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
 	const saveItem = useSaveItemMutation()
 	const generateModelPhotoshootImage = useServerFn(generateModelPhotoshootImageFn)
+	const deleteUploadedProductReferenceImages = useServerFn(deleteUploadedProductReferenceImagesFn)
 	const [selectedModelId, setSelectedModelId] = useState('')
 	const [customPhotoshootPrompt, setCustomPhotoshootPrompt] = useState('')
 	const [backViewImageUrl, setBackViewImageUrl] = useState('')
@@ -90,12 +96,13 @@ export function ProductForm({
 				}))
 			: OCCASION_LINKS
 
-	const uploadedClothingImages = useMemo(() => {
+	const savedProductImages = useMemo(() => {
 		const urls = [form.imageUrl, ...(form.additionalImages || [])].filter(
 			(url): url is string => typeof url === 'string' && url.trim().length > 0,
 		)
 		return Array.from(new Set(urls))
 	}, [form.additionalImages, form.imageUrl])
+	const photoshootSourceImages = isAddMode ? referenceImageUrls : savedProductImages
 
 	const getImageNameFromUrl = (url: string, index: number) => {
 		try {
@@ -115,6 +122,14 @@ export function ProductForm({
 		}
 	}, [models, selectedModelId])
 
+	const handleReferenceImagesChange = (urls: string[]) => {
+		const nextUrls = Array.from(new Set(urls))
+		setReferenceImageUrls(nextUrls)
+		if (backViewImageUrl && !nextUrls.includes(backViewImageUrl)) {
+			setBackViewImageUrl('')
+		}
+	}
+
 	const validate = () => {
 		const nextErrors: Record<string, string> = {}
 		if (!form.name?.trim()) nextErrors.name = 'Product name is required.'
@@ -122,13 +137,17 @@ export function ProductForm({
 		if (!form.price || Number(form.price) <= 0) {
 			nextErrors.price = 'Price must be greater than 0.'
 		}
+		if (isAddMode && !form.imageUrl?.trim()) {
+			nextErrors.imageUrl = 'Generate photoshoot images before creating the product.'
+		}
 		setErrors(nextErrors)
-		return Object.keys(nextErrors).length === 0
+		return nextErrors
 	}
 
 	const handleSave = async () => {
-		if (!validate()) {
-			toast.error('Please fix the highlighted fields')
+		const nextErrors = validate()
+		if (Object.keys(nextErrors).length > 0) {
+			toast.error(nextErrors.imageUrl || 'Please fix the highlighted fields')
 			return
 		}
 
@@ -154,7 +173,9 @@ export function ProductForm({
 	}
 
 	const handleGeneratePhotoshoot = async () => {
-		if (uploadedClothingImages.length === 0) {
+		const sourceImageUrls = Array.from(new Set(photoshootSourceImages))
+
+		if (sourceImageUrls.length === 0) {
 			toast.error('Upload at least one clothing image first')
 			return
 		}
@@ -176,7 +197,7 @@ export function ProductForm({
 		setIsGeneratingPhotoshoot(true)
 
 		try {
-			const generationTasks = uploadedClothingImages.flatMap((clothingImageUrl) => {
+			const generationTasks = sourceImageUrls.flatMap((clothingImageUrl) => {
 				const shotTypes: PhotoshootShotType[] = [...baseShots]
 				if (backViewImageUrl && clothingImageUrl === backViewImageUrl) {
 					shotTypes.push('back')
@@ -197,6 +218,7 @@ export function ProductForm({
 								ageRange: selectedModel.ageRange || '',
 								gender: selectedModel.gender || '',
 								ethnicity: selectedModel.ethnicity || '',
+								imageUrl: selectedModel.imageUrl || '',
 								promptUsed: selectedModel.promptUsed || '',
 								customPrompt: normalizedCustomPhotoshootPrompt,
 							},
@@ -211,29 +233,54 @@ export function ProductForm({
 						'imageUrl' in result && Boolean(result.imageUrl),
 				)
 				.map((result) => result.imageUrl)
+			const uniqueGeneratedUrls = Array.from(new Set(generatedUrls))
 
 			const failedCount = results.filter(
 				(result) => 'error' in result && Boolean(result.error),
 			).length
 
-			if (generatedUrls.length === 0) {
+			if (uniqueGeneratedUrls.length === 0) {
 				const failed = results.find(
 					(result): result is { error: string } => 'error' in result && Boolean(result.error),
 				)
 				throw new Error(failed?.error || 'No images were generated')
 			}
 
-			setForm((prev: any) => ({
-				...prev,
-				additionalImages: Array.from(new Set([...(prev.additionalImages || []), ...generatedUrls])),
-			}))
+			if (isAddMode) {
+				const [primaryImageUrl, ...additionalImages] = uniqueGeneratedUrls
+				setForm((prev: any) => ({
+					...prev,
+					imageUrl: primaryImageUrl,
+					additionalImages,
+				}))
+				setReferenceImageUrls([])
+				setBackViewImageUrl('')
+
+				try {
+					const cleanup = await deleteUploadedProductReferenceImages({
+						data: { urls: sourceImageUrls },
+					})
+					if (cleanup.failed > 0) {
+						toast.warning('Generated images saved, but reference cleanup needs review')
+					}
+				} catch {
+					toast.warning('Generated images saved, but reference cleanup failed')
+				}
+			} else {
+				setForm((prev: any) => ({
+					...prev,
+					additionalImages: Array.from(
+						new Set([...(prev.additionalImages || []), ...uniqueGeneratedUrls]),
+					),
+				}))
+			}
 
 			if (failedCount > 0) {
-				toast.success(`Generated ${generatedUrls.length} images (${failedCount} failed)`)
+				toast.success(`Generated ${uniqueGeneratedUrls.length} images (${failedCount} failed)`)
 				return
 			}
 
-			toast.success(`Generated ${generatedUrls.length} AI photoshoot images`)
+			toast.success(`Generated ${uniqueGeneratedUrls.length} AI photoshoot images`)
 		} catch (e: any) {
 			toast.error(e.message || 'Failed to generate photoshoot images')
 		} finally {
@@ -422,12 +469,25 @@ export function ProductForm({
 
 			<FormSection
 				title="Media"
-				description="Upload primary and gallery images for richer presentation."
+				description={
+					isAddMode
+						? 'Upload reference images, then generate the product media.'
+						: 'Upload primary and gallery images for richer presentation.'
+				}
 			>
-				<ImageUpload
-					value={form.imageUrl}
-					onChange={(url) => setForm({ ...form, imageUrl: url })}
-				/>
+				{isAddMode ? (
+					<MultiImageUpload
+						label="Reference Clothing Images"
+						values={referenceImageUrls}
+						onChange={handleReferenceImagesChange}
+						emptyText="Upload at least one clothing image to generate product media."
+					/>
+				) : (
+					<ImageUpload
+						value={form.imageUrl}
+						onChange={(url) => setForm({ ...form, imageUrl: url })}
+					/>
+				)}
 				<div className="border border-stone-200 bg-stone-50 p-4 space-y-3">
 					<div className="space-y-1">
 						<p className="text-xs uppercase tracking-widest text-stone-600">AI Model Photoshoot</p>
@@ -469,7 +529,7 @@ export function ProductForm({
 							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 						>
 							<option value="">No back shot</option>
-							{uploadedClothingImages.map((url, index) => (
+							{photoshootSourceImages.map((url, index) => (
 								<option key={url} value={url}>
 									{getImageNameFromUrl(url, index)}
 								</option>
@@ -482,7 +542,7 @@ export function ProductForm({
 						onClick={handleGeneratePhotoshoot}
 						disabled={
 							isGeneratingPhotoshoot ||
-							uploadedClothingImages.length === 0 ||
+							photoshootSourceImages.length === 0 ||
 							!selectedModelId ||
 							models.length === 0
 						}
@@ -505,10 +565,46 @@ export function ProductForm({
 						</p>
 					) : null}
 				</div>
-				<MultiImageUpload
-					values={form.additionalImages || []}
-					onChange={(urls) => setForm({ ...form, additionalImages: urls })}
-				/>
+				{isAddMode ? (
+					<div className="space-y-3">
+						<Label className="text-xs uppercase tracking-widest text-stone-500">
+							Generated Product Media
+						</Label>
+						{savedProductImages.length > 0 ? (
+							<div className="flex flex-wrap gap-3">
+								{savedProductImages.map((url, index) => (
+									<div key={url} className="space-y-1">
+										<div className="text-[10px] uppercase tracking-widest text-stone-500">
+											{index === 0 ? 'Primary' : `Gallery ${index}`}
+										</div>
+										<LoadingImage
+											src={url}
+											alt={
+												index === 0 ? 'Generated primary product image' : 'Generated gallery image'
+											}
+											width={96}
+											height={120}
+											sizes="96px"
+											className="h-[120px] w-24 object-cover border border-stone-200"
+										/>
+									</div>
+								))}
+							</div>
+						) : (
+							<p
+								className={`text-xs ${errors.imageUrl ? 'text-red-600' : 'text-stone-400 italic'}`}
+							>
+								{errors.imageUrl ||
+									'Generated images will appear here after photoshoot generation.'}
+							</p>
+						)}
+					</div>
+				) : (
+					<MultiImageUpload
+						values={form.additionalImages || []}
+						onChange={(urls) => setForm({ ...form, additionalImages: urls })}
+					/>
+				)}
 			</FormSection>
 
 			<FormSection title="Highlight Flags">

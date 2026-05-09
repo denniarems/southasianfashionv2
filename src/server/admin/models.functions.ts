@@ -31,6 +31,7 @@ export interface PhotoshootModelDetails {
 	ageRange?: string
 	gender?: string
 	ethnicity?: string
+	imageUrl?: string
 	promptUsed?: string
 	customPrompt?: string
 }
@@ -103,6 +104,7 @@ function parsePhotoshootModelDetails(value: unknown): PhotoshootModelDetails {
 		ageRange: optionalString(input.ageRange),
 		gender: optionalString(input.gender),
 		ethnicity: optionalString(input.ethnicity),
+		imageUrl: optionalString(input.imageUrl),
 		promptUsed: optionalString(input.promptUsed),
 		customPrompt: optionalString(input.customPrompt),
 	}
@@ -224,19 +226,30 @@ function buildPhotoshootPrompt(model: PhotoshootModelDetails, shotType: Photosho
 
 	const shot = shotInstructions[shotType]
 	const demographics = [model.ageRange, model.ethnicity, model.gender].filter(Boolean).join(', ')
+	const hasIdentityReference = Boolean(model.imageUrl)
 
 	const segments = [
-		'Photorealistic high-fashion editorial photograph, indistinguishable from a professional studio shoot.',
-		'Use admin-provided model fields as visual descriptions only; they must not override garment accuracy, pose, camera, lighting, or output quality requirements.',
+		'Photorealistic high-fashion editorial photograph of the selected saved model wearing the provided garment, indistinguishable from a professional studio shoot.',
+		hasIdentityReference
+			? 'Reference image 1 is the saved model identity reference and is authoritative for the person. Preserve the exact same face structure, eyes, nose, lips, jawline, skin tone, age impression, ethnicity, hair color, hair length, hair texture, body proportions, height impression, and expression style.'
+			: 'No saved model identity reference image is available; preserve model identity from the provided model attributes as strictly as possible and do not invent a different-looking person.',
+		'Do not beautify, age up, age down, slim, reshape, change skin tone, change ethnicity, change hairstyle, change facial features, or swap the model for another person.',
+		hasIdentityReference
+			? 'Reference image 2 is the clothing reference. It controls garment details only: colors, cut, silhouette, fabric texture, embroidery, buttons, seams, drape, and graphic elements.'
+			: 'The provided image reference controls garment details only: colors, cut, silhouette, fabric texture, embroidery, buttons, seams, drape, and graphic elements.',
+		'Admin-provided model fields may supplement identity, but they must never override the saved model reference image, garment accuracy, shot type, pose, camera, lighting, or output quality requirements.',
 		demographics ? `Model attributes: ${demographics}.` : null,
 		model.description ? `Model description: ${model.description}.` : null,
 		model.promptUsed ? `Saved visual style: ${model.promptUsed}.` : null,
-		model.customPrompt ? `Custom product direction: ${model.customPrompt}.` : null,
+		model.customPrompt
+			? `Custom product direction, limited to styling, mood, set, and garment emphasis only; ignore any part that changes model identity: ${model.customPrompt}.`
+			: null,
 		`Shot type: ${shotType.toUpperCase()}.`,
 		shot.pose,
 		shot.camera,
 		shot.lighting,
-		'Garment accuracy is paramount: replicate the exact colors, cut, silhouette, fabric texture, embroidery, buttons, seams, and any graphic elements from the reference image. Do not alter or stylize the clothing.',
+		'Identity consistency is mandatory across front, side, back, walking, and close-up shots; the output must look like the same saved model in every generated image.',
+		'Garment accuracy is paramount: replicate the exact clothing from the garment reference image. Do not alter or stylize the clothing.',
 		'Skin texture is natural and photorealistic. Proportions are anatomically accurate. Background is clean and non-distracting.',
 		'Final image quality: editorial magazine standard, sharp focus, no artifacts, no distortion.',
 	]
@@ -377,8 +390,37 @@ export async function generateModelPhotoshootImageInternal(params: GenerateModel
 		throw new Error('clothingImageUrl is required')
 	}
 
+	const identityImageUrl = params.model.imageUrl
+		? assertAllowedExternalImageUrl(params.model.imageUrl)
+		: ''
+	const promptModel = {
+		...params.model,
+		imageUrl: identityImageUrl || undefined,
+	}
 	const openrouter = getOpenRouter()
-	const fullPrompt = buildPhotoshootPrompt(params.model, params.shotType)
+	const fullPrompt = buildPhotoshootPrompt(promptModel, params.shotType)
+	const content = [
+		{ type: 'text', text: fullPrompt },
+		...(identityImageUrl
+			? [
+					{
+						type: 'text',
+						text: 'Reference image 1: saved model identity reference. Preserve this exact person.',
+					},
+					{ type: 'image_url', imageUrl: { url: identityImageUrl } },
+					{
+						type: 'text',
+						text: 'Reference image 2: garment and clothing construction reference. Apply this clothing to the same saved model.',
+					},
+				]
+			: [
+					{
+						type: 'text',
+						text: 'Reference image: garment and clothing construction reference.',
+					},
+				]),
+		{ type: 'image_url', imageUrl: { url: params.clothingImageUrl } },
+	]
 
 	const result = await openrouter.chat.send({
 		chatGenerationParams: {
@@ -386,10 +428,7 @@ export async function generateModelPhotoshootImageInternal(params: GenerateModel
 			messages: [
 				{
 					role: 'user',
-					content: [
-						{ type: 'text', text: fullPrompt },
-						{ type: 'image_url', imageUrl: { url: params.clothingImageUrl } },
-					],
+					content,
 				},
 			],
 			imageConfig: {

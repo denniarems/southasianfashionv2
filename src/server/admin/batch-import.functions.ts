@@ -445,6 +445,7 @@ export const generateBatchProductImagesFn = createServerFn({ method: 'POST' })
 			ageRange: model.ageRange || '',
 			gender: model.gender || '',
 			ethnicity: model.ethnicity || '',
+			imageUrl: model.imageUrl || '',
 			promptUsed: model.promptUsed || '',
 		}
 		const errors: string[] = []

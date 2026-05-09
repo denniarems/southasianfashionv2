@@ -16,12 +16,14 @@ interface MultiImageUploadProps {
 	values: string[]
 	onChange: (urls: string[]) => void
 	label?: string
+	emptyText?: string
 }
 
 export default function MultiImageUpload({
 	values,
 	onChange,
 	label = 'Additional Images',
+	emptyText = 'No additional images. Upload images to create a gallery on the product page.',
 }: MultiImageUploadProps) {
 	const [uploading, setUploading] = useState(false)
 	const fileRef = useRef<HTMLInputElement>(null)
@@ -112,11 +114,7 @@ export default function MultiImageUpload({
 					))}
 				</div>
 			)}
-			{values.length === 0 && (
-				<p className="text-xs text-stone-400 italic">
-					No additional images. Upload images to create a gallery on the product page.
-				</p>
-			)}
+			{values.length === 0 && <p className="text-xs text-stone-400 italic">{emptyText}</p>}
 		</div>
 	)
 }

@@ -45,6 +45,12 @@ const SAVE_ITEM_TYPES = [
 ] as const
 const DELETE_ITEM_TYPES = SAVE_ITEM_TYPES
 const DISCOUNT_TYPES = ['flat', 'percentage', 'tiered', 'bundle'] as const
+const PRODUCT_AVAILABILITY_STATUSES = [
+	'made-to-order',
+	'ready-to-ship',
+	'in-stock',
+	'limited',
+] as const
 
 type SaveItemInput = {
 	type: (typeof SAVE_ITEM_TYPES)[number]
@@ -55,6 +61,10 @@ type SaveItemInput = {
 type DeleteItemInput = {
 	type: (typeof DELETE_ITEM_TYPES)[number]
 	id: string
+}
+
+type DeleteUploadedProductReferenceImagesInput = {
+	urls: string[]
 }
 
 type ApplyDiscountsInput = {
@@ -79,6 +89,16 @@ function parseDeleteItemInput(value: unknown): DeleteItemInput {
 	return {
 		type: enumValue(input.type, DELETE_ITEM_TYPES, 'Item type'),
 		id: requiredString(input.id, 'Item ID'),
+	}
+}
+
+function parseDeleteUploadedProductReferenceImagesInput(
+	value: unknown,
+): DeleteUploadedProductReferenceImagesInput {
+	const input = asRecord(value, 'Product reference image cleanup request')
+
+	return {
+		urls: Array.from(new Set(stringArrayValue(input.urls))),
 	}
 }
 
@@ -131,8 +151,20 @@ function requirePositivePrice(value: unknown) {
 	return numberValue(value, 'Price', { min: 0.01 })
 }
 
+function productImageUrlValue(input: UnknownRecord, mode: SaveItemInput['mode']) {
+	if (mode === 'add') {
+		return requiredString(input.imageUrl, 'Generated product image')
+	}
+
+	return stringWithDefault(input.imageUrl)
+}
+
 function normalizeProductPayload(input: UnknownRecord, mode: SaveItemInput['mode'], slug: string) {
-	const availabilityStatus = optionalString(input.availabilityStatus) || 'made-to-order'
+	const availabilityStatus = enumValue(
+		input.availabilityStatus || 'made-to-order',
+		PRODUCT_AVAILABILITY_STATUSES,
+		'Availability status',
+	)
 
 	return {
 		id: idForMode(input, mode, 'Product'),
@@ -140,7 +172,7 @@ function normalizeProductPayload(input: UnknownRecord, mode: SaveItemInput['mode
 		description: stringWithDefault(input.description),
 		price: requirePositivePrice(input.price),
 		currency: 'CAD',
-		category: optionalString(input.category) || null,
+		category: requiredString(input.category, 'Category'),
 		occasion: optionalString(input.occasion) || null,
 		fabric: optionalString(input.fabric) || null,
 		color: optionalString(input.color) || null,
@@ -148,7 +180,7 @@ function normalizeProductPayload(input: UnknownRecord, mode: SaveItemInput['mode
 		isReadyToShip:
 			booleanValue(input.isReadyToShip) || availabilityStatus.toLowerCase() === 'ready-to-ship',
 		displayOrder: numberValue(input.displayOrder, 'Display order', { fallback: 0 }),
-		imageUrl: stringWithDefault(input.imageUrl),
+		imageUrl: productImageUrlValue(input, mode),
 		collectionId: optionalString(input.collectionId) || null,
 		sizeGuideId: optionalString(input.sizeGuideId) || null,
 		createdAt: mode === 'add' ? new Date().toISOString() : isoStringValue(input.createdAt),
@@ -501,6 +533,28 @@ export const fetchProductImagesForAdminFn = createServerFn({ method: 'GET' }).ha
 		return map
 	},
 )
+
+export const deleteUploadedProductReferenceImagesFn = createServerFn({ method: 'POST' })
+	.inputValidator(parseDeleteUploadedProductReferenceImagesInput)
+	.handler(async ({ data }) => {
+		await requireAdmin()
+
+		let deleted = 0
+		let failed = 0
+
+		await Promise.all(
+			data.urls.map(async (url) => {
+				try {
+					await deleteR2ObjectByUrl(url, 'temporary product reference image cleanup')
+					deleted += 1
+				} catch {
+					failed += 1
+				}
+			}),
+		)
+
+		return { success: true, deleted, failed }
+	})
 
 export const saveItemFn = createServerFn({ method: 'POST' })
 	.inputValidator(parseSaveItemInput)
