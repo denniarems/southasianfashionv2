@@ -24,7 +24,8 @@ export function LoadingImage({
 	skeletonClassName,
 	...props
 }: LoadingImageProps) {
-	const [loaded, setLoaded] = useState(false)
+	const [loadedSrc, setLoadedSrc] = useState<ImageProps['src'] | null>(null)
+	const loaded = loadedSrc === src
 
 	const resolvedBlurDataURL =
 		blurDataURL ?? (!disableAutoBlur && typeof src === 'string' ? DEFAULT_BLUR_DATA_URL : undefined)
@@ -33,22 +34,21 @@ export function LoadingImage({
 
 	useEffect(() => {
 		if (typeof src !== 'string' || typeof window === 'undefined') {
-			setLoaded(true)
+			setLoadedSrc(src)
 			return
 		}
-
-		setLoaded(false)
 
 		const image = new window.Image()
 		image.src = src
+		const markLoaded = () => setLoadedSrc(src)
 
 		if (image.complete) {
-			setLoaded(true)
+			markLoaded()
 			return
 		}
 
-		image.onload = () => setLoaded(true)
-		image.onerror = () => setLoaded(true)
+		image.onload = markLoaded
+		image.onerror = markLoaded
 
 		return () => {
 			image.onload = null
@@ -68,7 +68,7 @@ export function LoadingImage({
 			placeholder={resolvedPlaceholder}
 			blurDataURL={resolvedBlurDataURL}
 			onLoad={(event) => {
-				setLoaded(true)
+				setLoadedSrc(src)
 				onLoad?.(event)
 			}}
 		/>

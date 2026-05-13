@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useReducer, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { useServerFn } from '@tanstack/react-start'
 import { useAppRouter as useRouter } from '@/components/router-hooks'
@@ -47,6 +47,29 @@ interface SavedModel {
 const EMPTY_OCCASIONS: any[] = []
 const EMPTY_MODELS: SavedModel[] = []
 
+type ProductMediaState = {
+	isGeneratingPhotoshoot: boolean
+	referenceImageUrls: string[]
+	selectedModelId: string
+	customPhotoshootPrompt: string
+	backViewImageUrl: string
+}
+
+const initialProductMediaState: ProductMediaState = {
+	isGeneratingPhotoshoot: false,
+	referenceImageUrls: [],
+	selectedModelId: '',
+	customPhotoshootPrompt: '',
+	backViewImageUrl: '',
+}
+
+function productMediaReducer(
+	state: ProductMediaState,
+	action: { type: 'patch'; update: Partial<ProductMediaState> },
+): ProductMediaState {
+	return { ...state, ...action.update }
+}
+
 async function runWithConcurrency<T, R>(
 	items: T[],
 	limit: number,
@@ -55,15 +78,16 @@ async function runWithConcurrency<T, R>(
 	const results: R[] = []
 	let nextIndex = 0
 
-	await Promise.all(
-		Array.from({ length: Math.min(limit, items.length) }, async () => {
-			while (nextIndex < items.length) {
-				const currentIndex = nextIndex
-				nextIndex += 1
-				results[currentIndex] = await worker(items[currentIndex])
-			}
-		}),
-	)
+	const runNext = async (): Promise<void> => {
+		const currentIndex = nextIndex
+		nextIndex += 1
+		if (currentIndex >= items.length) return
+
+		results[currentIndex] = await worker(items[currentIndex])
+		await runNext()
+	}
+
+	await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => runNext()))
 
 	return results
 }
@@ -83,14 +107,22 @@ export function ProductForm({
 	const [form, setForm] = useState<any>(initialData || {})
 	const [errors, setErrors] = useState<Record<string, string>>({})
 	const [isSaving, startSavingTransition] = useTransition()
-	const [isGeneratingPhotoshoot, setIsGeneratingPhotoshoot] = useState(false)
-	const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
 	const saveItem = useSaveItemMutation()
 	const generateModelPhotoshootImage = useServerFn(generateModelPhotoshootImageFn)
 	const deleteUploadedProductReferenceImages = useServerFn(deleteUploadedProductReferenceImagesFn)
-	const [selectedModelId, setSelectedModelId] = useState('')
-	const [customPhotoshootPrompt, setCustomPhotoshootPrompt] = useState('')
-	const [backViewImageUrl, setBackViewImageUrl] = useState('')
+	const [media, dispatchMedia] = useReducer(productMediaReducer, initialProductMediaState)
+	const {
+		isGeneratingPhotoshoot,
+		referenceImageUrls,
+		selectedModelId,
+		customPhotoshootPrompt,
+		backViewImageUrl,
+	} = media
+	const patchMedia = (update: Partial<ProductMediaState>) =>
+		dispatchMedia({ type: 'patch', update })
+	const patchForm = (update: Record<string, unknown>) => {
+		setForm((prev: any) => ({ ...prev, ...update }))
+	}
 	const occasionOptions =
 		occasions.length > 0
 			? occasions.map((occasion: any) => ({
@@ -121,16 +153,17 @@ export function ProductForm({
 	useEffect(() => {
 		if (selectedModelId) return
 		if (models.length > 0) {
-			setSelectedModelId(models[0].id)
+			patchMedia({ selectedModelId: models[0].id })
 		}
 	}, [models, selectedModelId])
 
 	const handleReferenceImagesChange = (urls: string[]) => {
 		const nextUrls = Array.from(new Set(urls))
-		setReferenceImageUrls(nextUrls)
-		if (backViewImageUrl && !nextUrls.includes(backViewImageUrl)) {
-			setBackViewImageUrl('')
-		}
+		patchMedia({
+			referenceImageUrls: nextUrls,
+			backViewImageUrl:
+				backViewImageUrl && !nextUrls.includes(backViewImageUrl) ? '' : backViewImageUrl,
+		})
 	}
 
 	const validate = () => {
@@ -197,7 +230,7 @@ export function ProductForm({
 		const baseShots: PhotoshootShotType[] = ['front', 'side', 'walking', 'close-up']
 		const normalizedCustomPhotoshootPrompt = customPhotoshootPrompt.trim()
 
-		setIsGeneratingPhotoshoot(true)
+		patchMedia({ isGeneratingPhotoshoot: true })
 
 		try {
 			const generationTasks = sourceImageUrls.flatMap((clothingImageUrl) => {
@@ -230,12 +263,9 @@ export function ProductForm({
 						},
 					}),
 			)
-			const generatedUrls = results
-				.filter(
-					(result): result is { imageUrl: string } =>
-						'imageUrl' in result && Boolean(result.imageUrl),
-				)
-				.map((result) => result.imageUrl)
+			const generatedUrls = results.flatMap((result) =>
+				'imageUrl' in result && result.imageUrl ? [result.imageUrl] : [],
+			)
 			const uniqueGeneratedUrls = Array.from(new Set(generatedUrls))
 
 			const failedCount = results.filter(
@@ -256,8 +286,7 @@ export function ProductForm({
 					imageUrl: primaryImageUrl,
 					additionalImages,
 				}))
-				setReferenceImageUrls([])
-				setBackViewImageUrl('')
+				patchMedia({ referenceImageUrls: [], backViewImageUrl: '' })
 
 				try {
 					const cleanup = await deleteUploadedProductReferenceImages({
@@ -287,7 +316,7 @@ export function ProductForm({
 		} catch (e: any) {
 			toast.error(e.message || 'Failed to generate photoshoot images')
 		} finally {
-			setIsGeneratingPhotoshoot(false)
+			patchMedia({ isGeneratingPhotoshoot: false })
 		}
 	}
 
@@ -316,7 +345,7 @@ export function ProductForm({
 					<Input
 						data-testid="dlg-name"
 						value={form.name || ''}
-						onChange={(e) => setForm({ ...form, name: e.target.value })}
+						onChange={(e) => patchForm({ name: e.target.value })}
 						aria-invalid={Boolean(errors.name)}
 						className="rounded-none"
 					/>
@@ -326,7 +355,7 @@ export function ProductForm({
 					<Textarea
 						data-testid="dlg-desc"
 						value={form.description || ''}
-						onChange={(e) => setForm({ ...form, description: e.target.value })}
+						onChange={(e) => patchForm({ description: e.target.value })}
 						className="rounded-none"
 						rows={3}
 					/>
@@ -337,7 +366,7 @@ export function ProductForm({
 							data-testid="dlg-price"
 							type="number"
 							value={form.price || ''}
-							onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+							onChange={(e) => patchForm({ price: parseFloat(e.target.value) || 0 })}
 							aria-invalid={Boolean(errors.price)}
 							className="rounded-none"
 						/>
@@ -347,7 +376,7 @@ export function ProductForm({
 						<select
 							data-testid="dlg-category"
 							value={form.category || ''}
-							onChange={(e) => setForm({ ...form, category: e.target.value })}
+							onChange={(e) => patchForm({ category: e.target.value })}
 							aria-invalid={Boolean(errors.category)}
 							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-stone-500"
 						>
@@ -372,7 +401,7 @@ export function ProductForm({
 						<select
 							data-testid="dlg-collection"
 							value={form.collectionId || ''}
-							onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
+							onChange={(e) => patchForm({ collectionId: e.target.value })}
 							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 						>
 							<option value="">No collection</option>
@@ -387,17 +416,19 @@ export function ProductForm({
 						<select
 							data-testid="dlg-size-guide"
 							value={form.sizeGuideId || ''}
-							onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
+							onChange={(e) => patchForm({ sizeGuideId: e.target.value })}
 							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 						>
 							<option value="">No size guide</option>
-							{sizeGuides
-								.filter((guide: any) => guide.isActive)
-								.map((guide: any) => (
-									<option key={guide.id} value={guide.id}>
-										{guide.name}
-									</option>
-								))}
+							{sizeGuides.flatMap((guide: any) =>
+								guide.isActive
+									? [
+											<option key={guide.id} value={guide.id}>
+												{guide.name}
+											</option>,
+										]
+									: [],
+							)}
 						</select>
 					</Field>
 				</div>
@@ -408,7 +439,7 @@ export function ProductForm({
 					<Field label="Occasion">
 						<select
 							value={form.occasion || ''}
-							onChange={(e) => setForm({ ...form, occasion: e.target.value })}
+							onChange={(e) => patchForm({ occasion: e.target.value })}
 							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 						>
 							<option value="">No occasion</option>
@@ -422,7 +453,7 @@ export function ProductForm({
 					<Field label="Fabric">
 						<Input
 							value={form.fabric || ''}
-							onChange={(e) => setForm({ ...form, fabric: e.target.value })}
+							onChange={(e) => patchForm({ fabric: e.target.value })}
 							className="rounded-none"
 							placeholder="Silk, georgette, velvet"
 						/>
@@ -430,7 +461,7 @@ export function ProductForm({
 					<Field label="Color">
 						<Input
 							value={form.color || ''}
-							onChange={(e) => setForm({ ...form, color: e.target.value })}
+							onChange={(e) => patchForm({ color: e.target.value })}
 							className="rounded-none"
 							placeholder="Ivory, red, emerald"
 						/>
@@ -440,7 +471,7 @@ export function ProductForm({
 					<Field label="Availability">
 						<select
 							value={form.availabilityStatus || 'made-to-order'}
-							onChange={(e) => setForm({ ...form, availabilityStatus: e.target.value })}
+							onChange={(e) => patchForm({ availabilityStatus: e.target.value })}
 							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 						>
 							{AVAILABILITY_OPTIONS.map((option) => (
@@ -454,7 +485,7 @@ export function ProductForm({
 						<Input
 							type="number"
 							value={form.displayOrder ?? 0}
-							onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) || 0 })}
+							onChange={(e) => patchForm({ displayOrder: Number(e.target.value) || 0 })}
 							className="rounded-none"
 						/>
 					</Field>
@@ -462,7 +493,7 @@ export function ProductForm({
 						<div className="flex items-center gap-2">
 							<Switch
 								checked={form.isReadyToShip || false}
-								onCheckedChange={(v) => setForm({ ...form, isReadyToShip: v })}
+								onCheckedChange={(v) => patchForm({ isReadyToShip: v })}
 							/>
 							<Label className="text-xs">Ready to Ship</Label>
 						</div>
@@ -486,10 +517,7 @@ export function ProductForm({
 						emptyText="Upload at least one clothing image to generate product media."
 					/>
 				) : (
-					<ImageUpload
-						value={form.imageUrl}
-						onChange={(url) => setForm({ ...form, imageUrl: url })}
-					/>
+					<ImageUpload value={form.imageUrl} onChange={(url) => patchForm({ imageUrl: url })} />
 				)}
 				<div className="border border-stone-200 bg-stone-50 p-4 space-y-3">
 					<div className="space-y-1">
@@ -503,7 +531,7 @@ export function ProductForm({
 					<Field label="Select Saved Model">
 						<select
 							value={selectedModelId}
-							onChange={(e) => setSelectedModelId(e.target.value)}
+							onChange={(e) => patchMedia({ selectedModelId: e.target.value })}
 							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 						>
 							<option value="">Select model</option>
@@ -518,7 +546,7 @@ export function ProductForm({
 					<Field label="Custom Prompt (Optional)">
 						<Textarea
 							value={customPhotoshootPrompt}
-							onChange={(e) => setCustomPhotoshootPrompt(e.target.value)}
+							onChange={(e) => patchMedia({ customPhotoshootPrompt: e.target.value })}
 							placeholder="e.g. Editorial luxury campaign, soft golden-hour mood, emphasize embroidery and drape"
 							rows={3}
 							className="rounded-none"
@@ -528,7 +556,7 @@ export function ProductForm({
 					<Field label="Back View Clothing Image (Optional)">
 						<select
 							value={backViewImageUrl}
-							onChange={(e) => setBackViewImageUrl(e.target.value)}
+							onChange={(e) => patchMedia({ backViewImageUrl: e.target.value })}
 							className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 						>
 							<option value="">No back shot</option>
@@ -605,7 +633,7 @@ export function ProductForm({
 				) : (
 					<MultiImageUpload
 						values={form.additionalImages || []}
-						onChange={(urls) => setForm({ ...form, additionalImages: urls })}
+						onChange={(urls) => patchForm({ additionalImages: urls })}
 					/>
 				)}
 			</FormSection>
@@ -616,7 +644,7 @@ export function ProductForm({
 						<Switch
 							data-testid="dlg-new"
 							checked={form.isNew || false}
-							onCheckedChange={(v) => setForm({ ...form, isNew: v })}
+							onCheckedChange={(v) => patchForm({ isNew: v })}
 						/>
 						<Label className="text-xs">New Arrival</Label>
 					</div>
@@ -624,7 +652,7 @@ export function ProductForm({
 						<Switch
 							data-testid="dlg-featured"
 							checked={form.isFeatured || false}
-							onCheckedChange={(v) => setForm({ ...form, isFeatured: v })}
+							onCheckedChange={(v) => patchForm({ isFeatured: v })}
 						/>
 						<Label className="text-xs">Featured</Label>
 					</div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useReducer, useTransition } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { m } from 'framer-motion'
@@ -14,25 +14,55 @@ import { LoadingImage } from '@/components/ui/loading-image'
 import { FormSection, Field } from '../components/shared'
 import { deleteModelFn, generateModelImageFn, saveModelFn } from '@/server/admin/models.functions'
 
+type ModelStudioState = {
+	name: string
+	description: string
+	ageRange: string
+	gender: string
+	ethnicity: string
+	style: string
+	generatedImageUrl: string
+	isGenerating: boolean
+}
+
+const initialModelStudioState: ModelStudioState = {
+	name: '',
+	description: '',
+	ageRange: '20-30',
+	gender: 'Female',
+	ethnicity: 'South Asian',
+	style: 'Realistic Fashion Editorial',
+	generatedImageUrl: '',
+	isGenerating: false,
+}
+
+function modelStudioReducer(
+	state: ModelStudioState,
+	action: { type: 'patch'; update: Partial<ModelStudioState> } | { type: 'reset' },
+): ModelStudioState {
+	switch (action.type) {
+		case 'patch':
+			return { ...state, ...action.update }
+		case 'reset':
+			return initialModelStudioState
+		default:
+			return state
+	}
+}
+
 export default function ModelsClient({ initialModels }: { initialModels: any[] }) {
-	const [models] = useState(initialModels)
+	const models = initialModels
+	const [studio, dispatchStudio] = useReducer(modelStudioReducer, initialModelStudioState)
 	const router = useRouter()
 	const generateModelImage = useServerFn(generateModelImageFn)
 	const saveModel = useServerFn(saveModelFn)
 	const deleteModel = useServerFn(deleteModelFn)
-
-	// Form state
-	const [name, setName] = useState('')
-	const [description, setDescription] = useState('')
-	const [ageRange, setAgeRange] = useState('20-30')
-	const [gender, setGender] = useState('Female')
-	const [ethnicity, setEthnicity] = useState('South Asian')
-	const [style, setStyle] = useState('Realistic Fashion Editorial')
-
-	const [generatedImageUrl, setGeneratedImageUrl] = useState('')
-	const [isGenerating, setIsGenerating] = useState(false)
 	const [isSaving, startSaving] = useTransition()
 	const [isDeleting, startDeleting] = useTransition()
+	const patchStudio = (update: Partial<ModelStudioState>) =>
+		dispatchStudio({ type: 'patch', update })
+	const { name, description, ageRange, gender, ethnicity, style, generatedImageUrl, isGenerating } =
+		studio
 
 	const handleGenerate = async () => {
 		if (!description.trim()) {
@@ -40,8 +70,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 			return
 		}
 
-		setIsGenerating(true)
-		setGeneratedImageUrl('')
+		patchStudio({ isGenerating: true, generatedImageUrl: '' })
 
 		try {
 			const res = await generateModelImage({
@@ -49,12 +78,12 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 			})
 			if (res.error) throw new Error(res.error)
 
-			setGeneratedImageUrl(res.imageUrl || '')
+			patchStudio({ generatedImageUrl: res.imageUrl || '' })
 			toast.success('Model generated successfully!')
 		} catch (e: any) {
 			toast.error(e.message || 'Generation failed')
 		} finally {
-			setIsGenerating(false)
+			patchStudio({ isGenerating: false })
 		}
 	}
 
@@ -84,9 +113,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 
 				if (res.error) throw new Error(res.error)
 				toast.success('Model saved to gallery')
-				setGeneratedImageUrl('')
-				setName('')
-				setDescription('')
+				dispatchStudio({ type: 'reset' })
 				await router.invalidate({ sync: true })
 			} catch (e: any) {
 				toast.error(e.message || 'Failed to save model')
@@ -159,7 +186,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 								<Field label="Model Name">
 									<Input
 										value={name}
-										onChange={(e) => setName(e.target.value)}
+										onChange={(e) => patchStudio({ name: e.target.value })}
 										placeholder="e.g., Summer Bride, Modern Groom"
 										className="rounded-none"
 									/>
@@ -169,7 +196,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 									<Field label="Age Range">
 										<select
 											value={ageRange}
-											onChange={(e) => setAgeRange(e.target.value)}
+											onChange={(e) => patchStudio({ ageRange: e.target.value })}
 											className="w-full h-10 border border-stone-200 bg-white px-3 text-sm focus:ring-2 focus:ring-stone-500 outline-none"
 										>
 											{ageOptions.map((opt) => (
@@ -183,7 +210,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 									<Field label="Gender">
 										<select
 											value={gender}
-											onChange={(e) => setGender(e.target.value)}
+											onChange={(e) => patchStudio({ gender: e.target.value })}
 											className="w-full h-10 border border-stone-200 bg-white px-3 text-sm focus:ring-2 focus:ring-stone-500 outline-none"
 										>
 											{genderOptions.map((opt) => (
@@ -199,7 +226,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 									<Field label="Ethnicity">
 										<select
 											value={ethnicity}
-											onChange={(e) => setEthnicity(e.target.value)}
+											onChange={(e) => patchStudio({ ethnicity: e.target.value })}
 											className="w-full h-10 border border-stone-200 bg-white px-3 text-sm focus:ring-2 focus:ring-stone-500 outline-none"
 										>
 											{ethnicityOptions.map((opt) => (
@@ -213,7 +240,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 									<Field label="Style Preference">
 										<select
 											value={style}
-											onChange={(e) => setStyle(e.target.value)}
+											onChange={(e) => patchStudio({ style: e.target.value })}
 											className="w-full h-10 border border-stone-200 bg-white px-3 text-sm focus:ring-2 focus:ring-stone-500 outline-none"
 										>
 											{styleOptions.map((opt) => (
@@ -228,7 +255,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 								<Field label="Description / Prompt">
 									<Textarea
 										value={description}
-										onChange={(e) => setDescription(e.target.value)}
+										onChange={(e) => patchStudio({ description: e.target.value })}
 										placeholder="Describe the model's appearance, vibe, pose, clothing context..."
 										className="rounded-none"
 										rows={3}

@@ -161,7 +161,7 @@ export default function CustomizationInquiry({
 
 			{submitted ? (
 				<div className="mb-5 flex items-start gap-3 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-					<CheckCircleIcon className="mt-0.5 h-4 w-4 flex-shrink-0" />
+					<CheckCircleIcon className="mt-0.5 size-4 flex-shrink-0" />
 					<p>
 						Your private fitting request is saved. The atelier will review it and confirm the
 						appointment.

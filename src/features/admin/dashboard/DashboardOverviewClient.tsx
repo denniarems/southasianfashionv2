@@ -78,7 +78,7 @@ export default function DashboardOverviewClient({
 										<CardTitle className="text-xs uppercase tracking-widest text-stone-500 font-medium">
 											{stat.title}
 										</CardTitle>
-										<Icon className="h-4 w-4 text-stone-400" />
+										<Icon className="size-4 text-stone-400" />
 									</CardHeader>
 									<CardContent>
 										<div className="text-3xl font-heading text-stone-900">{stat.value}</div>
@@ -99,7 +99,7 @@ export default function DashboardOverviewClient({
 							</CardTitle>
 							<p className="mt-1 text-xs text-stone-500">7-day and 30-day storefront events</p>
 						</div>
-						<BarChart3 className="h-4 w-4 text-stone-400" />
+						<BarChart3 className="size-4 text-stone-400" />
 					</CardHeader>
 					<CardContent>
 						{analyticsSummary.available ? (
@@ -167,7 +167,7 @@ export default function DashboardOverviewClient({
 						<CardTitle className="text-sm uppercase tracking-widest text-stone-900">
 							Media Warnings
 						</CardTitle>
-						<AlertTriangle className="h-4 w-4 text-yellow-700" />
+						<AlertTriangle className="size-4 text-yellow-700" />
 					</CardHeader>
 					<CardContent className="space-y-3">
 						{[

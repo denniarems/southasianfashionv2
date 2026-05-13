@@ -1,5 +1,5 @@
 import { createContext, use, useCallback, useEffect, useRef, useState } from 'react'
-import { LazyMotion, domAnimation } from 'framer-motion'
+import { LazyMotion, MotionConfig, domAnimation } from 'framer-motion'
 import { ReactLenis } from 'lenis/react'
 import { Toaster } from '@/components/ui/toaster'
 import { FullScreenLoader } from '@/components/ui/full-screen-loader'
@@ -96,9 +96,11 @@ export function ClientWrapper({ children }: { children: React.ReactNode }) {
 			<ReactLenis root>
 				<CartProvider>
 					<LazyMotion features={domAnimation}>
-						{children}
-						<Toaster />
-						<FullScreenLoader show={isLoading} />
+						<MotionConfig reducedMotion="user">
+							{children}
+							<Toaster />
+							<FullScreenLoader show={isLoading} />
+						</MotionConfig>
 					</LazyMotion>
 				</CartProvider>
 			</ReactLenis>

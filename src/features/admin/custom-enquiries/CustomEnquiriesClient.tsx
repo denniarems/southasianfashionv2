@@ -221,7 +221,7 @@ export default function CustomEnquiriesClient({
 								<p className="text-[11px] font-semibold uppercase tracking-widest text-stone-500">
 									{label as string}
 								</p>
-								<DisplayIcon className="h-4 w-4 text-stone-400" />
+								<DisplayIcon className="size-4 text-stone-400" />
 							</div>
 							<p className="mt-3 font-heading text-3xl text-stone-900">{value as number}</p>
 						</div>
@@ -246,7 +246,7 @@ export default function CustomEnquiriesClient({
 											<span
 												className={`inline-flex items-center gap-1 border px-2 py-1 text-[10px] font-semibold uppercase tracking-widest ${statusClass(enquiry.status)}`}
 											>
-												<StatusIcon className="h-3 w-3" />
+												<StatusIcon className="size-3" />
 												{enquiry.status}
 											</span>
 											<span className="text-[11px] uppercase tracking-widest text-stone-400">
@@ -257,7 +257,7 @@ export default function CustomEnquiriesClient({
 											{enquiry.customerName}
 										</p>
 										<p className="mt-1 flex items-center gap-2 text-xs text-stone-500">
-											<MailIcon className="h-3 w-3" />
+											<MailIcon className="size-3" />
 											{enquiry.customerEmail}
 										</p>
 									</div>
@@ -314,7 +314,7 @@ export default function CustomEnquiriesClient({
 											rel="noopener noreferrer"
 											className="inline-flex items-center gap-2 text-sm font-medium text-yellow-700 hover:text-stone-900"
 										>
-											View product <ExternalLinkIcon className="h-3 w-3" />
+											View product <ExternalLinkIcon className="size-3" />
 										</a>
 									</div>
 								</div>
@@ -354,7 +354,7 @@ export default function CustomEnquiriesClient({
 										disabled={Boolean(actionKey)}
 										className="rounded-none"
 									>
-										<RefreshCwIcon className="h-4 w-4" />
+										<RefreshCwIcon className="size-4" />
 										{actionKey.startsWith('resend:') ? 'Resending…' : 'Resend Invite'}
 									</Button>
 								) : null}
@@ -367,7 +367,7 @@ export default function CustomEnquiriesClient({
 											disabled={Boolean(actionKey)}
 											className="rounded-none border-red-200 text-red-700 hover:bg-red-50"
 										>
-											<XIcon className="h-4 w-4" />
+											<XIcon className="size-4" />
 											{actionKey.startsWith('reject:') ? 'Rejecting…' : 'Reject'}
 										</Button>
 										<Button
@@ -376,7 +376,7 @@ export default function CustomEnquiriesClient({
 											disabled={Boolean(actionKey)}
 											className="rounded-none bg-stone-900 text-white hover:bg-yellow-700"
 										>
-											<CheckIcon className="h-4 w-4" />
+											<CheckIcon className="size-4" />
 											{actionKey.startsWith('approve:') ? 'Approving…' : 'Approve and Send'}
 										</Button>
 									</>

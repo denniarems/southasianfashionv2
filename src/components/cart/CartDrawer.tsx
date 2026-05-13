@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, m } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import MinusIcon from 'lucide-react/dist/esm/icons/minus'
@@ -83,6 +83,7 @@ export function CartDrawer({
 }) {
 	const { items, subtotal, clearCart, removeItem, updateQuantity, itemCount } = useCart()
 	const animatedSubtotal = useAnimatedNumber(subtotal)
+	const closeDrawer = useEffectEvent(() => onOpenChange(false))
 
 	const sanitizedWhatsApp = useMemo(
 		() => whatsappNumber?.replace(/[^0-9]/g, '') || '',
@@ -109,13 +110,13 @@ export function CartDrawer({
 
 		const onKeyDown = (event: KeyboardEvent) => {
 			if (event.key === 'Escape') {
-				onOpenChange(false)
+				closeDrawer()
 			}
 		}
 
 		document.addEventListener('keydown', onKeyDown)
 		return () => document.removeEventListener('keydown', onKeyDown)
-	}, [onOpenChange, open])
+	}, [open])
 
 	return (
 		<AnimatePresence>

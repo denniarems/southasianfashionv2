@@ -157,7 +157,7 @@ export default function OccasionsClient({
 										size="sm"
 										disabled={isMutating || index === 0}
 										onClick={() => moveOccasion(index, -1)}
-										className="h-8 w-8 rounded-none p-0"
+										className="size-8 rounded-none p-0"
 										aria-label={`Move ${occasion.name} up`}
 									>
 										<ArrowUp size={13} />
@@ -168,7 +168,7 @@ export default function OccasionsClient({
 										size="sm"
 										disabled={isMutating || index === activeItems.length - 1}
 										onClick={() => moveOccasion(index, 1)}
-										className="h-8 w-8 rounded-none p-0"
+										className="size-8 rounded-none p-0"
 										aria-label={`Move ${occasion.name} down`}
 									>
 										<ArrowDown size={13} />

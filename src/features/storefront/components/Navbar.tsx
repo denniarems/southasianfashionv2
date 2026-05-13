@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useReducer, useEffect } from 'react'
 import Link from '@/components/router-link'
 import Image from '@/components/ui/image'
 import { usePathname } from '@/components/router-hooks'
@@ -39,18 +39,49 @@ const staticLinks = [
 
 const EMPTY_CATEGORIES: string[] = []
 
+type NavbarUiState = {
+	scrolled: boolean
+	menuOpen: boolean
+	cartOpen: boolean
+	showMega: boolean
+	showShop: boolean
+	mobileShopOpen: boolean
+}
+
+function navbarUiReducer(
+	state: NavbarUiState,
+	action:
+		| { type: 'set'; key: keyof NavbarUiState; value: boolean }
+		| { type: 'toggle'; key: keyof NavbarUiState },
+): NavbarUiState {
+	switch (action.type) {
+		case 'set':
+			return { ...state, [action.key]: action.value }
+		case 'toggle':
+			return { ...state, [action.key]: !state[action.key] }
+		default:
+			return state
+	}
+}
+
 export default function Navbar({
 	settings,
 	collections,
 	categories = EMPTY_CATEGORIES,
 	transparent = false,
 }: NavbarProps) {
-	const [scrolled, setScrolled] = useState(false)
-	const [menuOpen, setMenuOpen] = useState(false)
-	const [cartOpen, setCartOpen] = useState(false)
-	const [showMega, setShowMega] = useState(false)
-	const [showShop, setShowShop] = useState(false)
-	const [mobileShopOpen, setMobileShopOpen] = useState(false)
+	const [ui, dispatchUi] = useReducer(navbarUiReducer, {
+		scrolled: false,
+		menuOpen: false,
+		cartOpen: false,
+		showMega: false,
+		showShop: false,
+		mobileShopOpen: false,
+	})
+	const setUi = (key: keyof NavbarUiState, value: boolean) =>
+		dispatchUi({ type: 'set', key, value })
+	const toggleUi = (key: keyof NavbarUiState) => dispatchUi({ type: 'toggle', key })
+	const { scrolled, menuOpen, cartOpen, showMega, showShop, mobileShopOpen } = ui
 	const { itemCount } = useCart()
 
 	const pathname = usePathname()
@@ -59,7 +90,7 @@ export default function Navbar({
 	const effectiveTransparent = isHomePage ? transparent : false
 
 	useEffect(() => {
-		const onScroll = () => setScrolled(window.scrollY > 50)
+		const onScroll = () => setUi('scrolled', window.scrollY > 50)
 		window.addEventListener('scroll', onScroll, { passive: true })
 		return () => window.removeEventListener('scroll', onScroll)
 	}, [])
@@ -121,8 +152,8 @@ export default function Navbar({
 							{categories.length > 0 && (
 								<div
 									className="relative"
-									onMouseEnter={() => setShowShop(true)}
-									onMouseLeave={() => setShowShop(false)}
+									onMouseEnter={() => setUi('showShop', true)}
+									onMouseLeave={() => setUi('showShop', false)}
 								>
 									<Link
 										href="/products"
@@ -144,7 +175,7 @@ export default function Navbar({
 												<div className="bg-white border border-stone-200 py-3 min-w-44 shadow-lg">
 													<Link
 														href="/products"
-														onClick={() => setShowShop(false)}
+														onClick={() => setUi('showShop', false)}
 														className="block px-5 py-2 text-xs uppercase tracking-widest text-stone-900 font-medium hover:bg-stone-50 hover:text-yellow-700 transition-colors"
 													>
 														All Products
@@ -154,7 +185,7 @@ export default function Navbar({
 														<Link
 															key={cat}
 															href={`/products?category=${encodeURIComponent(cat)}`}
-															onClick={() => setShowShop(false)}
+															onClick={() => setUi('showShop', false)}
 															className="block px-5 py-2 text-xs tracking-wider text-stone-500 hover:bg-stone-50 hover:text-yellow-700 transition-colors"
 														>
 															{cat}
@@ -169,8 +200,8 @@ export default function Navbar({
 
 							<div
 								className="relative"
-								onMouseEnter={() => setShowMega(true)}
-								onMouseLeave={() => setShowMega(false)}
+								onMouseEnter={() => setUi('showMega', true)}
+								onMouseLeave={() => setUi('showMega', false)}
 							>
 								<Link
 									href="/collections"
@@ -196,7 +227,7 @@ export default function Navbar({
 														<Link
 															key={c.id}
 															href={`/collections/${c.slug}`}
-															onClick={() => setShowMega(false)}
+															onClick={() => setUi('showMega', false)}
 															className="flex gap-3 group p-2 hover:bg-stone-50 transition-colors"
 															data-testid={`mega-menu-${c.slug}`}
 														>
@@ -224,7 +255,7 @@ export default function Navbar({
 												<div className="border-t border-stone-100 pt-3">
 													<Link
 														href="/collections"
-														onClick={() => setShowMega(false)}
+														onClick={() => setUi('showMega', false)}
 														className="block text-center text-xs uppercase tracking-widest text-yellow-700 hover:text-stone-900 transition-colors"
 														data-testid="mega-menu-view-all"
 													>
@@ -241,7 +272,7 @@ export default function Navbar({
 						<div className="hidden md:flex items-center gap-3">
 							<button
 								type="button"
-								onClick={() => setCartOpen(true)}
+								onClick={() => setUi('cartOpen', true)}
 								aria-label="Open atelier brief"
 								className={`relative inline-flex h-10 w-10 items-center justify-center border transition-colors duration-300 ${cartButtonClass}`}
 							>
@@ -257,7 +288,7 @@ export default function Navbar({
 						<div className="flex shrink-0 items-center gap-2 md:hidden">
 							<button
 								type="button"
-								onClick={() => setCartOpen(true)}
+								onClick={() => setUi('cartOpen', true)}
 								aria-label="Open atelier brief"
 								className={`relative inline-flex h-9 w-9 items-center justify-center border transition-colors duration-300 ${cartButtonClass}`}
 							>
@@ -272,7 +303,7 @@ export default function Navbar({
 							<button
 								data-testid="mobile-menu-toggle"
 								className={`transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-stone-500 ${isDark ? 'text-stone-900' : 'text-white'}`}
-								onClick={() => setMenuOpen(!menuOpen)}
+								onClick={() => toggleUi('menuOpen')}
 								aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
 							>
 								{menuOpen ? <XIcon size={20} /> : <MenuIcon size={20} />}
@@ -292,7 +323,7 @@ export default function Navbar({
 							<div className="px-6 py-8 space-y-6">
 								<a
 									href="/#new-arrivals"
-									onClick={() => setMenuOpen(false)}
+									onClick={() => setUi('menuOpen', false)}
 									className="block text-sm uppercase tracking-widest text-stone-700"
 								>
 									New Arrivals
@@ -302,7 +333,7 @@ export default function Navbar({
 									<>
 										<button
 											type="button"
-											onClick={() => setMobileShopOpen(!mobileShopOpen)}
+											onClick={() => toggleUi('mobileShopOpen')}
 											className="flex items-center justify-between w-full text-sm uppercase tracking-widest text-stone-700"
 										>
 											Shop
@@ -325,7 +356,7 @@ export default function Navbar({
 												>
 													<Link
 														href="/products"
-														onClick={() => setMenuOpen(false)}
+														onClick={() => setUi('menuOpen', false)}
 														className="block text-sm text-stone-500 pl-4"
 													>
 														All Products
@@ -334,7 +365,7 @@ export default function Navbar({
 														<Link
 															key={cat}
 															href={`/products?category=${encodeURIComponent(cat)}`}
-															onClick={() => setMenuOpen(false)}
+															onClick={() => setUi('menuOpen', false)}
 															className="block text-sm text-stone-400 pl-4"
 														>
 															{cat}
@@ -348,7 +379,7 @@ export default function Navbar({
 
 								<Link
 									href="/collections"
-									onClick={() => setMenuOpen(false)}
+									onClick={() => setUi('menuOpen', false)}
 									className="block text-sm uppercase tracking-widest text-stone-700"
 								>
 									Collections
@@ -357,7 +388,7 @@ export default function Navbar({
 									<Link
 										key={c.id}
 										href={`/collections/${c.slug}`}
-										onClick={() => setMenuOpen(false)}
+										onClick={() => setUi('menuOpen', false)}
 										className="block text-sm text-stone-400 pl-4"
 									>
 										{c.name}
@@ -365,7 +396,7 @@ export default function Navbar({
 								))}
 								<a
 									href="/#featured"
-									onClick={() => setMenuOpen(false)}
+									onClick={() => setUi('menuOpen', false)}
 									className="block text-sm uppercase tracking-widest text-stone-700"
 								>
 									Featured
@@ -378,7 +409,7 @@ export default function Navbar({
 
 			<CartDrawer
 				open={cartOpen}
-				onOpenChange={setCartOpen}
+				onOpenChange={(open) => setUi('cartOpen', open)}
 				whatsappNumber={settings?.whatsappNumber}
 			/>
 		</>

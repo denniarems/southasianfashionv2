@@ -1,6 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from 'react'
+import {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	useMemo,
+	useReducer,
+	type ReactNode,
+} from 'react'
 import Link from '@/components/router-link'
 import { useServerFn } from '@tanstack/react-start'
 import { AnimatePresence, m } from 'framer-motion'
@@ -40,6 +48,64 @@ type ProductFilters = {
 	priceMin: string
 	priceMax: string
 	sort: string
+}
+
+type ProductsGridState = {
+	items: ProductRow[]
+	total: number
+	hasMore: boolean
+	isLoading: boolean
+	isLoadingMore: boolean
+}
+
+type ProductsGridAction =
+	| { type: 'reset'; items: ProductRow[]; total: number; hasMore: boolean }
+	| { type: 'filter:start' }
+	| { type: 'filter:success'; items: ProductRow[]; total: number; hasMore: boolean }
+	| { type: 'filter:finish' }
+	| { type: 'loadMore:start' }
+	| { type: 'loadMore:success'; items: ProductRow[]; total: number; hasMore: boolean }
+	| { type: 'loadMore:finish' }
+
+function productsGridReducer(
+	state: ProductsGridState,
+	action: ProductsGridAction,
+): ProductsGridState {
+	switch (action.type) {
+		case 'reset':
+			return {
+				items: action.items,
+				total: action.total,
+				hasMore: action.hasMore,
+				isLoading: false,
+				isLoadingMore: false,
+			}
+		case 'filter:start':
+			return { ...state, isLoading: true, isLoadingMore: false }
+		case 'filter:success':
+			return {
+				...state,
+				items: action.items,
+				total: action.total,
+				hasMore: action.hasMore,
+			}
+		case 'filter:finish':
+			return { ...state, isLoading: false }
+		case 'loadMore:start':
+			return { ...state, isLoadingMore: true }
+		case 'loadMore:success':
+			return {
+				...state,
+				items: [...state.items, ...action.items],
+				total: action.total,
+				hasMore: action.hasMore,
+				isLoadingMore: false,
+			}
+		case 'loadMore:finish':
+			return { ...state, isLoadingMore: false }
+		default:
+			return state
+	}
 }
 
 interface ProductsGridProps {
@@ -163,15 +229,20 @@ export default function ProductsGrid({
 	whatsappNumber,
 	initialFilters,
 }: ProductsGridProps) {
-	const [items, setItems] = useState<ProductRow[]>(initialProducts)
-	const [total, setTotal] = useState(initialTotal)
-	const [hasMore, setHasMore] = useState(initialHasMore)
+	const [{ items, total, hasMore, isLoading, isLoadingMore }, dispatchProducts] = useReducer(
+		productsGridReducer,
+		{
+			items: initialProducts,
+			total: initialTotal,
+			hasMore: initialHasMore,
+			isLoading: false,
+			isLoadingMore: false,
+		},
+	)
 	const [filters, setFilters] = useState<ProductFilters>(() =>
 		normalizeInitialFilters(initialFilters),
 	)
 	const [searchInput, setSearchInput] = useState(filters.search)
-	const [isLoading, setIsLoading] = useState(false)
-	const [isLoadingMore, setIsLoadingMore] = useState(false)
 
 	const sentinelRef = useRef<HTMLDivElement>(null)
 	const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -183,6 +254,15 @@ export default function ProductsGrid({
 	const fabricOptions = useMemo(() => uniqueOptions(facets?.fabrics), [facets?.fabrics])
 	const colorOptions = useMemo(() => uniqueOptions(facets?.colors), [facets?.colors])
 	const occasionOptions = occasionLinks.length > 0 ? occasionLinks : OCCASION_LINKS
+
+	useEffect(() => {
+		dispatchProducts({
+			type: 'reset',
+			items: initialProducts,
+			total: initialTotal,
+			hasMore: initialHasMore,
+		})
+	}, [initialHasMore, initialProducts, initialTotal])
 
 	useEffect(() => {
 		debounceRef.current = setTimeout(() => {
@@ -221,8 +301,7 @@ export default function ProductsGrid({
 	const fetchFiltered = useCallback(
 		async (nextFilters: ProductFilters) => {
 			const requestId = ++abortRef.current
-			setIsLoading(true)
-			setIsLoadingMore(false)
+			dispatchProducts({ type: 'filter:start' })
 			window.scrollTo({ top: 0, behavior: 'smooth' })
 
 			try {
@@ -235,12 +314,15 @@ export default function ProductsGrid({
 
 				if (abortRef.current !== requestId) return
 
-				setItems(result.products)
-				setTotal(result.total)
-				setHasMore(result.hasMore)
+				dispatchProducts({
+					type: 'filter:success',
+					items: result.products,
+					total: result.total,
+					hasMore: result.hasMore,
+				})
 			} finally {
 				if (abortRef.current === requestId) {
-					setIsLoading(false)
+					dispatchProducts({ type: 'filter:finish' })
 				}
 			}
 		},
@@ -271,21 +353,29 @@ export default function ProductsGrid({
 	const loadMore = useCallback(async () => {
 		if (isLoadingMore || !hasMore) return
 		const requestId = abortRef.current
-		setIsLoadingMore(true)
+		dispatchProducts({ type: 'loadMore:start' })
 
-		const result = await fetchProducts({
-			data: {
-				...filters,
-				offset: items.length,
-			},
-		})
+		try {
+			const result = await fetchProducts({
+				data: {
+					...filters,
+					offset: items.length,
+				},
+			})
 
-		if (abortRef.current !== requestId) return
+			if (abortRef.current !== requestId) return
 
-		setItems((prev) => [...prev, ...result.products])
-		setTotal(result.total)
-		setHasMore(result.hasMore)
-		setIsLoadingMore(false)
+			dispatchProducts({
+				type: 'loadMore:success',
+				items: result.products,
+				total: result.total,
+				hasMore: result.hasMore,
+			})
+		} finally {
+			if (abortRef.current === requestId) {
+				dispatchProducts({ type: 'loadMore:finish' })
+			}
+		}
 	}, [fetchProducts, filters, hasMore, isLoadingMore, items.length])
 
 	useEffect(() => {

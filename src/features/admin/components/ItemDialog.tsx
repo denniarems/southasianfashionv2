@@ -45,6 +45,12 @@ export function ItemDialog({
 	const [discountProductSearch, setDiscountProductSearch] = useState('')
 	const [isSaving, startSavingTransition] = useTransition()
 	const saveItem = useSaveItemMutation()
+	const patchForm = (update: Record<string, unknown>) => {
+		setForm((prev: any) => ({ ...prev, ...update }))
+	}
+	const patchDlg = (update: Record<string, unknown>) => {
+		setDlg((prev: any) => ({ ...prev, ...update }))
+	}
 	const occasionOptions =
 		occasions.length > 0
 			? occasions.map((occasion: any) => ({
@@ -196,7 +202,7 @@ export function ItemDialog({
 				}
 
 				toast.success(mode === 'add' ? 'Created' : 'Updated')
-				setDlg({ ...dlg, open: false })
+				patchDlg({ open: false })
 			})()
 		})
 	}
@@ -213,7 +219,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-name"
 								value={form.name || ''}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								onChange={(e) => patchForm({ name: e.target.value })}
 								aria-invalid={Boolean(errors.name)}
 								className="rounded-none"
 							/>
@@ -223,7 +229,7 @@ export function ItemDialog({
 							<Textarea
 								data-testid="dlg-desc"
 								value={form.description || ''}
-								onChange={(e) => setForm({ ...form, description: e.target.value })}
+								onChange={(e) => patchForm({ description: e.target.value })}
 								className="rounded-none"
 								rows={3}
 							/>
@@ -234,7 +240,7 @@ export function ItemDialog({
 									data-testid="dlg-price"
 									type="number"
 									value={form.price || ''}
-									onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+									onChange={(e) => patchForm({ price: parseFloat(e.target.value) || 0 })}
 									aria-invalid={Boolean(errors.price)}
 									className="rounded-none"
 								/>
@@ -244,7 +250,7 @@ export function ItemDialog({
 								<select
 									data-testid="dlg-category"
 									value={form.category || ''}
-									onChange={(e) => setForm({ ...form, category: e.target.value })}
+									onChange={(e) => patchForm({ category: e.target.value })}
 									aria-invalid={Boolean(errors.category)}
 									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-stone-500"
 								>
@@ -269,7 +275,7 @@ export function ItemDialog({
 								<select
 									data-testid="dlg-collection"
 									value={form.collectionId || ''}
-									onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
+									onChange={(e) => patchForm({ collectionId: e.target.value })}
 									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 								>
 									<option value="">No collection</option>
@@ -284,17 +290,19 @@ export function ItemDialog({
 								<select
 									data-testid="dlg-size-guide"
 									value={form.sizeGuideId || ''}
-									onChange={(e) => setForm({ ...form, sizeGuideId: e.target.value })}
+									onChange={(e) => patchForm({ sizeGuideId: e.target.value })}
 									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 								>
 									<option value="">No size guide</option>
-									{sizeGuides
-										.filter((guide: any) => guide.isActive)
-										.map((guide: any) => (
-											<option key={guide.id} value={guide.id}>
-												{guide.name}
-											</option>
-										))}
+									{sizeGuides.flatMap((guide: any) =>
+										guide.isActive
+											? [
+													<option key={guide.id} value={guide.id}>
+														{guide.name}
+													</option>,
+												]
+											: [],
+									)}
 								</select>
 							</Field>
 						</div>
@@ -305,7 +313,7 @@ export function ItemDialog({
 							<Field label="Occasion">
 								<select
 									value={form.occasion || ''}
-									onChange={(e) => setForm({ ...form, occasion: e.target.value })}
+									onChange={(e) => patchForm({ occasion: e.target.value })}
 									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 								>
 									<option value="">No occasion</option>
@@ -319,14 +327,14 @@ export function ItemDialog({
 							<Field label="Fabric">
 								<Input
 									value={form.fabric || ''}
-									onChange={(e) => setForm({ ...form, fabric: e.target.value })}
+									onChange={(e) => patchForm({ fabric: e.target.value })}
 									className="rounded-none"
 								/>
 							</Field>
 							<Field label="Color">
 								<Input
 									value={form.color || ''}
-									onChange={(e) => setForm({ ...form, color: e.target.value })}
+									onChange={(e) => patchForm({ color: e.target.value })}
 									className="rounded-none"
 								/>
 							</Field>
@@ -335,7 +343,7 @@ export function ItemDialog({
 							<Field label="Availability">
 								<select
 									value={form.availabilityStatus || 'made-to-order'}
-									onChange={(e) => setForm({ ...form, availabilityStatus: e.target.value })}
+									onChange={(e) => patchForm({ availabilityStatus: e.target.value })}
 									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 								>
 									{AVAILABILITY_OPTIONS.map((option) => (
@@ -349,7 +357,7 @@ export function ItemDialog({
 								<Input
 									type="number"
 									value={form.displayOrder ?? 0}
-									onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) || 0 })}
+									onChange={(e) => patchForm({ displayOrder: Number(e.target.value) || 0 })}
 									className="rounded-none"
 								/>
 							</Field>
@@ -357,7 +365,7 @@ export function ItemDialog({
 								<div className="flex items-center gap-2">
 									<Switch
 										checked={form.isReadyToShip || false}
-										onCheckedChange={(v) => setForm({ ...form, isReadyToShip: v })}
+										onCheckedChange={(v) => patchForm({ isReadyToShip: v })}
 									/>
 									<Label className="text-xs">Ready to Ship</Label>
 								</div>
@@ -369,13 +377,10 @@ export function ItemDialog({
 						title="Media"
 						description="Upload primary and gallery images for richer presentation."
 					>
-						<ImageUpload
-							value={form.imageUrl}
-							onChange={(url) => setForm({ ...form, imageUrl: url })}
-						/>
+						<ImageUpload value={form.imageUrl} onChange={(url) => patchForm({ imageUrl: url })} />
 						<MultiImageUpload
 							values={form.additionalImages || []}
-							onChange={(urls) => setForm({ ...form, additionalImages: urls })}
+							onChange={(urls) => patchForm({ additionalImages: urls })}
 						/>
 					</FormSection>
 
@@ -385,7 +390,7 @@ export function ItemDialog({
 								<Switch
 									data-testid="dlg-new"
 									checked={form.isNew || false}
-									onCheckedChange={(v) => setForm({ ...form, isNew: v })}
+									onCheckedChange={(v) => patchForm({ isNew: v })}
 								/>
 								<Label className="text-xs">New Arrival</Label>
 							</div>
@@ -393,7 +398,7 @@ export function ItemDialog({
 								<Switch
 									data-testid="dlg-featured"
 									checked={form.isFeatured || false}
-									onCheckedChange={(v) => setForm({ ...form, isFeatured: v })}
+									onCheckedChange={(v) => patchForm({ isFeatured: v })}
 								/>
 								<Label className="text-xs">Featured</Label>
 							</div>
@@ -410,7 +415,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-name"
 								value={form.name || ''}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								onChange={(e) => patchForm({ name: e.target.value })}
 								aria-invalid={Boolean(errors.name)}
 								className="rounded-none"
 							/>
@@ -420,7 +425,7 @@ export function ItemDialog({
 							<Textarea
 								data-testid="dlg-desc"
 								value={form.description || ''}
-								onChange={(e) => setForm({ ...form, description: e.target.value })}
+								onChange={(e) => patchForm({ description: e.target.value })}
 								className="rounded-none"
 								rows={3}
 							/>
@@ -428,16 +433,13 @@ export function ItemDialog({
 					</FormSection>
 
 					<FormSection title="SEO & Media">
-						<ImageUpload
-							value={form.imageUrl}
-							onChange={(url) => setForm({ ...form, imageUrl: url })}
-						/>
+						<ImageUpload value={form.imageUrl} onChange={(url) => patchForm({ imageUrl: url })} />
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<Field label="Slug">
 								<Input
 									data-testid="dlg-slug"
 									value={form.slug || ''}
-									onChange={(e) => setForm({ ...form, slug: e.target.value })}
+									onChange={(e) => patchForm({ slug: e.target.value })}
 									aria-invalid={Boolean(errors.slug)}
 									className="rounded-none"
 								/>
@@ -447,7 +449,7 @@ export function ItemDialog({
 								<Input
 									type="number"
 									value={form.displayOrder ?? 0}
-									onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) || 0 })}
+									onChange={(e) => patchForm({ displayOrder: Number(e.target.value) || 0 })}
 									className="rounded-none"
 								/>
 							</Field>
@@ -455,14 +457,14 @@ export function ItemDialog({
 						<Field label="SEO Title">
 							<Input
 								value={form.seoTitle || ''}
-								onChange={(e) => setForm({ ...form, seoTitle: e.target.value })}
+								onChange={(e) => patchForm({ seoTitle: e.target.value })}
 								className="rounded-none"
 							/>
 						</Field>
 						<Field label="SEO Description">
 							<Textarea
 								value={form.seoDescription || ''}
-								onChange={(e) => setForm({ ...form, seoDescription: e.target.value })}
+								onChange={(e) => patchForm({ seoDescription: e.target.value })}
 								className="rounded-none"
 								rows={3}
 							/>
@@ -479,7 +481,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-title"
 								value={form.title || ''}
-								onChange={(e) => setForm({ ...form, title: e.target.value })}
+								onChange={(e) => patchForm({ title: e.target.value })}
 								aria-invalid={Boolean(errors.title)}
 								className="rounded-none"
 							/>
@@ -489,7 +491,7 @@ export function ItemDialog({
 							<Textarea
 								data-testid="dlg-subtitle"
 								value={form.subtitle || ''}
-								onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+								onChange={(e) => patchForm({ subtitle: e.target.value })}
 								className="rounded-none"
 								rows={2}
 							/>
@@ -497,16 +499,13 @@ export function ItemDialog({
 					</FormSection>
 
 					<FormSection title="Banner Media & CTA">
-						<ImageUpload
-							value={form.imageUrl}
-							onChange={(url) => setForm({ ...form, imageUrl: url })}
-						/>
+						<ImageUpload value={form.imageUrl} onChange={(url) => patchForm({ imageUrl: url })} />
 						<div className="grid grid-cols-2 gap-4">
 							<Field label="CTA Text">
 								<Input
 									data-testid="dlg-cta-text"
 									value={form.ctaText || ''}
-									onChange={(e) => setForm({ ...form, ctaText: e.target.value })}
+									onChange={(e) => patchForm({ ctaText: e.target.value })}
 									className="rounded-none"
 								/>
 							</Field>
@@ -514,7 +513,7 @@ export function ItemDialog({
 								<Input
 									data-testid="dlg-cta-link"
 									value={form.ctaLink || ''}
-									onChange={(e) => setForm({ ...form, ctaLink: e.target.value })}
+									onChange={(e) => patchForm({ ctaLink: e.target.value })}
 									className="rounded-none"
 								/>
 							</Field>
@@ -523,7 +522,7 @@ export function ItemDialog({
 							<Switch
 								data-testid="dlg-active"
 								checked={form.isActive || false}
-								onCheckedChange={(v) => setForm({ ...form, isActive: v })}
+								onCheckedChange={(v) => patchForm({ isActive: v })}
 							/>
 							<Label className="text-xs">Active</Label>
 						</div>
@@ -539,7 +538,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-cat-name"
 								value={form.name || ''}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								onChange={(e) => patchForm({ name: e.target.value })}
 								aria-invalid={Boolean(errors.name)}
 								className="rounded-none"
 							/>
@@ -549,7 +548,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-cat-slug"
 								value={form.slug || ''}
-								onChange={(e) => setForm({ ...form, slug: e.target.value })}
+								onChange={(e) => patchForm({ slug: e.target.value })}
 								aria-invalid={Boolean(errors.slug)}
 								className="rounded-none"
 								placeholder="e.g. sarees"
@@ -560,7 +559,7 @@ export function ItemDialog({
 							<Textarea
 								data-testid="dlg-cat-desc"
 								value={form.description || ''}
-								onChange={(e) => setForm({ ...form, description: e.target.value })}
+								onChange={(e) => patchForm({ description: e.target.value })}
 								className="rounded-none"
 								rows={2}
 							/>
@@ -580,7 +579,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-occasion-name"
 								value={form.name || ''}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								onChange={(e) => patchForm({ name: e.target.value })}
 								aria-invalid={Boolean(errors.name)}
 								className="rounded-none"
 							/>
@@ -590,7 +589,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-occasion-slug"
 								value={form.slug || ''}
-								onChange={(e) => setForm({ ...form, slug: e.target.value })}
+								onChange={(e) => patchForm({ slug: e.target.value })}
 								className="rounded-none"
 								placeholder="e.g. wedding-guest"
 							/>
@@ -599,7 +598,7 @@ export function ItemDialog({
 							<Textarea
 								data-testid="dlg-occasion-desc"
 								value={form.description || ''}
-								onChange={(e) => setForm({ ...form, description: e.target.value })}
+								onChange={(e) => patchForm({ description: e.target.value })}
 								className="rounded-none"
 								rows={3}
 							/>
@@ -610,13 +609,13 @@ export function ItemDialog({
 						<ImageUpload
 							label="Occasion Image"
 							value={form.imageUrl || ''}
-							onChange={(url) => setForm({ ...form, imageUrl: url })}
+							onChange={(url) => patchForm({ imageUrl: url })}
 						/>
 						<Field label="Display Order">
 							<Input
 								type="number"
 								value={form.displayOrder ?? 0}
-								onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) || 0 })}
+								onChange={(e) => patchForm({ displayOrder: Number(e.target.value) || 0 })}
 								className="rounded-none"
 							/>
 						</Field>
@@ -632,7 +631,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-size-guide-name"
 								value={form.name || ''}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								onChange={(e) => patchForm({ name: e.target.value })}
 								aria-invalid={Boolean(errors.name)}
 								className="rounded-none"
 							/>
@@ -644,7 +643,7 @@ export function ItemDialog({
 								<Input
 									data-testid="dlg-size-guide-product-type"
 									value={form.productType || ''}
-									onChange={(e) => setForm({ ...form, productType: e.target.value })}
+									onChange={(e) => patchForm({ productType: e.target.value })}
 									className="rounded-none"
 									placeholder="e.g. Kurta, Sherwani"
 								/>
@@ -653,7 +652,7 @@ export function ItemDialog({
 								<select
 									data-testid="dlg-size-guide-unit"
 									value={form.unit || 'in'}
-									onChange={(e) => setForm({ ...form, unit: e.target.value })}
+									onChange={(e) => patchForm({ unit: e.target.value })}
 									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 								>
 									<option value="in">in</option>
@@ -666,7 +665,7 @@ export function ItemDialog({
 							<Textarea
 								data-testid="dlg-size-guide-note"
 								value={form.note || ''}
-								onChange={(e) => setForm({ ...form, note: e.target.value })}
+								onChange={(e) => patchForm({ note: e.target.value })}
 								className="rounded-none"
 								rows={2}
 							/>
@@ -681,7 +680,7 @@ export function ItemDialog({
 							<Textarea
 								data-testid="dlg-size-guide-columns"
 								value={form.columnsJson || '["Bust","Waist","Hip","Length"]'}
-								onChange={(e) => setForm({ ...form, columnsJson: e.target.value })}
+								onChange={(e) => patchForm({ columnsJson: e.target.value })}
 								aria-invalid={Boolean(errors.columnsJson)}
 								className="rounded-none font-mono text-xs"
 								rows={3}
@@ -698,7 +697,7 @@ export function ItemDialog({
 									form.rowsJson ||
 									'[{"size":"XS","values":["32","26","35","38"]},{"size":"S","values":["34","28","37","39"]}]'
 								}
-								onChange={(e) => setForm({ ...form, rowsJson: e.target.value })}
+								onChange={(e) => patchForm({ rowsJson: e.target.value })}
 								aria-invalid={Boolean(errors.rowsJson)}
 								className="rounded-none font-mono text-xs"
 								rows={5}
@@ -710,7 +709,7 @@ export function ItemDialog({
 							<Switch
 								data-testid="dlg-size-guide-active"
 								checked={form.isActive ?? true}
-								onCheckedChange={(v) => setForm({ ...form, isActive: v })}
+								onCheckedChange={(v) => patchForm({ isActive: v })}
 							/>
 							<Label className="text-xs">Active</Label>
 						</div>
@@ -737,29 +736,28 @@ export function ItemDialog({
 				const next = selectedApplicableProducts.includes(productId)
 					? selectedApplicableProducts.filter((id: string) => id !== productId)
 					: [...selectedApplicableProducts, productId]
-				setForm({ ...form, applicableProductIds: next })
+				patchForm({ applicableProductIds: next })
 			}
 
 			const toggleCategory = (categoryName: string) => {
 				const next = selectedCategories.includes(categoryName)
 					? selectedCategories.filter((name) => name !== categoryName)
 					: [...selectedCategories, categoryName]
-				setForm({ ...form, applicableCategories: next })
+				patchForm({ applicableCategories: next })
 			}
 
 			const toggleBundleProduct = (productId: string) => {
 				const next = selectedBundleProducts.includes(productId)
 					? selectedBundleProducts.filter((id: string) => id !== productId)
 					: [...selectedBundleProducts, productId]
-				setForm({ ...form, bundleProductIds: next })
+				patchForm({ bundleProductIds: next })
 			}
 
 			const applyStrategy = (strategyId: 'flat' | 'percentage' | 'tiered' | 'bundle') => {
 				const strategy = DISCOUNT_STRATEGIES.find((item) => item.id === strategyId)
 				if (!strategy) return
 
-				setForm({
-					...form,
+				patchForm({
 					discountType: strategy.id,
 					wording: form.wording || strategy.defaultWording,
 					tierRulesJson:
@@ -809,7 +807,7 @@ export function ItemDialog({
 							<Input
 								data-testid="dlg-discount-name"
 								value={form.name || ''}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								onChange={(e) => patchForm({ name: e.target.value })}
 								aria-invalid={Boolean(errors.name)}
 								className="rounded-none"
 							/>
@@ -820,7 +818,7 @@ export function ItemDialog({
 							<Textarea
 								data-testid="dlg-discount-description"
 								value={form.description || ''}
-								onChange={(e) => setForm({ ...form, description: e.target.value })}
+								onChange={(e) => patchForm({ description: e.target.value })}
 								className="rounded-none"
 								rows={2}
 							/>
@@ -829,7 +827,7 @@ export function ItemDialog({
 						<Field label="Display Wording">
 							<Input
 								value={form.wording || currentStrategy.defaultWording}
-								onChange={(e) => setForm({ ...form, wording: e.target.value })}
+								onChange={(e) => patchForm({ wording: e.target.value })}
 								className="rounded-none"
 								placeholder={currentStrategy.defaultWording}
 							/>
@@ -845,7 +843,7 @@ export function ItemDialog({
 								<select
 									data-testid="dlg-discount-type"
 									value={form.discountType || 'flat'}
-									onChange={(e) => setForm({ ...form, discountType: e.target.value })}
+									onChange={(e) => patchForm({ discountType: e.target.value })}
 									className="w-full h-10 border border-stone-200 bg-white px-3 text-sm"
 								>
 									<option value="flat">flat</option>
@@ -863,7 +861,7 @@ export function ItemDialog({
 									data-testid="dlg-discount-value"
 									type="number"
 									value={form.discountValue ?? ''}
-									onChange={(e) => setForm({ ...form, discountValue: Number(e.target.value) || 0 })}
+									onChange={(e) => patchForm({ discountValue: Number(e.target.value) || 0 })}
 									className="rounded-none"
 								/>
 								{errors.discountValue ? (
@@ -876,10 +874,7 @@ export function ItemDialog({
 									type="number"
 									value={form.originalPrice ?? ''}
 									onChange={(e) =>
-										setForm({
-											...form,
-											originalPrice: e.target.value ? Number(e.target.value) : '',
-										})
+										patchForm({ originalPrice: e.target.value ? Number(e.target.value) : '' })
 									}
 									className="rounded-none"
 								/>
@@ -894,7 +889,7 @@ export function ItemDialog({
 								<Input
 									type="number"
 									value={form.priority ?? 10}
-									onChange={(e) => setForm({ ...form, priority: Number(e.target.value) || 0 })}
+									onChange={(e) => patchForm({ priority: Number(e.target.value) || 0 })}
 									className="rounded-none"
 								/>
 							</Field>
@@ -902,7 +897,7 @@ export function ItemDialog({
 								<Input
 									type="number"
 									value={form.minCartValue ?? 0}
-									onChange={(e) => setForm({ ...form, minCartValue: Number(e.target.value) || 0 })}
+									onChange={(e) => patchForm({ minCartValue: Number(e.target.value) || 0 })}
 									className="rounded-none"
 								/>
 							</Field>
@@ -911,7 +906,7 @@ export function ItemDialog({
 									type="number"
 									value={form.maxUses ?? ''}
 									onChange={(e) =>
-										setForm({ ...form, maxUses: e.target.value ? Number(e.target.value) : '' })
+										patchForm({ maxUses: e.target.value ? Number(e.target.value) : '' })
 									}
 									className="rounded-none"
 								/>
@@ -921,14 +916,14 @@ export function ItemDialog({
 								<div className="flex items-center gap-2">
 									<Switch
 										checked={form.isActive ?? true}
-										onCheckedChange={(v) => setForm({ ...form, isActive: v })}
+										onCheckedChange={(v) => patchForm({ isActive: v })}
 									/>
 									<Label className="text-xs">Active</Label>
 								</div>
 								<div className="flex items-center gap-2">
 									<Switch
 										checked={form.stackable || false}
-										onCheckedChange={(v) => setForm({ ...form, stackable: v })}
+										onCheckedChange={(v) => patchForm({ stackable: v })}
 									/>
 									<Label className="text-xs">Stackable</Label>
 								</div>
@@ -946,7 +941,7 @@ export function ItemDialog({
 									data-testid="dlg-discount-start"
 									type="datetime-local"
 									value={form.startDate || ''}
-									onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+									onChange={(e) => patchForm({ startDate: e.target.value })}
 									className="rounded-none"
 								/>
 								{errors.startDate ? (
@@ -959,7 +954,7 @@ export function ItemDialog({
 									data-testid="dlg-discount-end"
 									type="datetime-local"
 									value={form.endDate || ''}
-									onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+									onChange={(e) => patchForm({ endDate: e.target.value })}
 									className="rounded-none"
 								/>
 								{errors.endDate ? <p className="text-xs text-red-600">{errors.endDate}</p> : null}
@@ -1117,7 +1112,7 @@ export function ItemDialog({
 										type="button"
 										variant="outline"
 										size="sm"
-										onClick={() => setForm({ ...form, tierRulesJson: TIER_TEMPLATE })}
+										onClick={() => patchForm({ tierRulesJson: TIER_TEMPLATE })}
 										className="rounded-none text-[10px] uppercase tracking-[0.14em]"
 									>
 										Use Recommended Tiers
@@ -1126,7 +1121,7 @@ export function ItemDialog({
 							</div>
 							<Textarea
 								value={form.tierRulesJson || TIER_TEMPLATE}
-								onChange={(e) => setForm({ ...form, tierRulesJson: e.target.value })}
+								onChange={(e) => patchForm({ tierRulesJson: e.target.value })}
 								className="rounded-none font-mono text-xs"
 								rows={6}
 							/>
@@ -1160,7 +1155,7 @@ export function ItemDialog({
 								: 'Collection'
 
 	return (
-		<Dialog open={open} onOpenChange={(v) => setDlg({ ...dlg, open: v })}>
+		<Dialog open={open} onOpenChange={(v) => patchDlg({ open: v })}>
 			<DialogContent
 				className={`rounded-none max-h-[90vh] overflow-y-auto bg-white ${
 					type === 'discounts' ? 'sm:max-w-4xl' : 'sm:max-w-lg'
@@ -1179,7 +1174,7 @@ export function ItemDialog({
 					<Button
 						data-testid="dlg-cancel"
 						variant="outline"
-						onClick={() => setDlg({ ...dlg, open: false })}
+						onClick={() => patchDlg({ open: false })}
 						disabled={isSaving}
 						className="rounded-none text-xs"
 					>

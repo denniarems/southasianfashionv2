@@ -153,7 +153,7 @@ export default function ProductsClient({
 											type="checkbox"
 											checked={selectedIds.includes(p.id)}
 											onChange={() => toggleSelection(p.id)}
-											className="h-4 w-4 accent-stone-900"
+											className="size-4 accent-stone-900"
 											aria-label={`Select ${p.name}`}
 										/>
 									</label>
