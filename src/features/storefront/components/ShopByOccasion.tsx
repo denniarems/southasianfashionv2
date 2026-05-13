@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import ArrowUpRightIcon from 'lucide-react/dist/esm/icons/arrow-up-right'
 import Link from '@/components/router-link'
 import { LoadingImage } from '@/components/ui/loading-image'
@@ -11,7 +11,9 @@ interface ShopByOccasionProps {
 	occasions?: OccasionLink[]
 }
 
-export default function ShopByOccasion({ occasions = [...OCCASION_LINKS] }: ShopByOccasionProps) {
+const DEFAULT_OCCASIONS: OccasionLink[] = [...OCCASION_LINKS]
+
+export default function ShopByOccasion({ occasions = DEFAULT_OCCASIONS }: ShopByOccasionProps) {
 	const occasionItems = occasions.length > 0 ? occasions : OCCASION_LINKS
 
 	return (
@@ -34,7 +36,7 @@ export default function ShopByOccasion({ occasions = [...OCCASION_LINKS] }: Shop
 
 				<div className="grid grid-cols-1 gap-px overflow-hidden border border-stone-200 bg-stone-200 sm:grid-cols-2 lg:grid-cols-3">
 					{occasionItems.map((occasion, index) => (
-						<motion.div
+						<m.div
 							key={occasion.slug}
 							initial={{ opacity: 0, y: 16 }}
 							whileInView={{ opacity: 1, y: 0 }}
@@ -71,7 +73,7 @@ export default function ShopByOccasion({ occasions = [...OCCASION_LINKS] }: Shop
 									</p>
 								</div>
 							</Link>
-						</motion.div>
+						</m.div>
 					))}
 				</div>
 			</div>

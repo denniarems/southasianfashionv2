@@ -32,7 +32,7 @@ async function getProductCategories() {
 		.where(isNotNull(products.category))
 		.orderBy(asc(products.category))
 
-	return rows.map((row) => row.category).filter((category): category is string => Boolean(category))
+	return rows.flatMap((row) => (row.category ? [row.category] : []))
 }
 
 async function getProductFacets() {
@@ -56,7 +56,10 @@ async function getProductFacets() {
 	])
 
 	const clean = (rows: Array<{ value: string | null }>) =>
-		rows.map((row) => row.value).filter((value): value is string => Boolean(value?.trim()))
+		rows.flatMap((row) => {
+			const value = row.value?.trim()
+			return value ? [value] : []
+		})
 
 	return {
 		occasions: clean(occasionRows),

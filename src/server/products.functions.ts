@@ -180,8 +180,6 @@ export const fetchProductCategoriesFn = createServerFn({ method: 'GET' }).handle
 			.where(isNotNull(products.category))
 			.orderBy(asc(products.category))
 
-		return rows
-			.map((row: { category: string | null }) => row.category)
-			.filter((category: string | null): category is string => Boolean(category))
+		return rows.flatMap((row: { category: string | null }) => (row.category ? [row.category] : []))
 	},
 )

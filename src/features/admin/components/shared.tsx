@@ -114,7 +114,11 @@ export const TIER_TEMPLATE = JSON.stringify(
 
 export function parseStringArrayFromMixed(input: unknown): string[] {
 	if (Array.isArray(input)) {
-		return input.filter((v): v is string => typeof v === 'string').map((v) => v.trim())
+		return input.flatMap((value) => {
+			if (typeof value !== 'string') return []
+			const trimmed = value.trim()
+			return trimmed ? [trimmed] : []
+		})
 	}
 
 	if (typeof input === 'string') {
@@ -124,12 +128,12 @@ export function parseStringArrayFromMixed(input: unknown): string[] {
 		try {
 			const parsed = JSON.parse(trimmed)
 			if (!Array.isArray(parsed)) return []
-			return parsed.filter((v): v is string => typeof v === 'string').map((v) => v.trim())
+			return parseStringArrayFromMixed(parsed)
 		} catch {
-			return trimmed
-				.split(',')
-				.map((v) => v.trim())
-				.filter(Boolean)
+			return trimmed.split(',').flatMap((value) => {
+				const normalized = value.trim()
+				return normalized ? [normalized] : []
+			})
 		}
 	}
 

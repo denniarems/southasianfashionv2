@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from 'react'
 import Link from '@/components/router-link'
 import { useServerFn } from '@tanstack/react-start'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import SearchIcon from 'lucide-react/dist/esm/icons/search'
 import XIcon from 'lucide-react/dist/esm/icons/x'
 import LoaderIcon from 'lucide-react/dist/esm/icons/loader'
@@ -27,6 +27,8 @@ const SORT_OPTIONS = [
 
 const filterControlClass =
 	'h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm text-stone-800 outline-none transition-colors hover:border-stone-300 focus:border-stone-700 focus:bg-white'
+
+const DEFAULT_OCCASION_FILTERS: OccasionLink[] = [...OCCASION_LINKS]
 
 type ProductFilters = {
 	search: string
@@ -109,7 +111,14 @@ function ProductCardSkeleton() {
 }
 
 function uniqueOptions(values: string[] = []) {
-	return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)))
+	return Array.from(
+		new Set(
+			values.flatMap((value) => {
+				const normalized = value.trim()
+				return normalized ? [normalized] : []
+			}),
+		),
+	)
 }
 
 function FilterSelect({
@@ -150,7 +159,7 @@ export default function ProductsGrid({
 	initialHasMore,
 	categories,
 	facets,
-	occasionLinks = [...OCCASION_LINKS],
+	occasionLinks = DEFAULT_OCCASION_FILTERS,
 	whatsappNumber,
 	initialFilters,
 }: ProductsGridProps) {
@@ -203,9 +212,9 @@ export default function ProductsGrid({
 
 	const activeFilterKeys = useMemo(
 		() =>
-			(Object.entries(filters) as Array<[keyof ProductFilters, string]>)
-				.filter(([key, value]) => value && !(key === 'sort' && value === 'newest'))
-				.map(([key]) => key),
+			(Object.entries(filters) as Array<[keyof ProductFilters, string]>).flatMap(([key, value]) =>
+				value && !(key === 'sort' && value === 'newest') ? [key] : [],
+			),
 		[filters],
 	)
 
@@ -320,7 +329,7 @@ export default function ProductsGrid({
 					</p>
 				</div>
 
-				<motion.div layout className="mb-8 border border-stone-200 bg-white p-5 md:p-6">
+				<m.div layout className="mb-8 border border-stone-200 bg-white p-5 md:p-6">
 					<div className="mb-4 flex items-center justify-between gap-4">
 						<div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-stone-500">
 							<SlidersHorizontalIcon size={15} />
@@ -465,11 +474,11 @@ export default function ProductsGrid({
 							) : null}
 						</div>
 					) : null}
-				</motion.div>
+				</m.div>
 
 				<div className="flex items-center justify-between mb-8">
 					<p className="font-accent italic text-stone-500 text-sm">
-						{isLoading ? 'Searching...' : `Showing ${items.length} of ${total} pieces`}
+						{isLoading ? 'Searching…' : `Showing ${items.length} of ${total} pieces`}
 					</p>
 					{hasActiveFilters ? (
 						<div className="hidden md:flex flex-wrap justify-end gap-2">
@@ -487,7 +496,7 @@ export default function ProductsGrid({
 
 				<AnimatePresence mode="wait">
 					{isLoading ? (
-						<motion.div
+						<m.div
 							key="loading"
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
@@ -497,9 +506,9 @@ export default function ProductsGrid({
 							{Array.from({ length: 8 }).map((_, index) => (
 								<ProductCardSkeleton key={index} />
 							))}
-						</motion.div>
+						</m.div>
 					) : items.length > 0 ? (
-						<motion.div
+						<m.div
 							key="products"
 							layout
 							initial={{ opacity: 0 }}
@@ -510,7 +519,7 @@ export default function ProductsGrid({
 							{items.map((product) => (
 								<ProductCard key={product.id} product={product} whatsappNumber={whatsappNumber} />
 							))}
-						</motion.div>
+						</m.div>
 					) : null}
 				</AnimatePresence>
 

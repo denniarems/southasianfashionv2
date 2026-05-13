@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { ArrowDown, ArrowUp, ImageOff, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -39,7 +39,7 @@ export default function OccasionsClient({
 	const deleteItem = useDeleteItemMutation()
 	const saveItem = useSaveItemMutation()
 
-	const activeItems = [...items].sort((a: any, b: any) => {
+	const activeItems = items.toSorted((a: any, b: any) => {
 		const orderDelta = Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
 		if (orderDelta !== 0) return orderDelta
 		return String(a.name || '').localeCompare(String(b.name || ''))
@@ -111,7 +111,7 @@ export default function OccasionsClient({
 
 	return (
 		<div className="p-6 md:p-10 max-w-7xl mx-auto">
-			<motion.div
+			<m.div
 				initial={{ opacity: 0, y: 8 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.2 }}
@@ -147,7 +147,7 @@ export default function OccasionsClient({
 						{activeItems.map((occasion: any, index: number) => (
 							<div
 								key={occasion.id}
-								className="grid grid-cols-1 gap-4 px-4 py-4 transition-colors hover:bg-stone-50 lg:grid-cols-[64px_96px_1.4fr_1.6fr_0.5fr_170px] lg:items-center"
+								className="grid grid-cols-1 gap-4 p-4 transition-colors hover:bg-stone-50 lg:grid-cols-[64px_96px_1.4fr_1.6fr_0.5fr_170px] lg:items-center"
 								data-testid={`admin-occasion-${occasion.id}`}
 							>
 								<div className="flex gap-1">
@@ -233,7 +233,7 @@ export default function OccasionsClient({
 						))}
 					</div>
 				</div>
-			</motion.div>
+			</m.div>
 
 			<ItemDialog
 				dlg={dlg}

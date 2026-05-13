@@ -9,7 +9,7 @@ const IMAGE_EXTENSIONS_BY_TYPE: Record<string, string[]> = {
 export const ALLOWED_IMAGE_EXTENSIONS = new Set(Object.values(IMAGE_EXTENSIONS_BY_TYPE).flat())
 
 function bytesStartWith(bytes: Uint8Array, expected: number[]) {
-	return expected.every((byte, index) => bytes[index] === byte)
+	return bytes.length >= expected.length && expected.every((byte, index) => bytes[index] === byte)
 }
 
 function ascii(bytes: Uint8Array, start: number, end: number) {

@@ -77,10 +77,14 @@ export function enumValue<const T extends readonly string[]>(
 
 export function stringArrayValue(value: unknown): string[] {
 	if (Array.isArray(value)) {
-		return value
-			.filter((item): item is string => typeof item === 'string')
-			.map((item) => item.trim())
-			.filter(Boolean)
+		return value.flatMap((item) => {
+			if (typeof item !== 'string') {
+				return []
+			}
+
+			const trimmed = item.trim()
+			return trimmed ? [trimmed] : []
+		})
 	}
 
 	if (typeof value === 'string') {
@@ -96,10 +100,10 @@ export function stringArrayValue(value: unknown): string[] {
 			// Fall through to comma-separated parsing.
 		}
 
-		return trimmed
-			.split(',')
-			.map((item) => item.trim())
-			.filter(Boolean)
+		return trimmed.split(',').flatMap((item) => {
+			const normalized = item.trim()
+			return normalized ? [normalized] : []
+		})
 	}
 
 	return []

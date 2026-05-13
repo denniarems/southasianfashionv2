@@ -24,10 +24,10 @@ if (!accountId) {
 }
 
 function optionalCsv(value: string | undefined) {
-	return (value || '')
-		.split(',')
-		.map((item) => item.trim())
-		.filter(Boolean)
+	return (value || '').split(',').flatMap((item) => {
+		const normalized = item.trim()
+		return normalized ? [normalized] : []
+	})
 }
 
 function isEnabled(value: string | undefined) {

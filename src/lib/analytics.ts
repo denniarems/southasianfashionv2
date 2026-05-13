@@ -75,8 +75,10 @@ export function sanitizeAnalyticsInput(
 			? row.filterKeys.split(',')
 			: []
 	const filterKeys = rawFilterKeys
-		.map(safeString)
-		.filter((value): value is string => Boolean(value))
+		.flatMap((value) => {
+			const normalized = safeString(value)
+			return normalized ? [normalized] : []
+		})
 		.slice(0, 12)
 		.join(',')
 

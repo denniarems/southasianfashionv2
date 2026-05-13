@@ -56,10 +56,7 @@ type ProductLookup = Pick<ProductRow, 'id' | 'name' | 'category' | 'price' | 'cu
 
 function premiumDiscountWording(discount: DiscountRow): string {
 	const wording = discount.wording?.trim()
-	if (
-		wording &&
-		!/(price\s*drop|\boff\b|\bsave\b|savings|offer)/i.test(wording)
-	) {
+	if (wording && !/(price\s*drop|\boff\b|\bsave\b|savings|offer)/i.test(wording)) {
 		return wording
 	}
 
@@ -108,7 +105,7 @@ function toDiscountText(discount: DiscountRow): string {
 
 function resolveStacking(discountRows: DiscountRow[]): DiscountRow[] {
 	if (discountRows.length === 0) return []
-	const sorted = [...discountRows].sort((a, b) => b.priority - a.priority)
+	const sorted = discountRows.toSorted((a, b) => b.priority - a.priority)
 	const highestNonStackable = sorted.find((d) => !d.stackable)
 	if (highestNonStackable) {
 		return [highestNonStackable]
@@ -246,10 +243,14 @@ export async function computeCartDiscounts(
 	userKey?: string,
 ): Promise<ComputedCartDiscountSummary> {
 	const db = await getDb()
-	const normalizedItems = items
-		.filter((item) => item.quantity > 0 && item.productId)
-		.map((item) => ({ ...item, quantity: Math.floor(item.quantity) }))
-		.filter((item) => item.quantity > 0)
+	const normalizedItems = items.flatMap((item) => {
+		if (item.quantity <= 0 || !item.productId) {
+			return []
+		}
+
+		const quantity = Math.floor(item.quantity)
+		return quantity > 0 ? [{ ...item, quantity }] : []
+	})
 
 	if (normalizedItems.length === 0) {
 		return {
@@ -289,19 +290,19 @@ export async function computeCartDiscounts(
 	const perUserUsage = await getPerUserUsageMap(discountIds, userKey)
 	const usableDiscounts = filterUsableDiscounts(allActiveDiscounts, perUserUsage)
 
-	const lines = normalizedItems
-		.map((item) => {
-			const product = productMap.get(item.productId)
-			if (!product) return null
+	const lines = normalizedItems.flatMap((item) => {
+		const product = productMap.get(item.productId)
+		if (!product) return []
 
-			const lineOriginalTotal = product.price * item.quantity
-			return {
+		const lineOriginalTotal = product.price * item.quantity
+		return [
+			{
 				product,
 				quantity: item.quantity,
 				lineOriginalTotal,
-			}
-		})
-		.filter((line): line is NonNullable<typeof line> => Boolean(line))
+			},
+		]
+	})
 
 	if (lines.length === 0) {
 		return {
@@ -335,7 +336,8 @@ export async function computeCartDiscounts(
 		const qualifies = bundle.bundleProductIds.every((id) => cartProductIdSet.has(id))
 		if (!qualifies) continue
 
-		const affected = lines.filter((line) => bundle.bundleProductIds.includes(line.product.id))
+		const bundleProductIdSet = new Set(bundle.bundleProductIds)
+		const affected = lines.filter((line) => bundleProductIdSet.has(line.product.id))
 		const affectedSubtotal = affected.reduce((sum, line) => sum + line.lineOriginalTotal, 0)
 		if (affectedSubtotal <= 0) continue
 
@@ -349,19 +351,18 @@ export async function computeCartDiscounts(
 		if (bundleAmount <= 0) continue
 
 		for (const line of affected) {
+			const productId = line.product.id
 			const ratio = line.lineOriginalTotal / affectedSubtotal
 			const apportioned = bundleAmount * ratio
-			const prev = lineDiscountMap.get(line.product.id) ?? 0
-			lineDiscountMap.set(line.product.id, prev + apportioned)
-			lineAppliedIds.set(line.product.id, [
-				...(lineAppliedIds.get(line.product.id) ?? []),
-				bundle.id,
-			])
+			const prev = lineDiscountMap.get(productId) ?? 0
+			lineDiscountMap.set(productId, prev + apportioned)
+			lineAppliedIds.set(productId, [...(lineAppliedIds.get(productId) ?? []), bundle.id])
 		}
 	}
 
 	// Product-level flat/percentage discounts
 	for (const line of lines) {
+		const productId = line.product.id
 		const applicable = usableDiscounts.filter((discount) => {
 			if (discount.discountType !== 'flat' && discount.discountType !== 'percentage') {
 				return false
@@ -376,18 +377,15 @@ export async function computeCartDiscounts(
 		})
 
 		const resolved = resolveStacking(applicable)
-		let remaining = line.lineOriginalTotal - (lineDiscountMap.get(line.product.id) ?? 0)
+		let remaining = line.lineOriginalTotal - (lineDiscountMap.get(productId) ?? 0)
 
 		for (const discount of resolved) {
 			const discountAmount = computeDiscountAmount(discount, remaining, line.quantity)
 			if (discountAmount <= 0) continue
 
-			const prev = lineDiscountMap.get(line.product.id) ?? 0
-			lineDiscountMap.set(line.product.id, prev + discountAmount)
-			lineAppliedIds.set(line.product.id, [
-				...(lineAppliedIds.get(line.product.id) ?? []),
-				discount.id,
-			])
+			const prev = lineDiscountMap.get(productId) ?? 0
+			lineDiscountMap.set(productId, prev + discountAmount)
+			lineAppliedIds.set(productId, [...(lineAppliedIds.get(productId) ?? []), discount.id])
 			remaining = Math.max(0, remaining - discountAmount)
 		}
 	}
