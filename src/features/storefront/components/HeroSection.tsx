@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { LoadingImage } from '@/components/ui/loading-image'
 
 interface HeroData {
@@ -27,7 +27,7 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 		>
 			<div className="absolute inset-0">
 				{hero.imageUrl && (
-					<motion.div
+					<m.div
 						initial={{ scale: 1 }}
 						animate={{ scale: 1.06 }}
 						transition={{ duration: 14, ease: 'easeOut' }}
@@ -41,7 +41,7 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 							sizes="100vw"
 							className="object-cover object-[58%_center] sm:object-[center_30%]"
 						/>
-					</motion.div>
+					</m.div>
 				)}
 				<div className="absolute inset-0 bg-linear-to-t from-stone-950/88 via-stone-900/36 to-stone-950/10 sm:from-stone-950/78 sm:via-stone-900/28 sm:to-stone-950/8" />
 				<div className="absolute inset-0 bg-linear-to-r from-stone-950/35 via-transparent to-transparent sm:hidden" />
@@ -49,25 +49,25 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 
 			<div className="relative z-10 max-w-450 mx-auto w-full px-4 pb-14 pt-28 sm:px-6 sm:pb-20 md:px-12 md:pb-24 lg:px-24">
 				<div className="max-w-3xl text-white">
-					<motion.p
+					<m.p
 						initial={{ opacity: 0, y: 16 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.7, delay: 0.2 }}
 						className="mb-4 max-w-xs font-accent text-base italic leading-relaxed text-white/82 sm:max-w-lg sm:text-lg md:text-xl"
 					>
 						{subtitle}
-					</motion.p>
+					</m.p>
 					<div className="overflow-hidden pb-1">
-						<motion.h1
+						<m.h1
 							initial={{ y: '105%', opacity: 0.6 }}
 							animate={{ y: 0, opacity: 1 }}
 							transition={{ duration: 0.9, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
 							className="max-w-[10ch] font-heading text-4xl leading-[0.98] text-white drop-shadow-sm sm:text-6xl lg:text-7xl"
 						>
 							{title}
-						</motion.h1>
+						</m.h1>
 					</div>
-					<motion.div
+					<m.div
 						initial={{ opacity: 0, y: 16 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.7, delay: 0.95 }}
@@ -80,7 +80,7 @@ export default function HeroSection({ hero }: { hero?: HeroData }) {
 						>
 							{ctaText}
 						</a>
-					</motion.div>
+					</m.div>
 				</div>
 			</div>
 		</section>

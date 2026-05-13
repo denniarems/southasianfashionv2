@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -59,7 +59,7 @@ export default function CategoriesClient({
 
 	return (
 		<div className="p-6 md:p-10 max-w-7xl mx-auto">
-			<motion.div
+			<m.div
 				initial={{ opacity: 0, y: 8 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.2 }}
@@ -113,7 +113,7 @@ export default function CategoriesClient({
 						</div>
 					))}
 				</div>
-			</motion.div>
+			</m.div>
 
 			<ItemDialog
 				dlg={dlg}

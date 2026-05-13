@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import type { ProductPricePreview } from '@/lib/discounts'
 import ProductCard from './ProductCard'
 import SectionHeading from './SectionHeading'
@@ -36,13 +36,9 @@ export default function RelatedProducts({
 	return (
 		<section className="border-t border-stone-200 mt-16 md:mt-24 pt-16 md:pt-24 pb-8">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<SectionHeading
-					kicker="You May Also Like"
-					title="Related Pieces"
-					className="mb-10"
-				/>
+				<SectionHeading kicker="You May Also Like" title="Related Pieces" className="mb-10" />
 
-				<motion.div
+				<m.div
 					variants={stagger}
 					initial="hidden"
 					whileInView="show"
@@ -50,16 +46,16 @@ export default function RelatedProducts({
 					className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8"
 				>
 					{products.map((product) => (
-						<motion.div key={product.id} variants={fadeUp}>
+						<m.div key={product.id} variants={fadeUp}>
 							<ProductCard
 								product={product}
 								whatsappNumber={whatsappNumber}
 								compact
 								showActions={false}
 							/>
-						</motion.div>
+						</m.div>
 					))}
-				</motion.div>
+				</m.div>
 			</div>
 		</section>
 	)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { MessageCircle, X } from 'lucide-react'
 
 interface Settings {
@@ -13,14 +13,16 @@ export default function WhatsAppButton({ settings }: { settings?: Settings }) {
 	const [open, setOpen] = useState(false)
 	const whatsapp = settings?.whatsappNumber?.replace(/[^0-9]/g, '') || ''
 	const message =
-		settings?.whatsappMessage ||
-		'Hello, I would like to start a private fitting with the atelier.'
+		settings?.whatsappMessage || 'Hello, I would like to start a private fitting with the atelier.'
 
 	return (
-		<div className="fixed bottom-4 right-4 z-50 sm:bottom-8 sm:right-8" data-testid="whatsapp-widget">
+		<div
+			className="fixed bottom-4 right-4 z-50 sm:bottom-8 sm:right-8"
+			data-testid="whatsapp-widget"
+		>
 			<AnimatePresence>
 				{open && (
-					<motion.div
+					<m.div
 						initial={{ opacity: 0, y: 10, scale: 0.95 }}
 						animate={{ opacity: 1, y: 0, scale: 1 }}
 						exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -40,14 +42,14 @@ export default function WhatsAppButton({ settings }: { settings?: Settings }) {
 						>
 							Message the Atelier
 						</a>
-					</motion.div>
+					</m.div>
 				)}
 			</AnimatePresence>
 
 			<button
 				data-testid="whatsapp-toggle-btn"
 				onClick={() => setOpen(!open)}
-				className="flex h-12 w-12 items-center justify-center bg-stone-900 text-white shadow-lg transition-colors duration-300 hover:bg-yellow-700 sm:h-14 sm:w-14"
+				className="flex size-12 items-center justify-center bg-stone-900 text-white shadow-lg transition-colors duration-300 hover:bg-yellow-700 sm:h-14 sm:w-14"
 			>
 				{open ? <X size={20} /> : <MessageCircle size={20} />}
 			</button>

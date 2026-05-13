@@ -1,7 +1,7 @@
 'use client'
 
 import Link from '@/components/router-link'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { LoadingImage } from '@/components/ui/loading-image'
 
@@ -29,7 +29,7 @@ export default function Collections({ collections }: { collections: Collection[]
 			className="py-24 md:py-32 bg-stone-100"
 		>
 			<div className="max-w-450 mx-auto px-6 md:px-12 lg:px-24">
-				<motion.div
+				<m.div
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					viewport={{ once: true }}
@@ -40,9 +40,9 @@ export default function Collections({ collections }: { collections: Collection[]
 					<h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-stone-900 tracking-tight">
 						Our Collections
 					</h2>
-				</motion.div>
+				</m.div>
 
-				<motion.div
+				<m.div
 					variants={stagger}
 					initial="hidden"
 					whileInView="show"
@@ -50,7 +50,7 @@ export default function Collections({ collections }: { collections: Collection[]
 					className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
 				>
 					{collections.map((c, i) => (
-						<motion.div
+						<m.div
 							key={c.id}
 							variants={fadeUp}
 							data-testid={`collection-card-${c.id}`}
@@ -86,9 +86,9 @@ export default function Collections({ collections }: { collections: Collection[]
 									Explore <ArrowRight size={14} />
 								</span>
 							</div>
-						</motion.div>
+						</m.div>
 					))}
-				</motion.div>
+				</m.div>
 			</div>
 		</section>
 	)

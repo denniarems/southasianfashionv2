@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { LoadingImage } from '@/components/ui/loading-image'
 
 interface ProductImageGalleryProps {
@@ -41,7 +41,7 @@ export default function ProductImageGallery({ images, productName }: ProductImag
 		<div className="lg:sticky lg:top-28 space-y-3">
 			<div className="relative aspect-4/5 w-full bg-stone-100 overflow-hidden rounded-sm">
 				<AnimatePresence mode="wait">
-					<motion.div
+					<m.div
 						key={images[selectedIndex]}
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
@@ -57,7 +57,7 @@ export default function ProductImageGallery({ images, productName }: ProductImag
 							sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 50vw"
 							className="object-cover"
 						/>
-					</motion.div>
+					</m.div>
 				</AnimatePresence>
 			</div>
 			<div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>

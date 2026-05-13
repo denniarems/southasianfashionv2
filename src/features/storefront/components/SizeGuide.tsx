@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import RulerIcon from 'lucide-react/dist/esm/icons/ruler'
 import ChevronDownIcon from 'lucide-react/dist/esm/icons/chevron-down'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
@@ -64,7 +64,7 @@ export default function SizeGuide({
 
 			<AnimatePresence>
 				{open && (
-					<motion.div
+					<m.div
 						initial={{ height: 0, opacity: 0 }}
 						animate={{ height: 'auto', opacity: 1 }}
 						exit={{ height: 0, opacity: 0 }}
@@ -129,7 +129,7 @@ export default function SizeGuide({
 								</p>
 							</div>
 						</div>
-					</motion.div>
+					</m.div>
 				)}
 			</AnimatePresence>
 		</div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { formatCad } from '@/lib/currency'
 
 interface PremiumPriceDisplayProps {
@@ -64,17 +64,17 @@ export default function PremiumPriceDisplay({
 	return (
 		<div className="space-y-1.5">
 			{!compact && badgeText ? (
-				<motion.span
+				<m.span
 					initial={{ opacity: 0, scale: 0.92 }}
 					animate={{ opacity: 1, scale: 1 }}
 					transition={{ duration: 0.25 }}
 					className="inline-flex rounded-full border border-stone-300 bg-stone-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-700 discount-badge-pulse"
 				>
 					{badgeText}
-				</motion.span>
+				</m.span>
 			) : null}
 
-			<motion.div
+			<m.div
 				key={`${originalPrice}-${discountedPrice}`}
 				initial={{ opacity: 0, y: 4 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -97,9 +97,9 @@ export default function PremiumPriceDisplay({
 				>
 					{formatCurrency(currency, discountedPrice)}
 				</span>
-			</motion.div>
+			</m.div>
 
-			<motion.p
+			<m.p
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.3, delay: 0.05 }}
@@ -109,7 +109,7 @@ export default function PremiumPriceDisplay({
 				{savingsAmount > 0 && savingsPercent > 0
 					? ` - ${formatCurrency(currency, savingsAmount)} (${Math.round(savingsPercent)}%)`
 					: ''}
-			</motion.p>
+			</m.p>
 
 			{!compact && discountText ? <p className="text-xs text-stone-500">{discountText}</p> : null}
 			{!compact && countdown ? <p className="text-[11px] text-stone-500">{countdown}</p> : null}

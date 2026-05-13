@@ -1,7 +1,7 @@
 'use client'
 
 import Link from '@/components/router-link'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { LoadingImage } from '@/components/ui/loading-image'
@@ -38,10 +38,14 @@ export default function Featured({
 	const itemHref = `/products/${item.slug ?? item.id}`
 
 	return (
-		<section id="featured" data-testid="featured-section" className="overflow-hidden py-20 sm:py-24 md:py-32">
+		<section
+			id="featured"
+			data-testid="featured-section"
+			className="overflow-hidden py-20 sm:py-24 md:py-32"
+		>
 			<div className="max-w-450 mx-auto px-4 sm:px-6 md:px-12 lg:px-24">
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-					<motion.div
+					<m.div
 						initial={{ opacity: 0, y: 28 }}
 						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true }}
@@ -69,9 +73,9 @@ export default function Featured({
 								</span>
 							</div>
 						) : null}
-					</motion.div>
+					</m.div>
 
-					<motion.div
+					<m.div
 						initial={{ opacity: 0, y: 28 }}
 						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true }}
@@ -127,7 +131,7 @@ export default function Featured({
 								Start a Private Fitting
 							</a>
 						</div>
-					</motion.div>
+					</m.div>
 				</div>
 			</div>
 		</section>
