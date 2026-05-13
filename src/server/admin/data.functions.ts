@@ -225,63 +225,46 @@ export const getAdminCrudDataFn = createServerFn({ method: 'GET' })
 	.handler(async ({ data }) => {
 		await requireAdmin()
 		const db = await getDb()
-		const references = await getAdminReferenceData()
+		const referencesPromise = getAdminReferenceData()
+		const withReferences = async <T>(itemsPromise: Promise<T>) => {
+			const [items, references] = await Promise.all([itemsPromise, referencesPromise])
+			return {
+				items,
+				...references,
+			}
+		}
 
 		switch (data.type) {
 			case 'products':
-				return {
-					items: await db
-						.select()
-						.from(products)
-						.orderBy(asc(products.displayOrder), desc(products.createdAt)),
-					...references,
-				}
+				return withReferences(
+					db.select().from(products).orderBy(asc(products.displayOrder), desc(products.createdAt)),
+				)
 			case 'collections':
-				return {
-					items: await db
+				return withReferences(
+					db
 						.select()
 						.from(collections)
 						.orderBy(asc(collections.displayOrder), desc(collections.createdAt)),
-					...references,
-				}
+				)
 			case 'categories':
-				return {
-					items: await db.select().from(categories).orderBy(desc(categories.createdAt)),
-					...references,
-				}
+				return withReferences(db.select().from(categories).orderBy(desc(categories.createdAt)))
 			case 'occasions':
-				return {
-					items: await db
+				return withReferences(
+					db
 						.select()
 						.from(occasions)
 						.orderBy(asc(occasions.displayOrder), desc(occasions.createdAt)),
-					...references,
-				}
+				)
 			case 'hero':
-				return {
-					items: await db.select().from(heroBanners).orderBy(desc(heroBanners.createdAt)),
-					...references,
-				}
+				return withReferences(db.select().from(heroBanners).orderBy(desc(heroBanners.createdAt)))
 			case 'size-guides':
-				return {
-					items: await db.select().from(sizeGuides).orderBy(desc(sizeGuides.createdAt)),
-					...references,
-				}
+				return withReferences(db.select().from(sizeGuides).orderBy(desc(sizeGuides.createdAt)))
 			case 'discounts':
-				return {
-					items: await db.select().from(discounts).orderBy(desc(discounts.createdAt)),
-					...references,
-				}
+				return withReferences(db.select().from(discounts).orderBy(desc(discounts.createdAt)))
 			case 'settings':
-				return {
-					items: await db.select().from(settings).limit(1),
-					...references,
-				}
+				return withReferences(db.select().from(settings).limit(1))
 			default:
-				return {
-					items: [],
-					...references,
-				}
+				return withReferences(Promise.resolve([]))
 		}
 	})
 

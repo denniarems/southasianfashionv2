@@ -72,26 +72,26 @@ function parseTierRules(input: string | null | undefined): TierRule[] {
 		const parsed: unknown = JSON.parse(input)
 		if (!Array.isArray(parsed)) return []
 
-		const normalized = parsed.map((rule) => {
-			if (!rule || typeof rule !== 'object') return null
+		const validRules = parsed.flatMap((rule) => {
+			if (!rule || typeof rule !== 'object') return []
 
 			const minCartValue = Number((rule as { minCartValue?: unknown }).minCartValue)
 			const discountValue = Number((rule as { discountValue?: unknown }).discountValue)
 			const discountType = (rule as { discountType?: unknown }).discountType
 
-			if (!Number.isFinite(minCartValue) || !Number.isFinite(discountValue)) return null
+			if (!Number.isFinite(minCartValue) || !Number.isFinite(discountValue)) return []
 			if (discountType !== undefined && discountType !== 'flat' && discountType !== 'percentage') {
-				return null
+				return []
 			}
 
-			return {
-				minCartValue,
-				discountValue,
-				discountType: discountType as TierRule['discountType'],
-			}
+			return [
+				{
+					minCartValue,
+					discountValue,
+					discountType: discountType as TierRule['discountType'],
+				},
+			]
 		})
-
-		const validRules = normalized.filter((rule): rule is NonNullable<typeof rule> => rule !== null)
 
 		return validRules.sort((a, b) => b.minCartValue - a.minCartValue)
 	} catch {
@@ -421,7 +421,13 @@ export async function computeCartDiscounts(
 		let amount = 0
 		if (discount.discountType === 'tiered') {
 			const tierRules = parseTierRules(discount.tierRulesJson)
-			const matchedTier = tierRules.find((rule) => remainingCartAmount >= rule.minCartValue)
+			let matchedTier: TierRule | undefined
+			for (const rule of tierRules) {
+				if (remainingCartAmount >= rule.minCartValue) {
+					matchedTier = rule
+					break
+				}
+			}
 			if (matchedTier) {
 				if (matchedTier.discountType === 'flat') {
 					amount = Math.min(remainingCartAmount, matchedTier.discountValue)

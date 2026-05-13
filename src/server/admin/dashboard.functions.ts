@@ -420,11 +420,12 @@ export const deleteItemFn = createServerFn({ method: 'POST' })
 						}
 					}
 
-					for (const img of additionalImgs) {
-						await deleteR2ObjectByUrl(img.imageUrl, 'product additional image deletion')
-					}
-
-					await deleteR2ObjectByUrl(existing[0]?.imageUrl, 'product deletion')
+					await Promise.all([
+						...additionalImgs.map((img) =>
+							deleteR2ObjectByUrl(img.imageUrl, 'product additional image deletion'),
+						),
+						deleteR2ObjectByUrl(existing[0]?.imageUrl, 'product deletion'),
+					])
 					try {
 						await db.delete(productImages).where(eq(productImages.productId, data.id)).run()
 					} catch (error) {
@@ -599,11 +600,13 @@ export const saveItemFn = createServerFn({ method: 'POST' })
 							.where(eq(productImages.productId, productId))
 
 						const newUrlSet = new Set(additionalImages)
-						for (const img of existingImgs) {
-							if (!newUrlSet.has(img.imageUrl)) {
-								await deleteR2ObjectByUrl(img.imageUrl, 'product image removed')
-							}
-						}
+						await Promise.all(
+							existingImgs.flatMap((img) =>
+								newUrlSet.has(img.imageUrl)
+									? []
+									: [deleteR2ObjectByUrl(img.imageUrl, 'product image removed')],
+							),
+						)
 
 						await db.delete(productImages).where(eq(productImages.productId, productId)).run()
 

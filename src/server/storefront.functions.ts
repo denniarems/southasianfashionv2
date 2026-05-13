@@ -198,8 +198,7 @@ export const getProductDetailDataFn = createServerFn({ method: 'GET' })
 	.inputValidator((data: { slug: string }) => data)
 	.handler(async ({ data }) => {
 		const db = await getDb()
-		const shell = await getStoreShellData()
-		const product = await getProductBySlug(data.slug)
+		const [shell, product] = await Promise.all([getStoreShellData(), getProductBySlug(data.slug)])
 
 		if (!product) {
 			return {
@@ -264,12 +263,10 @@ export const getCollectionDetailDataFn = createServerFn({ method: 'GET' })
 	.inputValidator((data: { slug: string }) => data)
 	.handler(async ({ data }) => {
 		const db = await getDb()
-		const shell = await getStoreShellData()
-		const [collection] = await db
-			.select()
-			.from(collections)
-			.where(eq(collections.slug, data.slug))
-			.limit(1)
+		const [shell, [collection]] = await Promise.all([
+			getStoreShellData(),
+			db.select().from(collections).where(eq(collections.slug, data.slug)).limit(1),
+		])
 
 		if (!collection) {
 			return {

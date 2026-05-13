@@ -15,6 +15,16 @@ const DEFAULT_TIMEZONE = 'America/Toronto'
 const APPOINTMENT_DURATION_MINUTES = 30
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const LOCAL_DATE_TIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/
+const intlWithSupportedValues = Intl as typeof Intl & {
+	supportedValuesOf?: (key: 'timeZone') => string[]
+}
+const SUPPORTED_TIMEZONES = new Set([
+	...(typeof intlWithSupportedValues.supportedValuesOf === 'function'
+		? intlWithSupportedValues.supportedValuesOf('timeZone')
+		: [DEFAULT_TIMEZONE]),
+	'UTC',
+	DEFAULT_TIMEZONE,
+])
 
 type PublicCustomEnquiryInput = {
 	customerName: string
@@ -51,13 +61,11 @@ function normalizeEmail(value: unknown, label: string) {
 
 function normalizeTimezone(value: unknown) {
 	const timezone = optionalString(value) || DEFAULT_TIMEZONE
-
-	try {
-		new Intl.DateTimeFormat('en-US', { timeZone: timezone }).format(new Date())
-		return timezone
-	} catch {
+	if (!SUPPORTED_TIMEZONES.has(timezone)) {
 		throw new Error('Appointment timezone is invalid')
 	}
+
+	return timezone
 }
 
 function normalizeLocalDateTime(value: unknown) {
@@ -165,7 +173,10 @@ function formatIcsDateTime(localDateTime: string) {
 }
 
 function formatIcsUtc(date: Date) {
-	return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z')
+	return date
+		.toISOString()
+		.replace(/[-:]/g, '')
+		.replace(/\.\d{3}Z$/, 'Z')
 }
 
 function addMinutesToLocalDateTime(localDateTime: string, minutesToAdd: number) {
@@ -192,7 +203,9 @@ function addMinutesToLocalDateTime(localDateTime: string, minutesToAdd: number) 
 	].join('')
 }
 
-function formatLocalDateTimeForEmail(enquiry: Pick<CustomEnquiryRow, 'requestedStartLocal' | 'requestedTimezone'>) {
+function formatLocalDateTimeForEmail(
+	enquiry: Pick<CustomEnquiryRow, 'requestedStartLocal' | 'requestedTimezone'>,
+) {
 	const [date, time] = enquiry.requestedStartLocal.split('T')
 	return `${date} at ${time}`
 }
@@ -372,8 +385,8 @@ async function sendApprovalAdminNotification(enquiry: CustomEnquiryRow, adminNot
 	})
 }
 
-async function getEnquiryById(id: string) {
-	const db = await getDb()
+async function getEnquiryById(id: string, existingDb?: Awaited<ReturnType<typeof getDb>>) {
+	const db = existingDb ?? (await getDb())
 	const [enquiry] = await db
 		.select()
 		.from(customEnquiries)
@@ -424,7 +437,10 @@ export const submitCustomEnquiryFn = createServerFn({ method: 'POST' })
 				await sendNewEnquiryAdminNotification(enquiry)
 				await db
 					.update(customEnquiries)
-					.set({ adminNotificationSentAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+					.set({
+						adminNotificationSentAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+					})
 					.where(eq(customEnquiries.id, id))
 					.run()
 			} catch (error) {
@@ -437,7 +453,9 @@ export const submitCustomEnquiryFn = createServerFn({ method: 'POST' })
 			if (isMissingCustomEnquiriesTable(error)) {
 				return { error: 'Private fitting requests are not available yet' }
 			}
-			return { error: error instanceof Error ? error.message : 'Failed to submit private fitting request' }
+			return {
+				error: error instanceof Error ? error.message : 'Failed to submit private fitting request',
+			}
 		}
 	})
 
@@ -447,10 +465,7 @@ export const getCustomEnquiriesAdminDataFn = createServerFn({ method: 'GET' }).h
 
 	try {
 		return {
-			enquiries: await db
-				.select()
-				.from(customEnquiries)
-				.orderBy(desc(customEnquiries.createdAt)),
+			enquiries: await db.select().from(customEnquiries).orderBy(desc(customEnquiries.createdAt)),
 		}
 	} catch (error) {
 		if (isMissingCustomEnquiriesTable(error)) {
@@ -463,9 +478,8 @@ export const getCustomEnquiriesAdminDataFn = createServerFn({ method: 'GET' }).h
 export const approveCustomEnquiryFn = createServerFn({ method: 'POST' })
 	.inputValidator(parseAdminEnquiryActionInput)
 	.handler(async ({ data }) => {
-		const admin = await requireAdmin()
-		const db = await getDb()
-		const enquiry = await getEnquiryById(data.id)
+		const [admin, db] = await Promise.all([requireAdmin(), getDb()])
+		const enquiry = await getEnquiryById(data.id, db)
 
 		if (!enquiry) return { error: 'Private fitting request not found' }
 		if (enquiry.status === 'approved' && enquiry.invitationSentAt) {
@@ -503,16 +517,17 @@ export const approveCustomEnquiryFn = createServerFn({ method: 'POST' })
 
 			return { success: true }
 		} catch (error) {
-			return { error: error instanceof Error ? error.message : 'Failed to approve private fitting request' }
+			return {
+				error: error instanceof Error ? error.message : 'Failed to approve private fitting request',
+			}
 		}
 	})
 
 export const rejectCustomEnquiryFn = createServerFn({ method: 'POST' })
 	.inputValidator(parseAdminEnquiryActionInput)
 	.handler(async ({ data }) => {
-		const admin = await requireAdmin()
-		const db = await getDb()
-		const enquiry = await getEnquiryById(data.id)
+		const [admin, db] = await Promise.all([requireAdmin(), getDb()])
+		const enquiry = await getEnquiryById(data.id, db)
 
 		if (!enquiry) return { error: 'Private fitting request not found' }
 		if (enquiry.status === 'approved') {
@@ -544,9 +559,8 @@ export const resendCustomEnquiryInviteFn = createServerFn({ method: 'POST' })
 		return { id: requiredString(input.id, 'Request ID') }
 	})
 	.handler(async ({ data }) => {
-		await requireAdmin()
-		const db = await getDb()
-		const enquiry = await getEnquiryById(data.id)
+		const [, db] = await Promise.all([requireAdmin(), getDb()])
+		const enquiry = await getEnquiryById(data.id, db)
 
 		if (!enquiry) return { error: 'Private fitting request not found' }
 		if (enquiry.status !== 'approved') {
