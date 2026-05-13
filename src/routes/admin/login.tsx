@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { requestOtpFn, verifyOtpFn } from '@/server/admin/auth.functions'
 import { useAppRouter } from '@/components/router-hooks'
+import Link from '@/components/router-link'
+
+const OTP_SLOT_INDICES = [0, 1, 2, 3, 4, 5]
 
 export const Route = createFileRoute('/admin/login')({
 	head: () => ({
@@ -73,13 +76,13 @@ function AdminLogin() {
 		>
 			<div className="w-full max-w-md">
 				<div className="text-center mb-12">
-					<a
+					<Link
 						href="/"
 						className="font-heading text-2xl tracking-wider text-stone-900"
 						data-testid="admin-logo"
 					>
 						SouthAsianFashion
-					</a>
+					</Link>
 					<p className="font-accent italic text-yellow-700 mt-2">Admin Portal</p>
 				</div>
 
@@ -87,10 +90,14 @@ function AdminLogin() {
 					{!otpSent ? (
 						<div className="space-y-6">
 							<div>
-								<Label className="text-xs uppercase tracking-widest text-stone-500 mb-3 block">
+								<Label
+									htmlFor="admin-email"
+									className="text-xs uppercase tracking-widest text-stone-500 mb-3 block"
+								>
 									Admin Email
 								</Label>
 								<Input
+									id="admin-email"
 									data-testid="admin-email-input"
 									type="email"
 									value={email}
@@ -112,7 +119,7 @@ function AdminLogin() {
 								disabled={loading || !emailLooksValid}
 								className="w-full bg-stone-900 text-white rounded-none h-12 text-xs uppercase tracking-widest hover:bg-yellow-700"
 							>
-								{loading ? 'Sending...' : 'Send Verification Code'}
+								{loading ? 'Sending…' : 'Send Verification Code'}
 							</Button>
 						</div>
 					) : (
@@ -124,11 +131,11 @@ function AdminLogin() {
 							<div className="flex justify-center">
 								<InputOTP data-testid="otp-input" maxLength={6} value={otp} onChange={setOtp}>
 									<InputOTPGroup>
-										{[0, 1, 2, 3, 4, 5].map((index) => (
+										{OTP_SLOT_INDICES.map((index) => (
 											<InputOTPSlot
-												key={index}
+												key={`otp-slot-${index}`}
 												index={index}
-												className="rounded-none border-stone-300 h-12 w-12 text-lg"
+												className="rounded-none border-stone-300 size-12 text-lg"
 											/>
 										))}
 									</InputOTPGroup>
@@ -142,7 +149,7 @@ function AdminLogin() {
 									disabled={loading || otp.length !== 6}
 									className="w-full bg-stone-900 text-white rounded-none h-12 text-xs uppercase tracking-widest hover:bg-yellow-700"
 								>
-									{loading ? 'Verifying...' : 'Verify & Enter'}
+									{loading ? 'Verifying…' : 'Verify & Enter'}
 								</Button>
 								<button
 									data-testid="resend-otp-btn"
@@ -160,9 +167,9 @@ function AdminLogin() {
 				</div>
 
 				<p className="text-center text-xs text-stone-400 mt-8">
-					<a href="/" className="hover:text-stone-600 transition-colors">
+					<Link href="/" className="hover:text-stone-600 transition-colors">
 						&lt;- Back to store
-					</a>
+					</Link>
 				</p>
 			</div>
 		</div>

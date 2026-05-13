@@ -232,7 +232,7 @@ export default function BatchImportClient({
 	categories,
 	models,
 }: BatchImportClientProps) {
-	const router = useRouter()
+	const { push } = useRouter()
 	const batchImportProducts = useServerFn(batchImportProductsFn)
 	const generateBatchProductImages = useServerFn(generateBatchProductImagesFn)
 	const generateProductDescription = useServerFn(generateProductDescriptionFn)
@@ -262,7 +262,7 @@ export default function BatchImportClient({
 	const [progressCompleted, setProgressCompleted] = useState(0)
 	const [imageProgressCompleted, setImageProgressCompleted] = useState(0)
 	const [imageProgressTotal, setImageProgressTotal] = useState(0)
-	const [progressLabel, setProgressLabel] = useState('Waiting to start...')
+	const [progressLabel, setProgressLabel] = useState('Waiting to start…')
 	const previewUrlsRef = useRef<Set<string>>(new Set())
 
 	const existingCategorySet = useMemo(
@@ -479,7 +479,7 @@ export default function BatchImportClient({
 				setProgressCompleted(0)
 				setImageProgressCompleted(0)
 				setImageProgressTotal(0)
-				setProgressLabel('Preparing files...')
+				setProgressLabel('Preparing files…')
 
 				const rowsToImport = previewRows
 					.filter((row) => getRowValidationErrors(row).length === 0)
@@ -496,7 +496,7 @@ export default function BatchImportClient({
 					return
 				}
 
-				setProgressLabel('Uploading reference files to R2...')
+				setProgressLabel('Uploading reference files to R2…')
 				const uploadForm = new FormData()
 
 				const seenKeys = new Set<string>()
@@ -532,7 +532,7 @@ export default function BatchImportClient({
 				const uploadIssues: string[] = Array.isArray(uploadJson.errors) ? uploadJson.errors : []
 				setUploadErrors(uploadIssues)
 
-				setProgressLabel('Generating AI descriptions...')
+				setProgressLabel('Generating AI descriptions…')
 				let completedDescriptions = 0
 				const descriptionIssues: string[] = []
 				const payloadRows: BatchProductRow[] = await runWithConcurrency(
@@ -568,7 +568,7 @@ export default function BatchImportClient({
 
 						completedDescriptions += 1
 						setProgressLabel(
-							`Generated descriptions for ${completedDescriptions} / ${rowsToImport.length} rows...`,
+							`Generated descriptions for ${completedDescriptions} / ${rowsToImport.length} rows…`,
 						)
 
 						return {
@@ -592,7 +592,7 @@ export default function BatchImportClient({
 					setUploadErrors((current) => [...current, ...descriptionIssues])
 				}
 
-				setProgressLabel('Creating products...')
+				setProgressLabel('Creating products…')
 				const result = await batchImportProducts({
 					data: {
 						rows: payloadRows,
@@ -610,13 +610,13 @@ export default function BatchImportClient({
 				setImageProgressTotal(productsWithImages.length)
 
 				if (productsWithImages.length > 0) {
-					setProgressLabel('Generating photoshoot images...')
+					setProgressLabel('Generating photoshoot images…')
 
 					await runWithConcurrency(productsWithImages, 1, async (product, index) => {
 						setProgressLabel(
 							`Generating photoshoot images for ${product.name} (${index + 1} / ${
 								productsWithImages.length
-							})...`,
+							})…`,
 						)
 
 						try {
@@ -911,7 +911,7 @@ Semi-stitched, fits waist 26-32 inches.`}</pre>
 						>
 							{isPreviewingDescription ? (
 								<>
-									<Loader2 size={14} className="mr-2 animate-spin" /> Generating...
+									<Loader2 size={14} className="mr-2 animate-spin" /> Generating…
 								</>
 							) : (
 								<>
@@ -973,16 +973,28 @@ Semi-stitched, fits waist 26-32 inches.`}</pre>
 										<div className="px-4 pb-4 space-y-4 border-t border-stone-100">
 											<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 pt-3">
 												<div>
-													<label className="text-xs text-stone-500">Name</label>
+													<label
+														htmlFor={`batch-row-${row.index}-name`}
+														className="text-xs text-stone-500"
+													>
+														Name
+													</label>
 													<Input
+														id={`batch-row-${row.index}-name`}
 														value={row.name}
 														onChange={(e) => updatePreviewRow(row.index, { name: e.target.value })}
 														className="rounded-none mt-1"
 													/>
 												</div>
 												<div>
-													<label className="text-xs text-stone-500">Price (CAD)</label>
+													<label
+														htmlFor={`batch-row-${row.index}-price`}
+														className="text-xs text-stone-500"
+													>
+														Price (CAD)
+													</label>
 													<Input
+														id={`batch-row-${row.index}-price`}
 														type="number"
 														value={row.price}
 														onChange={(e) =>
@@ -992,8 +1004,14 @@ Semi-stitched, fits waist 26-32 inches.`}</pre>
 													/>
 												</div>
 												<div>
-													<label className="text-xs text-stone-500">Category</label>
+													<label
+														htmlFor={`batch-row-${row.index}-category`}
+														className="text-xs text-stone-500"
+													>
+														Category
+													</label>
 													<Input
+														id={`batch-row-${row.index}-category`}
 														value={row.category}
 														onChange={(e) =>
 															updatePreviewRow(row.index, { category: e.target.value })
@@ -1002,8 +1020,14 @@ Semi-stitched, fits waist 26-32 inches.`}</pre>
 													/>
 												</div>
 												<div>
-													<label className="text-xs text-stone-500">Collection</label>
+													<label
+														htmlFor={`batch-row-${row.index}-collection`}
+														className="text-xs text-stone-500"
+													>
+														Collection
+													</label>
 													<Input
+														id={`batch-row-${row.index}-collection`}
 														value={row.collection}
 														onChange={(e) =>
 															updatePreviewRow(row.index, { collection: e.target.value })
@@ -1123,7 +1147,7 @@ Semi-stitched, fits waist 26-32 inches.`}</pre>
 						>
 							{isImporting ? (
 								<>
-									<Loader2 size={14} className="mr-2 animate-spin" /> Importing...
+									<Loader2 size={14} className="mr-2 animate-spin" /> Importing…
 								</>
 							) : (
 								<>
@@ -1213,7 +1237,7 @@ Semi-stitched, fits waist 26-32 inches.`}</pre>
 						</Button>
 						<Button
 							type="button"
-							onClick={() => router.push('/admin/products')}
+							onClick={() => push('/admin/products')}
 							className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
 						>
 							Go to Products

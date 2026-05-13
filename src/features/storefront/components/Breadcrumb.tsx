@@ -18,8 +18,8 @@ export default function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
 						Home
 					</Link>
 				</li>
-				{items.map((item, i) => (
-					<li key={i} className="flex items-center gap-1.5">
+				{items.map((item) => (
+					<li key={`${item.href ?? 'current'}-${item.label}`} className="flex items-center gap-1.5">
 						<ChevronRightIcon size={12} className="text-stone-300" />
 						{item.href ? (
 							<Link

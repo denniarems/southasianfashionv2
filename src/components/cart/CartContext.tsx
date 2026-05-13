@@ -2,10 +2,11 @@
 
 import {
 	createContext,
+	use,
 	useCallback,
-	useContext,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 	type ReactNode,
 } from 'react'
@@ -35,7 +36,7 @@ const CartContext = createContext<CartContextValue | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
 	const [state, setState] = useState<CartState>(EMPTY_CART_STATE)
-	const [hydrated, setHydrated] = useState(false)
+	const canPersistRef = useRef(false)
 
 	useEffect(() => {
 		migrateLegacyCartStorage()
@@ -43,16 +44,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 		setState({
 			items: loaded.items.map((item) => ({ ...item, currency: STORE_CURRENCY })),
 		})
-		setHydrated(true)
 	}, [])
 
 	useEffect(() => {
-		if (!hydrated) {
+		if (!canPersistRef.current) {
+			canPersistRef.current = true
 			return
 		}
 
 		saveCartState(state)
-	}, [state, hydrated])
+	}, [state])
 
 	const addItem = useCallback((product: CartProduct, quantity = 1) => {
 		if (quantity <= 0) {
@@ -148,7 +149,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 }
 
 export function useCart() {
-	const context = useContext(CartContext)
+	const context = use(CartContext)
 	if (!context) {
 		throw new Error('useCart must be used within a CartProvider')
 	}

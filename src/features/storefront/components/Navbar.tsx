@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from '@/components/router-link'
 import Image from '@/components/ui/image'
 import { usePathname } from '@/components/router-hooks'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import ClipboardListIcon from 'lucide-react/dist/esm/icons/clipboard-list'
 import MenuIcon from 'lucide-react/dist/esm/icons/menu'
 import XIcon from 'lucide-react/dist/esm/icons/x'
@@ -37,10 +37,12 @@ const staticLinks = [
 	{ label: 'Featured', href: '/#featured', isAnchor: true },
 ]
 
+const EMPTY_CATEGORIES: string[] = []
+
 export default function Navbar({
 	settings,
 	collections,
-	categories = [],
+	categories = EMPTY_CATEGORIES,
 	transparent = false,
 }: NavbarProps) {
 	const [scrolled, setScrolled] = useState(false)
@@ -132,7 +134,7 @@ export default function Navbar({
 
 									<AnimatePresence>
 										{showShop && (
-											<motion.div
+											<m.div
 												initial={{ opacity: 0, y: 8 }}
 												animate={{ opacity: 1, y: 0 }}
 												exit={{ opacity: 0, y: 8 }}
@@ -159,7 +161,7 @@ export default function Navbar({
 														</Link>
 													))}
 												</div>
-											</motion.div>
+											</m.div>
 										)}
 									</AnimatePresence>
 								</div>
@@ -180,7 +182,7 @@ export default function Navbar({
 
 								<AnimatePresence>
 									{showMega && (
-										<motion.div
+										<m.div
 											initial={{ opacity: 0, y: 8 }}
 											animate={{ opacity: 1, y: 0 }}
 											exit={{ opacity: 0, y: 8 }}
@@ -205,7 +207,7 @@ export default function Navbar({
 																	width={56}
 																	height={56}
 																	sizes="56px"
-																	className="w-14 h-14 object-cover shrink-0"
+																	className="size-14 object-cover shrink-0"
 																/>
 															)}
 															<div className="min-w-0">
@@ -230,7 +232,7 @@ export default function Navbar({
 													</Link>
 												</div>
 											</div>
-										</motion.div>
+										</m.div>
 									)}
 								</AnimatePresence>
 							</div>
@@ -245,7 +247,7 @@ export default function Navbar({
 							>
 								<ClipboardListIcon size={18} />
 								{itemCount > 0 && (
-									<span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-yellow-700 text-white text-[10px] font-semibold flex items-center justify-center">
+									<span className="absolute -top-2 -right-2 min-size-5 px-1 rounded-full bg-yellow-700 text-white text-[10px] font-semibold flex items-center justify-center">
 										{itemCount}
 									</span>
 								)}
@@ -261,7 +263,7 @@ export default function Navbar({
 							>
 								<ClipboardListIcon size={16} />
 								{itemCount > 0 && (
-									<span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-yellow-700 text-white text-[10px] font-semibold flex items-center justify-center">
+									<span className="absolute -top-2 -right-2 min-size-5 px-1 rounded-full bg-yellow-700 text-white text-[10px] font-semibold flex items-center justify-center">
 										{itemCount}
 									</span>
 								)}
@@ -281,7 +283,7 @@ export default function Navbar({
 
 				<AnimatePresence>
 					{menuOpen && (
-						<motion.div
+						<m.div
 							initial={{ opacity: 0, height: 0 }}
 							animate={{ opacity: 1, height: 'auto' }}
 							exit={{ opacity: 0, height: 0 }}
@@ -304,17 +306,17 @@ export default function Navbar({
 											className="flex items-center justify-between w-full text-sm uppercase tracking-widest text-stone-700"
 										>
 											Shop
-											<motion.span
+											<m.span
 												animate={{ rotate: mobileShopOpen ? 180 : 0 }}
 												transition={{ duration: 0.2 }}
 												className="text-stone-400"
 											>
 												▾
-											</motion.span>
+											</m.span>
 										</button>
 										<AnimatePresence>
 											{mobileShopOpen && (
-												<motion.div
+												<m.div
 													initial={{ height: 0, opacity: 0 }}
 													animate={{ height: 'auto', opacity: 1 }}
 													exit={{ height: 0, opacity: 0 }}
@@ -338,7 +340,7 @@ export default function Navbar({
 															{cat}
 														</Link>
 													))}
-												</motion.div>
+												</m.div>
 											)}
 										</AnimatePresence>
 									</>
@@ -369,7 +371,7 @@ export default function Navbar({
 									Featured
 								</a>
 							</div>
-						</motion.div>
+						</m.div>
 					)}
 				</AnimatePresence>
 			</nav>

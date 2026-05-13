@@ -1,7 +1,7 @@
 'use client'
 
 import Link from '@/components/router-link'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { LoadingImage } from '@/components/ui/loading-image'
@@ -50,7 +50,7 @@ export default function ProductCard({
 		: '#'
 
 	return (
-		<motion.article
+		<m.article
 			layout
 			className="group h-full min-w-0"
 			data-testid={`product-card-${product.id}`}
@@ -64,7 +64,11 @@ export default function ProductCard({
 						src={product.imageUrl}
 						alt={product.name}
 						fill
-						sizes={compact ? '(max-width: 640px) 50vw, 25vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'}
+						sizes={
+							compact
+								? '(max-width: 640px) 50vw, 25vw'
+								: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'
+						}
 						className="object-cover transition-transform duration-700 group-hover:scale-105"
 					/>
 				) : (
@@ -77,7 +81,11 @@ export default function ProductCard({
 						src={product.secondaryImageUrl}
 						alt=""
 						fill
-						sizes={compact ? '(max-width: 640px) 50vw, 25vw' : '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'}
+						sizes={
+							compact
+								? '(max-width: 640px) 50vw, 25vw'
+								: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'
+						}
 						className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
 					/>
 				) : null}
@@ -112,29 +120,36 @@ export default function ProductCard({
 									currency: 'CAD',
 									imageUrl: product.imageUrl || null,
 								}}
-								className="flex w-full items-center justify-center gap-2 bg-white/95 px-3 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-900 backdrop-blur-sm transition-colors hover:bg-yellow-700 hover:text-white sm:tracking-[0.14em]"
+								className="flex w-full items-center justify-center gap-2 bg-stone-900/95 p-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur-sm transition-colors hover:bg-yellow-700 sm:tracking-[0.14em]"
 							/>
-							<a
-								href={whatsappHref}
-								target="_blank"
-								rel="noopener noreferrer"
-								onClick={(event) => {
-									if (!whatsapp) {
-										event.preventDefault()
-										return
-									}
-									trackAnalyticsEvent({
-										eventName: 'whatsapp_click',
-										productId: product.id,
-										productSlug: product.slug || undefined,
-										category: product.category || undefined,
-									})
-								}}
-								className="flex w-full items-center justify-center gap-2 bg-white/95 px-3 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-900 backdrop-blur-sm transition-colors hover:bg-yellow-700 hover:text-white sm:tracking-[0.14em]"
-							>
-								<MessageCircleIcon size={14} />
-								Private Fitting
-							</a>
+							{whatsapp ? (
+								<a
+									href={whatsappHref}
+									target="_blank"
+									rel="noopener noreferrer"
+									onClick={() => {
+										trackAnalyticsEvent({
+											eventName: 'whatsapp_click',
+											productId: product.id,
+											productSlug: product.slug || undefined,
+											category: product.category || undefined,
+										})
+									}}
+									className="flex w-full items-center justify-center gap-2 bg-stone-900/95 p-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur-sm transition-colors hover:bg-yellow-700 sm:tracking-[0.14em]"
+								>
+									<MessageCircleIcon size={14} />
+									Private Fitting
+								</a>
+							) : (
+								<button
+									type="button"
+									disabled
+									className="flex w-full cursor-not-allowed items-center justify-center gap-2 bg-white/80 p-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400 backdrop-blur-sm sm:tracking-[0.14em]"
+								>
+									<MessageCircleIcon size={14} />
+									Private Fitting
+								</button>
+							)}
 						</div>
 					</div>
 				) : null}
@@ -156,6 +171,6 @@ export default function ProductCard({
 					<PriceBlock compact price={product.price} pricing={product.pricing} />
 				</div>
 			</div>
-		</motion.article>
+		</m.article>
 	)
 }

@@ -71,7 +71,9 @@ export default function SettingsClient({
 						<Field label="Logo URL">
 							<Input
 								value={settingsForm.logoUrl || ''}
-								onChange={(e) => setSettingsForm({ ...settingsForm, logoUrl: e.target.value })}
+								onChange={(e) =>
+									setSettingsForm((prev: any) => ({ ...prev, logoUrl: e.target.value }))
+								}
 								placeholder="https://..."
 								className="rounded-none"
 							/>
@@ -82,7 +84,10 @@ export default function SettingsClient({
 							<Input
 								value={settingsForm.whatsappNumber || ''}
 								onChange={(e) =>
-									setSettingsForm({ ...settingsForm, whatsappNumber: e.target.value })
+									setSettingsForm((prev: any) => ({
+										...prev,
+										whatsappNumber: e.target.value,
+									}))
 								}
 								placeholder="e.g. +1234567890"
 								className="rounded-none"
@@ -91,7 +96,9 @@ export default function SettingsClient({
 						<Field label="Instagram URL">
 							<Input
 								value={settingsForm.instagramUrl || ''}
-								onChange={(e) => setSettingsForm({ ...settingsForm, instagramUrl: e.target.value })}
+								onChange={(e) =>
+									setSettingsForm((prev: any) => ({ ...prev, instagramUrl: e.target.value }))
+								}
 								className="rounded-none"
 							/>
 						</Field>
@@ -101,7 +108,7 @@ export default function SettingsClient({
 						disabled={isMutating}
 						className="rounded-none bg-stone-900 text-white uppercase tracking-widest text-xs"
 					>
-						{isMutating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+						{isMutating ? <Loader2 className="size-4 mr-2 animate-spin" /> : null}
 						Save Settings
 					</Button>
 				</form>

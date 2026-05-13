@@ -99,7 +99,9 @@ export default function CustomizationInquiry({
 		return lines.join('\n')
 	}, [form, productName, productUrl])
 
-	const whatsappHref = whatsapp ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}` : '#'
+	const whatsappHref = whatsapp
+		? `https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`
+		: '#'
 
 	const updateField = (field: keyof CustomizationForm, value: string) => {
 		markStarted()
@@ -140,7 +142,9 @@ export default function CustomizationInquiry({
 				toast.success('Private fitting request sent for atelier review')
 			}
 		} catch (error) {
-			toast.error(error instanceof Error ? error.message : 'Failed to submit private fitting request')
+			toast.error(
+				error instanceof Error ? error.message : 'Failed to submit private fitting request',
+			)
 		} finally {
 			setSubmitting(false)
 		}
@@ -279,32 +283,39 @@ export default function CustomizationInquiry({
 				<button
 					type="submit"
 					disabled={submitting}
-					className="inline-flex w-full items-center justify-center gap-2 bg-stone-900 px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors hover:bg-yellow-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:gap-3 sm:px-8 sm:text-xs sm:tracking-widest"
+					className="inline-flex w-full items-center justify-center gap-2 bg-stone-900 p-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors hover:bg-yellow-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:gap-3 sm:px-8 sm:text-xs sm:tracking-widest"
 				>
 					<SendIcon size={16} />
-					{submitting ? 'Sending...' : 'Send Private Fitting Request'}
+					{submitting ? 'Sending…' : 'Send Private Fitting Request'}
 				</button>
-				<a
-					href={whatsappHref}
-					target="_blank"
-					rel="noopener noreferrer"
-					onClick={(event) => {
-						if (!whatsapp) {
-							event.preventDefault()
-							return
-						}
-						trackAnalyticsEvent({
-							eventName: 'whatsapp_click',
-							productId,
-							productSlug: productSlug || undefined,
-							category: category || undefined,
-						})
-					}}
-					className="inline-flex w-full items-center justify-center gap-2 border border-stone-300 bg-white px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-stone-900 transition-colors hover:border-stone-900 hover:bg-stone-100 sm:w-auto sm:gap-3 sm:px-8 sm:text-xs sm:tracking-widest"
-				>
-					<MessageCircleIcon size={16} />
-					Message Atelier
-				</a>
+				{whatsapp ? (
+					<a
+						href={whatsappHref}
+						target="_blank"
+						rel="noopener noreferrer"
+						onClick={() => {
+							trackAnalyticsEvent({
+								eventName: 'whatsapp_click',
+								productId,
+								productSlug: productSlug || undefined,
+								category: category || undefined,
+							})
+						}}
+						className="inline-flex w-full items-center justify-center gap-2 border border-stone-300 bg-white p-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-stone-900 transition-colors hover:border-stone-900 hover:bg-stone-100 sm:w-auto sm:gap-3 sm:px-8 sm:text-xs sm:tracking-widest"
+					>
+						<MessageCircleIcon size={16} />
+						Message Atelier
+					</a>
+				) : (
+					<button
+						type="button"
+						disabled
+						className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 border border-stone-200 bg-stone-50 p-4 text-[10px] font-semibold uppercase tracking-[0.13em] text-stone-400 sm:w-auto sm:gap-3 sm:px-8 sm:text-xs sm:tracking-widest"
+					>
+						<MessageCircleIcon size={16} />
+						Message Atelier
+					</button>
+				)}
 			</div>
 		</form>
 	)

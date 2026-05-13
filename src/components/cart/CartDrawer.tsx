@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import MessageCircleIcon from 'lucide-react/dist/esm/icons/message-circle'
 import MinusIcon from 'lucide-react/dist/esm/icons/minus'
 import PlusIcon from 'lucide-react/dist/esm/icons/plus'
@@ -121,7 +121,7 @@ export function CartDrawer({
 		<AnimatePresence>
 			{open && (
 				<>
-					<motion.button
+					<m.button
 						type="button"
 						aria-label="Close atelier brief"
 						initial={{ opacity: 0 }}
@@ -132,7 +132,7 @@ export function CartDrawer({
 						className="fixed inset-0 z-70 bg-black/50"
 					/>
 
-					<motion.aside
+					<m.aside
 						initial={{ x: '100%' }}
 						animate={{ x: 0 }}
 						exit={{ x: '100%' }}
@@ -143,7 +143,7 @@ export function CartDrawer({
 							<div>
 								<p className="font-heading text-xl text-stone-900">Atelier Brief</p>
 								<p className="text-xs uppercase tracking-widest text-stone-400 mt-1">
-									<motion.span
+									<m.span
 										key={itemCount}
 										initial={{ y: -4, opacity: 0 }}
 										animate={{ y: 0, opacity: 1 }}
@@ -151,7 +151,7 @@ export function CartDrawer({
 										className="inline-block"
 									>
 										{itemCount}
-									</motion.span>{' '}
+									</m.span>{' '}
 									piece{itemCount === 1 ? '' : 's'} selected
 								</p>
 							</div>
@@ -243,34 +243,37 @@ export function CartDrawer({
 							</div>
 
 							<p className="border border-stone-200 bg-stone-50 px-4 py-3 text-xs leading-relaxed text-stone-500">
-								Final measurements, delivery timing, and finishing details are confirmed after
-								your private fitting.
+								Final measurements, delivery timing, and finishing details are confirmed after your
+								private fitting.
 							</p>
 
-							<a
-								href={whatsappHref || '#'}
-								target="_blank"
-								rel="noopener noreferrer"
-								onClick={(event) => {
-									if (!whatsappHref) {
-										event.preventDefault()
-										return
-									}
-									trackAnalyticsEvent({
-										eventName: 'whatsapp_click',
-										route: '/cart',
-										value: items.length,
-									})
-								}}
-								className={`inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.13em] transition-colors sm:text-xs sm:tracking-widest ${
-									whatsappHref
-										? 'bg-stone-900 text-white hover:bg-yellow-700'
-										: 'bg-stone-200 text-stone-500 cursor-not-allowed'
-								}`}
-							>
-								<MessageCircleIcon size={14} />
-								Start a Private Fitting
-							</a>
+							{whatsappHref ? (
+								<a
+									href={whatsappHref}
+									target="_blank"
+									rel="noopener noreferrer"
+									onClick={() => {
+										trackAnalyticsEvent({
+											eventName: 'whatsapp_click',
+											route: '/cart',
+											value: items.length,
+										})
+									}}
+									className="inline-flex w-full items-center justify-center gap-2 bg-stone-900 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-colors hover:bg-yellow-700 sm:text-xs sm:tracking-widest"
+								>
+									<MessageCircleIcon size={14} />
+									Start a Private Fitting
+								</a>
+							) : (
+								<button
+									type="button"
+									disabled
+									className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 bg-stone-200 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-stone-500 sm:text-xs sm:tracking-widest"
+								>
+									<MessageCircleIcon size={14} />
+									Start a Private Fitting
+								</button>
+							)}
 
 							<button
 								type="button"
@@ -281,7 +284,7 @@ export function CartDrawer({
 								Clear Brief
 							</button>
 						</div>
-					</motion.aside>
+					</m.aside>
 				</>
 			)}
 		</AnimatePresence>

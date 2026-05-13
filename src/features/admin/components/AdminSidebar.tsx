@@ -48,9 +48,11 @@ export function AdminSidebar() {
 
 			{/* Mobile Overlay */}
 			{isOpen && (
-				<div
+				<button
+					type="button"
 					className="fixed inset-0 bg-stone-900/50 z-30 md:hidden backdrop-blur-sm"
 					onClick={() => setIsOpen(false)}
+					aria-label="Close navigation menu"
 				/>
 			)}
 
@@ -92,7 +94,7 @@ export function AdminSidebar() {
 				<div className="p-4 border-t border-stone-200 space-y-2">
 					<Link href="/">
 						<Button variant="outline" className="w-full justify-start text-xs rounded-none">
-							<ArrowLeft className="w-3 h-3 mr-2" />
+							<ArrowLeft className="size-3 mr-2" />
 							Back to Store
 						</Button>
 					</Link>
@@ -106,7 +108,7 @@ export function AdminSidebar() {
 						}}
 						className="w-full justify-start text-xs rounded-none text-red-600 hover:text-red-700 hover:bg-red-50"
 					>
-						<LogOut className="w-3 h-3 mr-2" />
+						<LogOut className="size-3 mr-2" />
 						Sign Out
 					</Button>
 				</div>

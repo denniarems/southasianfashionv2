@@ -180,8 +180,8 @@ export default function CustomEnquiriesClient({
 						Private Fitting Requests
 					</h1>
 					<p className="mt-1 max-w-2xl text-sm text-stone-500">
-						Review private fitting requests, approve calendar invites, and keep customer
-						atelier notes in one place.
+						Review private fitting requests, approve calendar invites, and keep customer atelier
+						notes in one place.
 					</p>
 				</div>
 				<div className="grid grid-cols-2 gap-2 sm:flex">
@@ -263,7 +263,9 @@ export default function CustomEnquiriesClient({
 									</div>
 									<div>
 										<p className="text-sm font-medium text-stone-900">{enquiry.productName}</p>
-										<p className="mt-1 text-xs text-stone-500">{enquiry.preferredSize || 'No size'}</p>
+										<p className="mt-1 text-xs text-stone-500">
+											{enquiry.preferredSize || 'No size'}
+										</p>
 									</div>
 									<div>
 										<p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400">
@@ -318,7 +320,7 @@ export default function CustomEnquiriesClient({
 								</div>
 
 								<div className="space-y-4">
-									<div className={`border px-3 py-3 ${statusClass(selected.status)}`}>
+									<div className={`border p-3 ${statusClass(selected.status)}`}>
 										<p className="text-[10px] font-semibold uppercase tracking-widest">Status</p>
 										<p className="mt-1 text-sm font-semibold capitalize">{selected.status}</p>
 									</div>
@@ -327,11 +329,12 @@ export default function CustomEnquiriesClient({
 										<p>Approved: {formatDate(selected.approvedAt)}</p>
 										<p>Invite sent: {formatDate(selected.invitationSentAt)}</p>
 									</div>
-									<label className="block">
+									<label htmlFor="custom-enquiry-admin-note" className="block">
 										<span className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-stone-500">
 											Admin note
 										</span>
 										<Textarea
+											id="custom-enquiry-admin-note"
 											value={adminNote}
 											onChange={(event) => setAdminNote(event.target.value)}
 											rows={6}
@@ -352,7 +355,7 @@ export default function CustomEnquiriesClient({
 										className="rounded-none"
 									>
 										<RefreshCwIcon className="h-4 w-4" />
-										{actionKey.startsWith('resend:') ? 'Resending...' : 'Resend Invite'}
+										{actionKey.startsWith('resend:') ? 'Resending…' : 'Resend Invite'}
 									</Button>
 								) : null}
 								{selected.status === 'pending' ? (
@@ -365,7 +368,7 @@ export default function CustomEnquiriesClient({
 											className="rounded-none border-red-200 text-red-700 hover:bg-red-50"
 										>
 											<XIcon className="h-4 w-4" />
-											{actionKey.startsWith('reject:') ? 'Rejecting...' : 'Reject'}
+											{actionKey.startsWith('reject:') ? 'Rejecting…' : 'Reject'}
 										</Button>
 										<Button
 											type="button"
@@ -374,7 +377,7 @@ export default function CustomEnquiriesClient({
 											className="rounded-none bg-stone-900 text-white hover:bg-yellow-700"
 										>
 											<CheckIcon className="h-4 w-4" />
-											{actionKey.startsWith('approve:') ? 'Approving...' : 'Approve and Send'}
+											{actionKey.startsWith('approve:') ? 'Approving…' : 'Approve and Send'}
 										</Button>
 									</>
 								) : null}
