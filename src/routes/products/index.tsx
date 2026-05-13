@@ -5,7 +5,7 @@ import ProductsGrid from '@/features/storefront/components/ProductsGrid'
 import { fetchProductsFn } from '@/server/products.functions'
 import { getProductsShellDataFn } from '@/server/storefront.functions'
 import { occasionLabelForSlug } from '@/lib/merchandising'
-import { absoluteUrl, itemListJsonLd, routeCanonical } from '@/lib/seo'
+import { absoluteUrl, itemListJsonLd, jsonLdScriptContent, routeCanonical } from '@/lib/seo'
 
 const FILTER_KEYS = [
 	'category',
@@ -115,12 +115,9 @@ function ProductsPage() {
 
 	return (
 		<>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{
-					__html: JSON.stringify(itemListJsonLd(initialResult.products, '/products')),
-				}}
-			/>
+			<script type="application/ld+json">
+				{jsonLdScriptContent(itemListJsonLd(initialResult.products, '/products'))}
+			</script>
 			<Navbar
 				settings={siteSettings}
 				collections={allCollections}

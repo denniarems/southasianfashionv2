@@ -1,4 +1,4 @@
-import { useSession } from '@tanstack/react-start/server'
+import { useSession as getServerSession } from '@tanstack/react-start/server'
 
 export const ADMIN_SESSION_COOKIE = 'saf_admin_session'
 
@@ -31,8 +31,8 @@ function getSessionSecret() {
 	return secret
 }
 
-export async function useAdminSession() {
-	return useSession<AdminSession>({
+export async function getAdminSession() {
+	return getServerSession<AdminSession>({
 		name: ADMIN_SESSION_COOKIE,
 		password: getSessionSecret(),
 		maxAge: 60 * 60 * 24,
@@ -46,7 +46,7 @@ export async function useAdminSession() {
 }
 
 export async function requireAdmin() {
-	const session = await useAdminSession()
+	const session = await getAdminSession()
 	const email = session.data.email
 
 	if (!email) {
@@ -57,8 +57,8 @@ export async function requireAdmin() {
 }
 
 export function getAllowedAdminEmails() {
-	return (process.env.ADMIN_EMAIL || '')
-		.split(',')
-		.map((email) => email.trim().toLowerCase())
-		.filter(Boolean)
+	return (process.env.ADMIN_EMAIL || '').split(',').flatMap((email) => {
+		const normalized = email.trim().toLowerCase()
+		return normalized ? [normalized] : []
+	})
 }

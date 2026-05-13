@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm'
 import { Resend } from 'resend'
 import { getDb } from '@/db'
 import { otpCodes } from '@/db/schema'
-import { AdminAuthError, getAllowedAdminEmails, requireAdmin, useAdminSession } from './auth.server'
+import { AdminAuthError, getAdminSession, getAllowedAdminEmails, requireAdmin } from './auth.server'
 
 type EmailInput = {
 	email: string
@@ -99,14 +99,14 @@ export const verifyOtpFn = createServerFn({ method: 'POST' })
 
 		await db.delete(otpCodes).where(eq(otpCodes.email, email)).run()
 
-		const session = await useAdminSession()
+		const session = await getAdminSession()
 		await session.update({ email })
 
 		return { success: true }
 	})
 
 export const logoutFn = createServerFn({ method: 'POST' }).handler(async () => {
-	const session = await useAdminSession()
+	const session = await getAdminSession()
 	await session.clear()
 
 	return { success: true }

@@ -48,6 +48,10 @@ export function routeCanonical(pathname = '/', siteUrl = getSiteUrl()) {
 	return `${siteUrl}${path === '/' ? '/' : path}`
 }
 
+export function jsonLdScriptContent(value: unknown) {
+	return JSON.stringify(value).replace(/</g, '\\u003c')
+}
+
 export function productCanonical(product: ProductLike, siteUrl = getSiteUrl()) {
 	return routeCanonical(`/products/${product.slug || product.id}`, siteUrl)
 }
@@ -82,8 +86,8 @@ export function collectionDescription(collection: CollectionLike) {
 export function fashionStoreJsonLd(settings?: StoreSettings | null) {
 	const brandName = settings?.brandName?.trim() || SITE_NAME
 	const phone = settings?.whatsappNumber?.trim() || '+1-613-000-0000'
-	const sameAs = [settings?.instagramUrl, settings?.facebookUrl].filter(
-		(url): url is string => Boolean(url),
+	const sameAs = [settings?.instagramUrl, settings?.facebookUrl].filter((url): url is string =>
+		Boolean(url),
 	)
 
 	return {

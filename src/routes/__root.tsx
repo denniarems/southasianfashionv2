@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
 import { ClientWrapper } from '@/components/ClientWrapper'
-import { absoluteUrl, fashionStoreJsonLd, getSiteUrl } from '@/lib/seo'
+import { absoluteUrl, fashionStoreJsonLd, getSiteUrl, jsonLdScriptContent } from '@/lib/seo'
 import '@/styles/globals.css'
 
 export const Route = createRootRoute({
 	head: () => {
 		const siteUrl = getSiteUrl()
-		const description = 'Curated luxury South Asian fashion, culturally rooted and globally inspired.'
+		const description =
+			'Curated luxury South Asian fashion, culturally rooted and globally inspired.'
 
 		return {
 			meta: [
@@ -65,14 +66,15 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
 		<html lang="en" suppressHydrationWarning>
 			<head>
 				<HeadContent />
-				<script
-					type="application/ld+json"
-					dangerouslySetInnerHTML={{ __html: JSON.stringify(fashionStoreJsonLd()) }}
-				/>
+				<script type="application/ld+json">{jsonLdScriptContent(fashionStoreJsonLd())}</script>
 				{import.meta.env.DEV ? (
 					<>
-						<script src="//unpkg.com/react-grab/dist/index.global.js" crossOrigin="anonymous" />
-						<script src="//unpkg.com/@react-grab/mcp/dist/client.global.js" />
+						<script
+							defer
+							src="//unpkg.com/react-grab/dist/index.global.js"
+							crossOrigin="anonymous"
+						/>
+						<script defer src="//unpkg.com/@react-grab/mcp/dist/client.global.js" />
 					</>
 				) : null}
 			</head>

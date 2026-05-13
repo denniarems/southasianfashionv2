@@ -12,6 +12,7 @@ import {
 	collectionDescription,
 	collectionTitle,
 	itemListJsonLd,
+	jsonLdScriptContent,
 } from '@/lib/seo'
 
 export const Route = createFileRoute('/collections/$slug')({
@@ -72,26 +73,20 @@ function CollectionDetailPage() {
 
 	return (
 		<>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{
-					__html: JSON.stringify(
-						breadcrumbJsonLd([
-							{ label: 'Home', href: '/' },
-							{ label: 'Collections', href: '/collections' },
-							{ label: collection.name },
-						]),
-					),
-				}}
-			/>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{
-					__html: JSON.stringify(
-						itemListJsonLd(data.collectionProducts, `/collections/${collection.slug}`),
-					),
-				}}
-			/>
+			<script type="application/ld+json">
+				{jsonLdScriptContent(
+					breadcrumbJsonLd([
+						{ label: 'Home', href: '/' },
+						{ label: 'Collections', href: '/collections' },
+						{ label: collection.name },
+					]),
+				)}
+			</script>
+			<script type="application/ld+json">
+				{jsonLdScriptContent(
+					itemListJsonLd(data.collectionProducts, `/collections/${collection.slug}`),
+				)}
+			</script>
 			<Navbar
 				settings={data.siteSettings}
 				collections={data.allCollections}

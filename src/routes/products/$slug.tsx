@@ -18,6 +18,7 @@ import { getProductDetailDataFn } from '@/server/storefront.functions'
 import {
 	absoluteUrl,
 	breadcrumbJsonLd,
+	jsonLdScriptContent,
 	productCanonical,
 	productDescription,
 	productJsonLd,
@@ -31,7 +32,7 @@ function parseJsonStringArray(input: string | null | undefined): string[] {
 	try {
 		const parsed = JSON.parse(input)
 		if (!Array.isArray(parsed)) return []
-		return parsed.filter((item): item is string => typeof item === 'string')
+		return parsed.flatMap((item) => (typeof item === 'string' ? [item] : []))
 	} catch {
 		return []
 	}
@@ -45,21 +46,21 @@ function parseSizeRows(
 		const parsed = JSON.parse(input)
 		if (!Array.isArray(parsed)) return []
 
-		return parsed
-			.map((row) => {
-				if (!row || typeof row !== 'object') return null
-				const rawSize = (row as { size?: unknown }).size
-				const rawValues = (row as { values?: unknown }).values
+		return parsed.flatMap((row) => {
+			if (!row || typeof row !== 'object') return []
+			const rawSize = (row as { size?: unknown }).size
+			const rawValues = (row as { values?: unknown }).values
 
-				if (typeof rawSize !== 'string') return null
-				if (!Array.isArray(rawValues)) return null
+			if (typeof rawSize !== 'string') return []
+			if (!Array.isArray(rawValues)) return []
 
-				return {
+			return [
+				{
 					size: rawSize,
 					values: rawValues.map((value) => String(value)),
-				}
-			})
-			.filter((row): row is { size: string; values: string[] } => row !== null)
+				},
+			]
+		})
 	} catch {
 		return []
 	}
@@ -179,33 +180,27 @@ function ProductDetailPage() {
 					pricing: data.pricingPreview,
 				}}
 			/>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{
-					__html: JSON.stringify(
-						productJsonLd({
-							product,
-							pricing: data.pricingPreview,
-							images: data.productImages,
-							url: productAbsoluteUrl,
-						}),
-					),
-				}}
-			/>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{
-					__html: JSON.stringify(
-						breadcrumbJsonLd([
-							{ label: 'Home', href: '/' },
-							...breadcrumbItems.map((item) => ({
-								label: item.label,
-								href: item.href,
-							})),
-						]),
-					),
-				}}
-			/>
+			<script type="application/ld+json">
+				{jsonLdScriptContent(
+					productJsonLd({
+						product,
+						pricing: data.pricingPreview,
+						images: data.productImages,
+						url: productAbsoluteUrl,
+					}),
+				)}
+			</script>
+			<script type="application/ld+json">
+				{jsonLdScriptContent(
+					breadcrumbJsonLd([
+						{ label: 'Home', href: '/' },
+						...breadcrumbItems.map((item) => ({
+							label: item.label,
+							href: item.href,
+						})),
+					]),
+				)}
+			</script>
 			<Navbar
 				settings={data.siteSettings}
 				collections={data.allCollections}
@@ -329,14 +324,13 @@ function ProductDetailPage() {
 
 							<div className="space-y-4">
 								<p className="text-sm text-stone-500 flex items-center gap-2">
-									<span className="w-1.5 h-1.5 bg-stone-300 rounded-full" /> Made to order
+									<span className="size-1.5 bg-stone-300 rounded-full" /> Made to order
 								</p>
 								<p className="text-sm text-stone-500 flex items-center gap-2">
-									<span className="w-1.5 h-1.5 bg-stone-300 rounded-full" /> Ships worldwide
+									<span className="size-1.5 bg-stone-300 rounded-full" /> Ships worldwide
 								</p>
 								<p className="text-sm text-stone-500 flex items-center gap-2">
-									<span className="w-1.5 h-1.5 bg-stone-300 rounded-full" /> Private fitting
-									available
+									<span className="size-1.5 bg-stone-300 rounded-full" /> Private fitting available
 								</p>
 							</div>
 
