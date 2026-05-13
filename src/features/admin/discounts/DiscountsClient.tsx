@@ -1,13 +1,43 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useDeleteItemMutation } from '../components/admin-mutations'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ItemDialog } from '../components/ItemDialog'
+
+const DISCOUNT_MONTHS = [
+	'Jan',
+	'Feb',
+	'Mar',
+	'Apr',
+	'May',
+	'Jun',
+	'Jul',
+	'Aug',
+	'Sep',
+	'Oct',
+	'Nov',
+	'Dec',
+]
+
+function formatDiscountDate(value?: string | null) {
+	if (!value) {
+		return ''
+	}
+
+	const [year, month, day] = value.slice(0, 10).split('-')
+	const monthLabel = DISCOUNT_MONTHS[Number(month) - 1]
+
+	if (!year || !monthLabel || !day) {
+		return value
+	}
+
+	return `${monthLabel} ${Number(day)}, ${year}`
+}
 
 export default function DiscountsClient({
 	items,
@@ -54,7 +84,7 @@ export default function DiscountsClient({
 
 	return (
 		<div className="p-6 md:p-10 max-w-7xl mx-auto">
-			<motion.div
+			<m.div
 				initial={{ opacity: 0, y: 8 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.2 }}
@@ -73,7 +103,7 @@ export default function DiscountsClient({
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					{activeItems.map((discount: any) => {
 						const typeLabel = discount.discountType.toUpperCase()
-						const dateRange = `${new Date(discount.startDate).toLocaleDateString()}${discount.endDate ? ` to ${new Date(discount.endDate).toLocaleDateString()}` : ' to Permanent'}`
+						const dateRange = `${formatDiscountDate(discount.startDate)}${discount.endDate ? ` to ${formatDiscountDate(discount.endDate)}` : ' to Permanent'}`
 
 						return (
 							<div
@@ -144,7 +174,7 @@ export default function DiscountsClient({
 						)
 					})}
 				</div>
-			</motion.div>
+			</m.div>
 
 			<ItemDialog
 				dlg={dlg}

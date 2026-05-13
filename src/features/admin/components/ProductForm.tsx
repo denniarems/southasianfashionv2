@@ -44,6 +44,9 @@ interface SavedModel {
 	promptUsed?: string | null
 }
 
+const EMPTY_OCCASIONS: any[] = []
+const EMPTY_MODELS: SavedModel[] = []
+
 async function runWithConcurrency<T, R>(
 	items: T[],
 	limit: number,
@@ -70,12 +73,12 @@ export function ProductForm({
 	initialData,
 	collections,
 	categories,
-	occasions = [],
+	occasions = EMPTY_OCCASIONS,
 	sizeGuides,
-	models = [],
+	models = EMPTY_MODELS,
 	onCancel,
 }: ProductFormProps) {
-	const router = useRouter()
+	const { push, refresh } = useRouter()
 	const isAddMode = mode === 'add'
 	const [form, setForm] = useState<any>(initialData || {})
 	const [errors, setErrors] = useState<Record<string, string>>({})
@@ -166,8 +169,8 @@ export function ProductForm({
 					return
 				}
 				toast.success(mode === 'add' ? 'Created' : 'Updated')
-				router.push('/admin/products')
-				router.refresh()
+				push('/admin/products')
+				refresh()
 			})()
 		})
 	}
@@ -294,7 +297,7 @@ export function ProductForm({
 				<Button
 					variant="ghost"
 					size="sm"
-					onClick={() => router.push('/admin/products')}
+					onClick={() => push('/admin/products')}
 					className="rounded-none text-stone-500 hover:text-stone-900 hover:bg-stone-100 -ml-3"
 				>
 					<ArrowLeft size={16} className="mr-1" />
@@ -550,7 +553,7 @@ export function ProductForm({
 					>
 						{isGeneratingPhotoshoot ? (
 							<>
-								<Loader2 size={14} className="mr-2 animate-spin" /> Generating Photoshoot...
+								<Loader2 size={14} className="mr-2 animate-spin" /> Generating Photoshoot…
 							</>
 						) : (
 							<>
@@ -648,7 +651,7 @@ export function ProductForm({
 					{isSaving ? (
 						<span className="inline-flex items-center gap-2">
 							<Loader2 size={14} className="animate-spin" />
-							Saving...
+							Saving…
 						</span>
 					) : mode === 'add' ? (
 						'Create Product'

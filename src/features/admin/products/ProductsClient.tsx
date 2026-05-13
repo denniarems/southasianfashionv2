@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useAppRouter as useRouter } from '@/components/router-hooks'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Plus, Pencil, Trash2, Upload, ImageOff, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -39,7 +39,7 @@ export default function ProductsClient({
 		(initialSizeGuides || []).map((guide: any) => [guide.id, guide.name]),
 	)
 
-	const router = useRouter()
+	const { push } = useRouter()
 	const [productImagesMap, setProductImagesMap] = useState<Record<string, string[]>>({})
 	useEffect(() => {
 		fetchProductImagesForAdmin().then(setProductImagesMap)
@@ -86,7 +86,7 @@ export default function ProductsClient({
 
 	return (
 		<div className="p-6 md:p-10 max-w-7xl mx-auto">
-			<motion.div
+			<m.div
 				initial={{ opacity: 0, y: 8 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.2 }}
@@ -113,7 +113,7 @@ export default function ProductsClient({
 							type="button"
 							data-testid="batch-import-btn"
 							variant="outline"
-							onClick={() => router.push('/admin/products/batch')}
+							onClick={() => push('/admin/products/batch')}
 							className="rounded-none text-xs uppercase tracking-widest"
 						>
 							<Upload size={14} className="mr-2" /> Batch Import
@@ -121,7 +121,7 @@ export default function ProductsClient({
 						<Button
 							type="button"
 							data-testid="add-product-btn"
-							onClick={() => router.push('/admin/products/add')}
+							onClick={() => push('/admin/products/add')}
 							className="rounded-none bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-yellow-700"
 						>
 							<Plus size={14} className="mr-2" /> Add Product
@@ -145,7 +145,7 @@ export default function ProductsClient({
 							return (
 								<div
 									key={p.id}
-									className="grid grid-cols-1 gap-4 px-4 py-4 transition-colors hover:bg-stone-50 lg:grid-cols-[44px_76px_1.7fr_0.8fr_0.7fr_1fr_130px] lg:items-center"
+									className="grid grid-cols-1 gap-4 p-4 transition-colors hover:bg-stone-50 lg:grid-cols-[44px_76px_1.7fr_0.8fr_0.7fr_1fr_130px] lg:items-center"
 									data-testid={`admin-product-${p.id}`}
 								>
 									<label className="flex items-center gap-2">
@@ -252,7 +252,7 @@ export default function ProductsClient({
 						})}
 					</div>
 				</div>
-			</motion.div>
+			</m.div>
 
 			<ItemDialog
 				dlg={dlg}

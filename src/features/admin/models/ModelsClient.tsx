@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Loader2, RefreshCw, Save, Trash2, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -146,7 +146,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 				<TabsContent value="create" className="focus-visible:ring-0 focus-visible:outline-none">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 						{/* Studio / Generation Form */}
-						<motion.div
+						<m.div
 							initial={{ opacity: 0, x: -10 }}
 							animate={{ opacity: 1, x: 0 }}
 							transition={{ duration: 0.3 }}
@@ -243,7 +243,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 									>
 										{isGenerating ? (
 											<>
-												<Loader2 size={14} className="mr-2 animate-spin" /> Generating...
+												<Loader2 size={14} className="mr-2 animate-spin" /> Generating…
 											</>
 										) : (
 											<>
@@ -253,10 +253,10 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 									</Button>
 								</div>
 							</FormSection>
-						</motion.div>
+						</m.div>
 
 						{/* Preview Area */}
-						<motion.div
+						<m.div
 							initial={{ opacity: 0, x: 10 }}
 							animate={{ opacity: 1, x: 0 }}
 							transition={{ duration: 0.3, delay: 0.1 }}
@@ -268,8 +268,8 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 								<div className="bg-stone-100 border border-stone-200 aspect-square flex items-center justify-center relative overflow-hidden">
 									{isGenerating ? (
 										<div className="text-stone-400 flex flex-col items-center">
-											<Loader2 className="w-8 h-8 animate-spin mb-2" />
-											<span className="text-xs uppercase tracking-widest">Creating Magic...</span>
+											<Loader2 className="size-8 animate-spin mb-2" />
+											<span className="text-xs uppercase tracking-widest">Creating Magic…</span>
 										</div>
 									) : generatedImageUrl ? (
 										<img
@@ -279,7 +279,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 										/>
 									) : (
 										<div className="text-stone-400 text-xs uppercase tracking-widest text-center px-4">
-											Waiting for generation...
+											Waiting for generation…
 											<br />
 											<span className="opacity-70 normal-case mt-2 block">
 												Configure the model demographics on the left and hit generate.
@@ -314,19 +314,19 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 									</div>
 								)}
 							</FormSection>
-						</motion.div>
+						</m.div>
 					</div>
 				</TabsContent>
 
 				<TabsContent value="gallery" className="focus-visible:ring-0 focus-visible:outline-none">
-					<motion.div
+					<m.div
 						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.3 }}
 					>
 						{models.length === 0 ? (
 							<div className="text-center py-16 bg-white border border-stone-200">
-								<Wand2 className="w-8 h-8 text-stone-300 mx-auto mb-3" />
+								<Wand2 className="size-8 text-stone-300 mx-auto mb-3" />
 								<p className="text-sm text-stone-500">No model models saved yet.</p>
 								<p className="text-xs text-stone-400 mt-1">
 									Switch to the Create tab to generate your first model.
@@ -390,7 +390,7 @@ export default function ModelsClient({ initialModels }: { initialModels: any[] }
 								))}
 							</div>
 						)}
-					</motion.div>
+					</m.div>
 				</TabsContent>
 			</Tabs>
 		</div>

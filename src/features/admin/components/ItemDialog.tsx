@@ -28,13 +28,15 @@ import {
 import { formatCad } from '@/lib/currency'
 import { AVAILABILITY_OPTIONS, OCCASION_LINKS } from '@/lib/merchandising'
 
+const EMPTY_OCCASIONS: any[] = []
+
 export function ItemDialog({
 	dlg,
 	setDlg,
 	products,
 	collections,
 	categories,
-	occasions = [],
+	occasions = EMPTY_OCCASIONS,
 	sizeGuides,
 }: any) {
 	const { open, type, mode, data } = dlg
@@ -1193,7 +1195,7 @@ export function ItemDialog({
 						{isSaving ? (
 							<span className="inline-flex items-center gap-2">
 								<Loader2 size={14} className="animate-spin" />
-								Saving...
+								Saving…
 							</span>
 						) : mode === 'add' ? (
 							'Create'
