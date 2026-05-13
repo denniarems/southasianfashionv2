@@ -87,7 +87,7 @@ function CollectionsPage() {
 
 					{allCollections.length === 0 && (
 						<div className="text-center py-24">
-							<div className="inline-flex items-center justify-center w-16 h-16 bg-stone-100 mb-6">
+							<div className="inline-flex items-center justify-center size-16 bg-stone-100 mb-6">
 								<PackageIcon size={28} className="text-stone-400" />
 							</div>
 							<p className="font-heading text-2xl text-stone-900 mb-3">Check back soon</p>

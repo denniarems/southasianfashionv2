@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Package, Layers, Grid, Tags, ArrowRight, BarChart3, AlertTriangle } from 'lucide-react'
 import Link from '@/components/router-link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -66,7 +66,7 @@ export default function DashboardOverviewClient({
 				{statCards.map((stat, i) => {
 					const Icon = stat.icon
 					return (
-						<motion.div
+						<m.div
 							key={stat.title}
 							initial={{ opacity: 0, y: 10 }}
 							animate={{ opacity: 1, y: 0 }}
@@ -85,7 +85,7 @@ export default function DashboardOverviewClient({
 									</CardContent>
 								</Card>
 							</Link>
-						</motion.div>
+						</m.div>
 					)
 				})}
 			</div>
@@ -114,7 +114,10 @@ export default function DashboardOverviewClient({
 									].map(([label, counts]) => {
 										const values = counts as { sevenDay: number; thirtyDay: number }
 										return (
-											<div key={label as string} className="border border-stone-200 bg-stone-50 p-3">
+											<div
+												key={label as string}
+												className="border border-stone-200 bg-stone-50 p-3"
+											>
 												<p className="text-[10px] uppercase tracking-widest text-stone-500">
 													{label as string}
 												</p>
@@ -172,7 +175,10 @@ export default function DashboardOverviewClient({
 							['Low image count', merchandisingWarnings.lowImageCount],
 							['Weak product names', merchandisingWarnings.weakProductNames],
 						].map(([label, value]) => (
-							<div key={label as string} className="flex items-center justify-between border border-stone-200 bg-stone-50 px-3 py-3">
+							<div
+								key={label as string}
+								className="flex items-center justify-between border border-stone-200 bg-stone-50 p-3"
+							>
 								<span className="text-sm text-stone-600">{label as string}</span>
 								<span className="font-heading text-xl text-stone-900">{value as number}</span>
 							</div>
@@ -183,7 +189,7 @@ export default function DashboardOverviewClient({
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 				{/* Recent Products */}
-				<motion.div
+				<m.div
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4 }}
@@ -197,7 +203,7 @@ export default function DashboardOverviewClient({
 							href="/admin/products"
 							className="text-xs text-stone-500 hover:text-stone-900 flex items-center gap-1 transition-colors"
 						>
-							View All <ArrowRight className="w-3 h-3" />
+							View All <ArrowRight className="size-3" />
 						</Link>
 					</div>
 					<div className="bg-white border border-stone-200 divide-y divide-stone-100">
@@ -209,7 +215,7 @@ export default function DashboardOverviewClient({
 								>
 									<div className="flex items-center gap-4">
 										{product.imageUrl ? (
-											<div className="w-10 h-10 bg-stone-100 border border-stone-200 overflow-hidden relative flex-shrink-0">
+											<div className="size-10 bg-stone-100 border border-stone-200 overflow-hidden relative flex-shrink-0">
 												<img
 													src={product.imageUrl}
 													alt={product.name}
@@ -217,8 +223,8 @@ export default function DashboardOverviewClient({
 												/>
 											</div>
 										) : (
-											<div className="w-10 h-10 bg-stone-100 border border-stone-200 flex items-center justify-center flex-shrink-0 text-stone-400">
-												<Package className="w-4 h-4" />
+											<div className="size-10 bg-stone-100 border border-stone-200 flex items-center justify-center flex-shrink-0 text-stone-400">
+												<Package className="size-4" />
 											</div>
 										)}
 										<div>
@@ -239,10 +245,10 @@ export default function DashboardOverviewClient({
 							<div className="p-8 text-center text-sm text-stone-500">No products found</div>
 						)}
 					</div>
-				</motion.div>
+				</m.div>
 
 				{/* Recent Collections */}
-				<motion.div
+				<m.div
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.5 }}
@@ -256,7 +262,7 @@ export default function DashboardOverviewClient({
 							href="/admin/collections"
 							className="text-xs text-stone-500 hover:text-stone-900 flex items-center gap-1 transition-colors"
 						>
-							View All <ArrowRight className="w-3 h-3" />
+							View All <ArrowRight className="size-3" />
 						</Link>
 					</div>
 					<div className="bg-white border border-stone-200 divide-y divide-stone-100">
@@ -268,7 +274,7 @@ export default function DashboardOverviewClient({
 								>
 									<div className="flex items-center gap-4">
 										{collection.imageUrl ? (
-											<div className="w-10 h-10 bg-stone-100 border border-stone-200 overflow-hidden relative flex-shrink-0">
+											<div className="size-10 bg-stone-100 border border-stone-200 overflow-hidden relative flex-shrink-0">
 												<img
 													src={collection.imageUrl}
 													alt={collection.name}
@@ -276,8 +282,8 @@ export default function DashboardOverviewClient({
 												/>
 											</div>
 										) : (
-											<div className="w-10 h-10 bg-stone-100 border border-stone-200 flex items-center justify-center flex-shrink-0 text-stone-400">
-												<Layers className="w-4 h-4" />
+											<div className="size-10 bg-stone-100 border border-stone-200 flex items-center justify-center flex-shrink-0 text-stone-400">
+												<Layers className="size-4" />
 											</div>
 										)}
 										<div>
@@ -293,7 +299,7 @@ export default function DashboardOverviewClient({
 							<div className="p-8 text-center text-sm text-stone-500">No collections found</div>
 						)}
 					</div>
-				</motion.div>
+				</m.div>
 			</div>
 		</div>
 	)

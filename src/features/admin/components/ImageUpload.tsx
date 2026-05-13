@@ -64,7 +64,7 @@ export default function ImageUpload({ value, onChange, label = 'Image' }: ImageU
 					data-testid="image-upload-btn"
 				>
 					{uploading ? (
-						'...'
+						'…'
 					) : (
 						<>
 							<Upload size={14} className="mr-2" /> Upload File
@@ -86,7 +86,7 @@ export default function ImageUpload({ value, onChange, label = 'Image' }: ImageU
 					<button
 						type="button"
 						onClick={() => onChange('')}
-						className="absolute -top-2 -right-2 bg-stone-900 text-white w-5 h-5 flex items-center justify-center"
+						className="absolute -top-2 -right-2 bg-stone-900 text-white size-5 flex items-center justify-center"
 					>
 						<X size={10} />
 					</button>
