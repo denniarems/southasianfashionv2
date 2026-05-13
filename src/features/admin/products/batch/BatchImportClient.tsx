@@ -104,15 +104,16 @@ async function runWithConcurrency<T, R>(
 	const results: R[] = []
 	let nextIndex = 0
 
-	await Promise.all(
-		Array.from({ length: Math.min(limit, items.length) }, async () => {
-			while (nextIndex < items.length) {
-				const currentIndex = nextIndex
-				nextIndex += 1
-				results[currentIndex] = await worker(items[currentIndex], currentIndex)
-			}
-		}),
-	)
+	const runNext = async (): Promise<void> => {
+		const currentIndex = nextIndex
+		nextIndex += 1
+		if (currentIndex >= items.length) return
+
+		results[currentIndex] = await worker(items[currentIndex], currentIndex)
+		await runNext()
+	}
+
+	await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => runNext()))
 
 	return results
 }
@@ -158,10 +159,10 @@ function splitCsvLine(line: string) {
 }
 
 function parseCsv(csvText: string): CsvRow[] {
-	const lines = csvText
-		.split(/\r?\n/)
-		.map((line) => line.trim())
-		.filter(Boolean)
+	const lines = csvText.split(/\r?\n/).flatMap((line) => {
+		const trimmed = line.trim()
+		return trimmed ? [trimmed] : []
+	})
 
 	if (lines.length < 2) return []
 
@@ -204,10 +205,10 @@ function getRelativeKey(file: File) {
 }
 
 function getIndexFromRelativePath(path: string) {
-	const segments = path
-		.split('/')
-		.map((segment) => segment.trim())
-		.filter(Boolean)
+	const segments = path.split('/').flatMap((segment) => {
+		const trimmed = segment.trim()
+		return trimmed ? [trimmed] : []
+	})
 
 	const numeric = segments.find((segment) => /^\d+$/.test(segment))
 	if (numeric) return numeric
@@ -390,6 +391,7 @@ export default function BatchImportClient({
 			}
 			previewUrlsRef.current.clear()
 			setLightboxImage('')
+			const descReads: Promise<void>[] = []
 
 			for (const file of entries) {
 				const fileKey = getRelativeKey(file)
@@ -401,9 +403,13 @@ export default function BatchImportClient({
 				const isDesc = file.name.toLowerCase() === 'desc.txt'
 
 				if (isDesc) {
-					nextMap[indexKey].descText = await file.text()
 					nextMap[indexKey].descFileKey = fileKey
 					nextMap[indexKey].descFile = file
+					descReads.push(
+						file.text().then((text) => {
+							nextMap[indexKey].descText = text
+						}),
+					)
 					continue
 				}
 
@@ -417,6 +423,7 @@ export default function BatchImportClient({
 					})
 				}
 			}
+			await Promise.all(descReads)
 
 			setFolderMap(nextMap)
 			setFolderFileCount(entries.length)
@@ -481,14 +488,18 @@ export default function BatchImportClient({
 				setImageProgressTotal(0)
 				setProgressLabel('Preparing files…')
 
-				const rowsToImport = previewRows
-					.filter((row) => getRowValidationErrors(row).length === 0)
-					.map((row) => ({
-						...row,
-						name: row.name.trim(),
-						category: row.category.trim(),
-						collection: row.collection.trim(),
-					}))
+				const rowsToImport = previewRows.flatMap((row) =>
+					getRowValidationErrors(row).length === 0
+						? [
+								{
+									...row,
+									name: row.name.trim(),
+									category: row.category.trim(),
+									collection: row.collection.trim(),
+								},
+							]
+						: [],
+				)
 
 				if (rowsToImport.length === 0) {
 					toast.error('No valid rows to import. Please fix validation errors first.')
@@ -581,9 +592,10 @@ export default function BatchImportClient({
 							isFeatured: row.isFeatured,
 							descriptionRaw: description,
 							descriptionGenerated,
-							referenceImageUrls: row.images
-								.map((image) => fileUrlMap[image.fileKey] || fileUrlMap[image.file.name] || '')
-								.filter(Boolean),
+							referenceImageUrls: row.images.flatMap((image) => {
+								const url = fileUrlMap[image.fileKey] || fileUrlMap[image.file.name] || ''
+								return url ? [url] : []
+							}),
 						}
 					},
 				)

@@ -57,28 +57,30 @@ export const Route = createFileRoute('/api/upload/batch')({
 					const results: Record<string, string> = {}
 					const errors: string[] = []
 
-					for (const [index, file] of entries.entries()) {
-						const ext = await getSafeExtension(file)
-						const key = fileKeys[index] || getFileKey(file)
+					await Promise.all(
+						entries.map(async (file, index) => {
+							const ext = await getSafeExtension(file)
+							const key = fileKeys[index] || getFileKey(file)
 
-						if (!ext) {
-							errors.push(`${key}: invalid file type`)
-							continue
-						}
+							if (!ext) {
+								errors.push(`${key}: invalid file type`)
+								return
+							}
 
-						if (file.size > MAX_FILE_BYTES) {
-							errors.push(`${key}: exceeds 10MB limit`)
-							continue
-						}
+							if (file.size > MAX_FILE_BYTES) {
+								errors.push(`${key}: exceeds 10MB limit`)
+								return
+							}
 
-						try {
-							const objectName = `batch-${crypto.randomUUID()}.${ext}`
-							const uploaded = await putR2Object(objectName, file, file.type || undefined)
-							results[key] = uploaded.url
-						} catch {
-							errors.push(`${key}: upload failed`)
-						}
-					}
+							try {
+								const objectName = `batch-${crypto.randomUUID()}.${ext}`
+								const uploaded = await putR2Object(objectName, file, file.type || undefined)
+								results[key] = uploaded.url
+							} catch {
+								errors.push(`${key}: upload failed`)
+							}
+						}),
+					)
 
 					return Response.json({ files: results, errors })
 				} catch (error) {

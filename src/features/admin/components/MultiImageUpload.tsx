@@ -33,22 +33,24 @@ export default function MultiImageUpload({
 		if (!files?.length) return
 		setUploading(true)
 
-		const newUrls: string[] = []
+		const uploadedUrls = await Promise.all(
+			Array.from(files).map(async (file) => {
+				const form = new FormData()
+				form.append('file', file)
 
-		for (const file of Array.from(files)) {
-			const form = new FormData()
-			form.append('file', file)
-
-			try {
-				const res = await fetch('/api/upload', { method: 'POST', body: form })
-				if (!res.ok) throw new Error('Upload failed')
-				const data = (await res.json()) as UploadResponse
-				if (!data.url) throw new Error(data.error || 'Upload failed')
-				newUrls.push(data.url)
-			} catch {
-				toast.error(`Failed to upload ${file.name}`)
-			}
-		}
+				try {
+					const res = await fetch('/api/upload', { method: 'POST', body: form })
+					if (!res.ok) throw new Error('Upload failed')
+					const data = (await res.json()) as UploadResponse
+					if (!data.url) throw new Error(data.error || 'Upload failed')
+					return data.url
+				} catch {
+					toast.error(`Failed to upload ${file.name}`)
+					return ''
+				}
+			}),
+		)
+		const newUrls = uploadedUrls.flatMap((url) => (url ? [url] : []))
 
 		if (newUrls.length > 0) {
 			onChange([...values, ...newUrls])

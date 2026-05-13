@@ -95,10 +95,11 @@ function parseProductDescriptionInput(value: unknown): ProductDescriptionInput {
 function parseReferenceImageUrls(value: unknown) {
 	if (!Array.isArray(value)) return []
 
-	return value
-		.filter((item): item is string => typeof item === 'string')
-		.map((item) => item.trim())
-		.filter(Boolean)
+	return value.flatMap((item) => {
+		if (typeof item !== 'string') return []
+		const url = item.trim()
+		return url ? [url] : []
+	})
 }
 
 function parseBatchProductRow(value: unknown): BatchProductRow {
@@ -162,15 +163,16 @@ async function runWithConcurrency<T, R>(
 	const results: R[] = []
 	let nextIndex = 0
 
-	await Promise.all(
-		Array.from({ length: Math.min(limit, items.length) }, async () => {
-			while (nextIndex < items.length) {
-				const index = nextIndex
-				nextIndex += 1
-				results[index] = await worker(items[index])
-			}
-		}),
-	)
+	const runNext = async (): Promise<void> => {
+		const index = nextIndex
+		nextIndex += 1
+		if (index >= items.length) return
+
+		results[index] = await worker(items[index])
+		await runNext()
+	}
+
+	await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => runNext()))
 
 	return results
 }
@@ -349,11 +351,14 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 
 		for (const row of data.rows) {
 			try {
-				if (!row.name?.trim()) {
+				const name = row.name.trim()
+				const category = row.category.trim()
+
+				if (!name) {
 					throw new Error('Missing product name')
 				}
 
-				if (!row.category?.trim()) {
+				if (!category) {
 					throw new Error('Missing category')
 				}
 
@@ -361,7 +366,7 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 					throw new Error('Invalid price')
 				}
 
-				await ensureCategory(db, row.category, categoryCache)
+				await ensureCategory(db, category, categoryCache)
 
 				const collectionId = await findCollectionId(db, row.collection || '', collectionCache)
 
@@ -369,18 +374,18 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 				if (row.descriptionGenerated) result.descriptions++
 
 				const productId = crypto.randomUUID()
-				const slug = await generateUniqueProductSlug(db, row.name.trim())
+				const slug = await generateUniqueProductSlug(db, name)
 
 				await db
 					.insert(products)
 					.values({
 						id: productId,
-						name: row.name.trim(),
+						name,
 						slug,
 						description,
 						price: row.price,
 						currency: 'CAD',
-						category: row.category.trim(),
+						category,
 						imageUrl: '',
 						isNew: row.isNew,
 						isFeatured: row.isFeatured,
@@ -392,7 +397,7 @@ export const batchImportProductsFn = createServerFn({ method: 'POST' })
 				result.products.push({
 					rowIndex: row.index,
 					productId,
-					name: row.name.trim(),
+					name,
 					description,
 					referenceImageUrls: row.referenceImageUrls,
 				})
@@ -481,9 +486,7 @@ export const generateBatchProductImagesFn = createServerFn({ method: 'POST' })
 			},
 		)
 
-		const generatedUrls = imageResults
-			.filter((item): item is { imageUrl: string } => Boolean(item?.imageUrl))
-			.map((item) => item.imageUrl)
+		const generatedUrls = imageResults.flatMap((item) => (item?.imageUrl ? [item.imageUrl] : []))
 
 		if (generatedUrls.length > 0) {
 			const [primaryImageUrl, ...additionalImageUrls] = product.imageUrl
