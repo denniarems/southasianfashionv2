@@ -1,6 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
-import { OpenRouter } from '@openrouter/sdk'
 import { getDb } from '@/db'
 import { models } from '@/db/schema'
 import {
@@ -8,6 +7,7 @@ import {
 	isValidImageBytes,
 	normalizeImageContentType,
 } from '@/lib/upload-validation'
+import { generateImageWithRetry } from './ai-image'
 import {
 	asRecord,
 	enumValue,
@@ -19,7 +19,7 @@ import { requireAdmin } from './auth.server'
 
 export type PhotoshootShotType = 'front' | 'side' | 'back' | 'walking' | 'close-up'
 const PHOTOSHOOT_SHOT_TYPES = ['front', 'side', 'back', 'walking', 'close-up'] as const
-const AI_IMAGE_MODEL = 'google/gemini-3.1-flash-image-preview'
+const AI_IMAGE_MODEL = 'bytedance-seed/seedream-5-0-pro'
 const AI_IMAGE_SIZE = '1K'
 const AI_IMAGE_ASPECT_RATIO = '9:16'
 const MAX_EXTERNAL_IMAGE_BYTES = 10 * 1024 * 1024
@@ -134,51 +134,6 @@ function parseIdInput(value: unknown) {
 	return { id: requiredString(input.id, 'Model ID') }
 }
 
-function getOpenRouter() {
-	if (!process.env.OPENROUTER_API_KEY) {
-		throw new Error('OPENROUTER_API_KEY is not set')
-	}
-
-	return new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY })
-}
-
-function parseDataUrl(dataUrl: string) {
-	const match = dataUrl.match(/^data:([^;,]+)(?:;[^,]*)?;base64,([\s\S]+)$/)
-
-	if (!match) {
-		throw new Error('AI provider returned an unsupported image format')
-	}
-
-	const mimeType = normalizeImageContentType(match[1])
-	const extension = getAllowedImageExtensionForMimeType(mimeType)
-	if (!extension) {
-		throw new Error('AI provider returned an unsupported image type')
-	}
-
-	let binary: string
-	try {
-		binary = atob(match[2].replace(/\s/g, ''))
-	} catch {
-		throw new Error('AI provider returned invalid image data')
-	}
-
-	const bytes = new Uint8Array(binary.length)
-
-	for (let i = 0; i < binary.length; i += 1) {
-		bytes[i] = binary.charCodeAt(i)
-	}
-
-	if (!isValidImageBytes(bytes.slice(0, 32), mimeType)) {
-		throw new Error('AI provider returned image data that does not match its type')
-	}
-
-	return {
-		mimeType,
-		body: new Blob([bytes], { type: mimeType }),
-		extension,
-	}
-}
-
 function buildPhotoshootPrompt(model: PhotoshootModelDetails, shotType: PhotoshootShotType) {
 	const shotInstructions: Record<
 		PhotoshootShotType,
@@ -255,13 +210,6 @@ function buildPhotoshootPrompt(model: PhotoshootModelDetails, shotType: Photosho
 	]
 
 	return segments.filter(Boolean).join(' ')
-}
-
-async function uploadAiDataUrl(dataUrl: string, keyPrefix: string) {
-	const { putR2Object } = await import('@/server/storage/r2')
-	const image = parseDataUrl(dataUrl)
-	const filename = `${keyPrefix}-${crypto.randomUUID()}.${image.extension}`
-	return putR2Object(filename, image.body, image.mimeType)
 }
 
 function isPrivateIpv4(hostname: string) {
@@ -397,59 +345,19 @@ export async function generateModelPhotoshootImageInternal(params: GenerateModel
 		...params.model,
 		imageUrl: identityImageUrl || undefined,
 	}
-	const openrouter = getOpenRouter()
 	const fullPrompt = buildPhotoshootPrompt(promptModel, params.shotType)
-	const content = [
-		{ type: 'text', text: fullPrompt },
-		...(identityImageUrl
-			? [
-					{
-						type: 'text',
-						text: 'Reference image 1: saved model identity reference. Preserve this exact person.',
-					},
-					{ type: 'image_url', imageUrl: { url: identityImageUrl } },
-					{
-						type: 'text',
-						text: 'Reference image 2: garment and clothing construction reference. Apply this clothing to the same saved model.',
-					},
-				]
-			: [
-					{
-						type: 'text',
-						text: 'Reference image: garment and clothing construction reference.',
-					},
-				]),
-		{ type: 'image_url', imageUrl: { url: params.clothingImageUrl } },
-	]
+	const inputReferences = [identityImageUrl, params.clothingImageUrl].filter(Boolean)
 
-	const result = await openrouter.chat.send({
-		chatGenerationParams: {
-			model: AI_IMAGE_MODEL,
-			messages: [
-				{
-					role: 'user',
-					content,
-				},
-			],
-			imageConfig: {
-				image_size: AI_IMAGE_SIZE,
-				aspectRatio: AI_IMAGE_ASPECT_RATIO,
-			},
-			modalities: ['image', 'text'],
-			stream: false,
-		},
-	} as any)
+	const uploaded = await generateImageWithRetry({
+		model: AI_IMAGE_MODEL,
+		prompt: fullPrompt,
+		aspectRatio: AI_IMAGE_ASPECT_RATIO,
+		resolution: AI_IMAGE_SIZE,
+		keyPrefix: `photoshoot-${params.shotType}`,
+		inputReferences,
+	})
 
-	const message = result.choices[0]?.message as any
-	if (message?.images && message.images.length > 0) {
-		const uploaded = await uploadAiDataUrl(
-			message.images[0].imageUrl.url,
-			`photoshoot-${params.shotType}`,
-		)
-		return { imageUrl: uploaded.url }
-	}
-
-	throw new Error('No image returned from the AI.')
+	return { imageUrl: uploaded.url }
 }
 
 export const saveModelFn = createServerFn({ method: 'POST' })
@@ -532,33 +440,16 @@ export const generateModelImageFn = createServerFn({ method: 'POST' })
 			]
 				.filter(Boolean)
 				.join(' ')
-			const openrouter = getOpenRouter()
 
-			const result = await openrouter.chat.send({
-				chatGenerationParams: {
-					model: AI_IMAGE_MODEL,
-					messages: [
-						{
-							role: 'user',
-							content: fullPrompt,
-						},
-					],
-					imageConfig: {
-						image_size: AI_IMAGE_SIZE,
-						aspectRatio: AI_IMAGE_ASPECT_RATIO,
-					},
-					modalities: ['image', 'text'],
-					stream: false,
-				},
+			const uploaded = await generateImageWithRetry({
+				model: AI_IMAGE_MODEL,
+				prompt: fullPrompt,
+				aspectRatio: AI_IMAGE_ASPECT_RATIO,
+				resolution: AI_IMAGE_SIZE,
+				keyPrefix: 'model',
 			})
 
-			const message = result.choices[0]?.message as any
-			if (message?.images && message.images.length > 0) {
-				const uploaded = await uploadAiDataUrl(message.images[0].imageUrl.url, 'model')
-				return { imageUrl: uploaded.url }
-			}
-
-			throw new Error('No image returned from the AI.')
+			return { imageUrl: uploaded.url }
 		} catch (error) {
 			return { error: error instanceof Error ? error.message : 'Failed to generate model image' }
 		}

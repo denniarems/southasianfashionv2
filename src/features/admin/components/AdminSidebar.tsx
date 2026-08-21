@@ -25,6 +25,7 @@ export function AdminSidebar() {
 		{ href: '/admin/size-guides', label: 'Size Guides' },
 		{ href: '/admin/discounts', label: 'Discounts' },
 		{ href: '/admin/models', label: 'Models' },
+		{ href: '/admin/showcase', label: 'Showcase AI' },
 		{ href: '/admin/settings', label: 'Settings' },
 	]
 

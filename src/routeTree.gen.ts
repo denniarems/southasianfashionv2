@@ -23,6 +23,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
 import { Route as ApiUploadBatchRouteImport } from './routes/api/upload/batch'
 import { Route as AdminProtectedSizeGuidesRouteImport } from './routes/admin/_protected/size-guides'
+import { Route as AdminProtectedShowcaseRouteImport } from './routes/admin/_protected/showcase'
 import { Route as AdminProtectedSettingsRouteImport } from './routes/admin/_protected/settings'
 import { Route as AdminProtectedProductsRouteImport } from './routes/admin/_protected/products'
 import { Route as AdminProtectedOccasionsRouteImport } from './routes/admin/_protected/occasions'
@@ -108,6 +109,11 @@ const AdminProtectedSizeGuidesRoute =
     path: '/size-guides',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const AdminProtectedShowcaseRoute = AdminProtectedShowcaseRouteImport.update({
+  id: '/showcase',
+  path: '/showcase',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
 const AdminProtectedSettingsRoute = AdminProtectedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/admin/occasions': typeof AdminProtectedOccasionsRoute
   '/admin/products': typeof AdminProtectedProductsRouteWithChildren
   '/admin/settings': typeof AdminProtectedSettingsRoute
+  '/admin/showcase': typeof AdminProtectedShowcaseRoute
   '/admin/size-guides': typeof AdminProtectedSizeGuidesRoute
   '/api/upload/batch': typeof ApiUploadBatchRoute
   '/admin/products/add': typeof AdminProtectedProductsAddRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/admin/occasions': typeof AdminProtectedOccasionsRoute
   '/admin/products': typeof AdminProtectedProductsRouteWithChildren
   '/admin/settings': typeof AdminProtectedSettingsRoute
+  '/admin/showcase': typeof AdminProtectedShowcaseRoute
   '/admin/size-guides': typeof AdminProtectedSizeGuidesRoute
   '/api/upload/batch': typeof ApiUploadBatchRoute
   '/admin/products/add': typeof AdminProtectedProductsAddRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/admin/_protected/occasions': typeof AdminProtectedOccasionsRoute
   '/admin/_protected/products': typeof AdminProtectedProductsRouteWithChildren
   '/admin/_protected/settings': typeof AdminProtectedSettingsRoute
+  '/admin/_protected/showcase': typeof AdminProtectedShowcaseRoute
   '/admin/_protected/size-guides': typeof AdminProtectedSizeGuidesRoute
   '/api/upload/batch': typeof ApiUploadBatchRoute
   '/admin/_protected/products/add': typeof AdminProtectedProductsAddRoute
@@ -292,6 +301,7 @@ export interface FileRouteTypes {
     | '/admin/occasions'
     | '/admin/products'
     | '/admin/settings'
+    | '/admin/showcase'
     | '/admin/size-guides'
     | '/api/upload/batch'
     | '/admin/products/add'
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/admin/occasions'
     | '/admin/products'
     | '/admin/settings'
+    | '/admin/showcase'
     | '/admin/size-guides'
     | '/api/upload/batch'
     | '/admin/products/add'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/occasions'
     | '/admin/_protected/products'
     | '/admin/_protected/settings'
+    | '/admin/_protected/showcase'
     | '/admin/_protected/size-guides'
     | '/api/upload/batch'
     | '/admin/_protected/products/add'
@@ -468,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/size-guides'
       fullPath: '/admin/size-guides'
       preLoaderRoute: typeof AdminProtectedSizeGuidesRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/showcase': {
+      id: '/admin/_protected/showcase'
+      path: '/showcase'
+      fullPath: '/admin/showcase'
+      preLoaderRoute: typeof AdminProtectedShowcaseRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
     '/admin/_protected/settings': {
@@ -592,6 +611,7 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedOccasionsRoute: typeof AdminProtectedOccasionsRoute
   AdminProtectedProductsRoute: typeof AdminProtectedProductsRouteWithChildren
   AdminProtectedSettingsRoute: typeof AdminProtectedSettingsRoute
+  AdminProtectedShowcaseRoute: typeof AdminProtectedShowcaseRoute
   AdminProtectedSizeGuidesRoute: typeof AdminProtectedSizeGuidesRoute
 }
 
@@ -607,6 +627,7 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedOccasionsRoute: AdminProtectedOccasionsRoute,
   AdminProtectedProductsRoute: AdminProtectedProductsRouteWithChildren,
   AdminProtectedSettingsRoute: AdminProtectedSettingsRoute,
+  AdminProtectedShowcaseRoute: AdminProtectedShowcaseRoute,
   AdminProtectedSizeGuidesRoute: AdminProtectedSizeGuidesRoute,
 }
 
